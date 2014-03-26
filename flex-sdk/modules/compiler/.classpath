@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src/java"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/flex-asc"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/flex-fxgutils"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/flex-swfutils"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
+	<classpathentry kind="var" path="FLEX_HOME/lib/batik-all-flex.jar"/>
+	<classpathentry kind="var" path="FLEX_HOME/lib/external/xercesImpl.jar"/>
+	<classpathentry kind="var" path="FLEX_HOME/lib/velocity-dep-1.4-flex.jar"/>
+	<classpathentry kind="var" path="FLEX_HOME/lib/external/commons-collections.jar"/>
+	<classpathentry kind="var" path="FLEX_HOME/lib/external/saxon9.jar"/>
+	<classpathentry kind="var" path="FLEX_HOME/lib/external/xml-apis-ext.jar"/>
+	<classpathentry kind="var" path="FLEX_HOME/lib/external/xml-apis.jar"/>
+	<classpathentry kind="var" path="FLEX_HOME/lib/external/optional/flex-messaging-common.jar"/>
+	<classpathentry kind="output" path="classes"/>
+</classpath>
