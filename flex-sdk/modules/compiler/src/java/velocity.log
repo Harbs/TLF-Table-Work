@@ -1,114 +1,114 @@
-Mon Sep 02 17:36:27 IDT 2013  [debug] AvalonLogSystem initialized using logfile 'velocity.log'
-Mon Sep 02 17:36:27 IDT 2013   [info] ************************************************************** 
-Mon Sep 02 17:36:27 IDT 2013   [info] Starting Jakarta Velocity v1.4
-Mon Sep 02 17:36:27 IDT 2013   [info] RuntimeInstance initializing.
-Mon Sep 02 17:36:27 IDT 2013   [info] Default Properties File: org/apache/flex/forks/velocity/runtime/defaults/velocity.properties
-Mon Sep 02 17:36:27 IDT 2013   [info] Trying to use logger class org.apache.flex.forks.velocity.runtime.log.AvalonLogSystem
-Mon Sep 02 17:36:27 IDT 2013   [info] Using logger class org.apache.flex.forks.velocity.runtime.log.AvalonLogSystem
-Mon Sep 02 17:36:27 IDT 2013   [info] Default ResourceManager initializing. (class org.apache.flex.forks.velocity.runtime.resource.ResourceManagerImpl)
-Mon Sep 02 17:36:27 IDT 2013   [info] Resource Loader Instantiated: org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
-Mon Sep 02 17:36:27 IDT 2013   [info] FileResourceLoader : initialization starting.
-Mon Sep 02 17:36:27 IDT 2013   [info] FileResourceLoader : adding path '.'
-Mon Sep 02 17:36:27 IDT 2013   [info] FileResourceLoader : initialization complete.
-Mon Sep 02 17:36:27 IDT 2013   [info] ResourceCache : initialized. (class org.apache.flex.forks.velocity.runtime.resource.ResourceCacheImpl)
-Mon Sep 02 17:36:27 IDT 2013   [info] Default ResourceManager initialization complete.
-Mon Sep 02 17:36:27 IDT 2013   [info] Loaded System Directive: org.apache.flex.forks.velocity.runtime.directive.Literal
-Mon Sep 02 17:36:27 IDT 2013   [info] Loaded System Directive: org.apache.flex.forks.velocity.runtime.directive.Macro
-Mon Sep 02 17:36:27 IDT 2013   [info] Loaded System Directive: org.apache.flex.forks.velocity.runtime.directive.Parse
-Mon Sep 02 17:36:27 IDT 2013   [info] Loaded System Directive: org.apache.flex.forks.velocity.runtime.directive.Include
-Mon Sep 02 17:36:27 IDT 2013   [info] Loaded System Directive: org.apache.flex.forks.velocity.runtime.directive.Foreach
-Mon Sep 02 17:36:28 IDT 2013   [info] Created: 1 parsers.
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : initialization starting.
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : adding VMs from VM library template : VM_global_library.vm
-Mon Sep 02 17:36:28 IDT 2013  [error] ResourceManager : unable to find resource 'VM_global_library.vm' in any resource loader.
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : error using  VM library template VM_global_library.vm : org.apache.flex.forks.velocity.exception.ResourceNotFoundException: Unable to find resource 'VM_global_library.vm'
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro :  VM library template macro registration complete.
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : allowInline = true : VMs can be defined inline in templates
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : allowInlineLocal = false : VMs defined inline will be  global in scope if allowed.
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : messages on  : VM system will output logging messages
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : autoload off  : VM system will not automatically reload global library macros
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : initialization complete.
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocity successfully started.
-Mon Sep 02 17:36:28 IDT 2013   [info] ResourceManager : found flex2/compiler/mxml/gen/ClassDef.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #trace( str ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #embedText( text origLine ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #embedTextMapCompileErrorsOnly( text origLine ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #emitInitializers( indent initializerIterator lvalueBase ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #emitComponentStyleSettings( ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #emitAddedToStageHandlerFunc( ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #emitComponentInitializers_1( ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #emitComponentStyleInitializers( ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #emitBindingInitializers( ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #emitInitialBindingExecutions( ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #emitComponentInitializers_2( ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #emitSelectorAncestor( selector ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #emitStylesInitFunc( fname ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #emitEmbedMetadata( embed ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #emitBindingsSetup( convertedClassName ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #emitInitializerSupportDefs( ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : trace : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : embedText : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : embedTextMapCompileErrorsOnly : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : emitInitializers : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : emitComponentStyleSettings : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : emitAddedToStageHandlerFunc : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : emitComponentInitializers_1 : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : emitComponentStyleInitializers : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : emitBindingInitializers : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : emitInitialBindingExecutions : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : emitComponentInitializers_2 : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : emitSelectorAncestor : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : emitStylesInitFunc : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : emitEmbedMetadata : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : emitBindingsSetup : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : emitInitializerSupportDefs : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [info] ResourceManager : found flex2/compiler/mxml/gen/ClassDefLib.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
-Mon Sep 02 17:36:28 IDT 2013   [info] ResourceManager : found flex2/compiler/mxml/gen/InterfaceDef.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
-Mon Sep 02 17:36:28 IDT 2013   [info] ResourceManager : found flex2/compiler/css/FontFaceRules.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #selectorAncestor( selector ) : source = flex2/compiler/css/StyleDef.vm
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : selectorAncestor : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [info] ResourceManager : found flex2/compiler/css/StyleDef.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : embedText : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #styleSelectorAncestor( selector ) : source = flex2/compiler/css/StyleModule.vm
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : embedText : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : styleSelectorAncestor : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [info] ResourceManager : found flex2/compiler/css/StyleModule.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : embedText : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : embedText : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [info] ResourceManager : found flex2/compiler/css/StyleLibrary.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
-Mon Sep 02 17:36:28 IDT 2013   [info] ResourceManager : found flex2/compiler/as3/EmbedClass.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
-Mon Sep 02 17:36:28 IDT 2013   [info] ResourceManager : found flex2/compiler/as3/binding/BindableProperty.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #writeWatcherChangeEvents( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #writeWatcherListeners( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #writeXMLWatcher( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #writeArrayElementWatcher( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #writeEvaluationWatcherPart( watcher parentVar ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #writeArrayElementWatcherBottom( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #writeFunctionReturnWatcher( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #writePropertyWatcher( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #writeRepeaterComponentWatcher( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #writeRepeaterItemWatcher( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #writeWatcher( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
-Mon Sep 02 17:36:28 IDT 2013   [info] Velocimacro : added new VM : #writeWatcherBottom( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writeWatcherChangeEvents : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writeWatcherListeners : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writeXMLWatcher : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writeArrayElementWatcher : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writeEvaluationWatcherPart : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writeArrayElementWatcherBottom : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writeFunctionReturnWatcher : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writePropertyWatcher : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writeRepeaterComponentWatcher : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writeRepeaterItemWatcher : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writeWatcher : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writeWatcherBottom : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writeArrayElementWatcherBottom : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writeFunctionReturnWatcher : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writePropertyWatcher : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writeRepeaterComponentWatcher : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writeRepeaterItemWatcher : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [warn] Velocimacro : VM addition rejected : writeWatcher : inline not allowed to replace existing VM
-Mon Sep 02 17:36:28 IDT 2013   [info] ResourceManager : found flex2/compiler/as3/binding/WatcherSetupUtil.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
-Mon Sep 02 17:36:28 IDT 2013   [info] ResourceManager : found flex2/compiler/as3/managed/ManagedProperty.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
-Mon Sep 02 17:36:28 IDT 2013   [info] ResourceManager : found flex2/compiler/media/SkinClass.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
+Sun Mar 30 10:49:37 IDT 2014  [debug] AvalonLogSystem initialized using logfile 'velocity.log'
+Sun Mar 30 10:49:37 IDT 2014   [info] ************************************************************** 
+Sun Mar 30 10:49:37 IDT 2014   [info] Starting Jakarta Velocity v1.4
+Sun Mar 30 10:49:37 IDT 2014   [info] RuntimeInstance initializing.
+Sun Mar 30 10:49:37 IDT 2014   [info] Default Properties File: org/apache/flex/forks/velocity/runtime/defaults/velocity.properties
+Sun Mar 30 10:49:37 IDT 2014   [info] Trying to use logger class org.apache.flex.forks.velocity.runtime.log.AvalonLogSystem
+Sun Mar 30 10:49:37 IDT 2014   [info] Using logger class org.apache.flex.forks.velocity.runtime.log.AvalonLogSystem
+Sun Mar 30 10:49:37 IDT 2014   [info] Default ResourceManager initializing. (class org.apache.flex.forks.velocity.runtime.resource.ResourceManagerImpl)
+Sun Mar 30 10:49:37 IDT 2014   [info] Resource Loader Instantiated: org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
+Sun Mar 30 10:49:37 IDT 2014   [info] FileResourceLoader : initialization starting.
+Sun Mar 30 10:49:37 IDT 2014   [info] FileResourceLoader : adding path '.'
+Sun Mar 30 10:49:37 IDT 2014   [info] FileResourceLoader : initialization complete.
+Sun Mar 30 10:49:37 IDT 2014   [info] ResourceCache : initialized. (class org.apache.flex.forks.velocity.runtime.resource.ResourceCacheImpl)
+Sun Mar 30 10:49:37 IDT 2014   [info] Default ResourceManager initialization complete.
+Sun Mar 30 10:49:37 IDT 2014   [info] Loaded System Directive: org.apache.flex.forks.velocity.runtime.directive.Literal
+Sun Mar 30 10:49:37 IDT 2014   [info] Loaded System Directive: org.apache.flex.forks.velocity.runtime.directive.Macro
+Sun Mar 30 10:49:37 IDT 2014   [info] Loaded System Directive: org.apache.flex.forks.velocity.runtime.directive.Parse
+Sun Mar 30 10:49:37 IDT 2014   [info] Loaded System Directive: org.apache.flex.forks.velocity.runtime.directive.Include
+Sun Mar 30 10:49:37 IDT 2014   [info] Loaded System Directive: org.apache.flex.forks.velocity.runtime.directive.Foreach
+Sun Mar 30 10:49:37 IDT 2014   [info] Created: 1 parsers.
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : initialization starting.
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : adding VMs from VM library template : VM_global_library.vm
+Sun Mar 30 10:49:37 IDT 2014  [error] ResourceManager : unable to find resource 'VM_global_library.vm' in any resource loader.
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : error using  VM library template VM_global_library.vm : org.apache.flex.forks.velocity.exception.ResourceNotFoundException: Unable to find resource 'VM_global_library.vm'
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro :  VM library template macro registration complete.
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : allowInline = true : VMs can be defined inline in templates
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : allowInlineLocal = false : VMs defined inline will be  global in scope if allowed.
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : messages on  : VM system will output logging messages
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : autoload off  : VM system will not automatically reload global library macros
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : initialization complete.
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocity successfully started.
+Sun Mar 30 10:49:37 IDT 2014   [info] ResourceManager : found flex2/compiler/mxml/gen/ClassDef.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #trace( str ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #embedText( text origLine ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #embedTextMapCompileErrorsOnly( text origLine ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #emitInitializers( indent initializerIterator lvalueBase ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #emitComponentStyleSettings( ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #emitAddedToStageHandlerFunc( ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #emitComponentInitializers_1( ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #emitComponentStyleInitializers( ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #emitBindingInitializers( ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #emitInitialBindingExecutions( ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #emitComponentInitializers_2( ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #emitSelectorAncestor( selector ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #emitStylesInitFunc( fname ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #emitEmbedMetadata( embed ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #emitBindingsSetup( convertedClassName ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #emitInitializerSupportDefs( ) : source = flex2/compiler/mxml/gen/ClassDefLib.vm
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : trace : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : embedText : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : embedTextMapCompileErrorsOnly : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : emitInitializers : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : emitComponentStyleSettings : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : emitAddedToStageHandlerFunc : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : emitComponentInitializers_1 : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : emitComponentStyleInitializers : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : emitBindingInitializers : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : emitInitialBindingExecutions : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : emitComponentInitializers_2 : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : emitSelectorAncestor : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : emitStylesInitFunc : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : emitEmbedMetadata : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : emitBindingsSetup : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : emitInitializerSupportDefs : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [info] ResourceManager : found flex2/compiler/mxml/gen/ClassDefLib.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
+Sun Mar 30 10:49:37 IDT 2014   [info] ResourceManager : found flex2/compiler/mxml/gen/InterfaceDef.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
+Sun Mar 30 10:49:37 IDT 2014   [info] ResourceManager : found flex2/compiler/css/FontFaceRules.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #selectorAncestor( selector ) : source = flex2/compiler/css/StyleDef.vm
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : selectorAncestor : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [info] ResourceManager : found flex2/compiler/css/StyleDef.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : embedText : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #styleSelectorAncestor( selector ) : source = flex2/compiler/css/StyleModule.vm
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : embedText : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : styleSelectorAncestor : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [info] ResourceManager : found flex2/compiler/css/StyleModule.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : embedText : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : embedText : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [info] ResourceManager : found flex2/compiler/css/StyleLibrary.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
+Sun Mar 30 10:49:37 IDT 2014   [info] ResourceManager : found flex2/compiler/as3/EmbedClass.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
+Sun Mar 30 10:49:37 IDT 2014   [info] ResourceManager : found flex2/compiler/as3/binding/BindableProperty.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #writeWatcherChangeEvents( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #writeWatcherListeners( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #writeXMLWatcher( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #writeArrayElementWatcher( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #writeEvaluationWatcherPart( watcher parentVar ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #writeArrayElementWatcherBottom( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #writeFunctionReturnWatcher( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #writePropertyWatcher( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #writeRepeaterComponentWatcher( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #writeRepeaterItemWatcher( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #writeWatcher( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
+Sun Mar 30 10:49:37 IDT 2014   [info] Velocimacro : added new VM : #writeWatcherBottom( watcher ) : source = flex2/compiler/as3/binding/WatcherSetupUtil.vm
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writeWatcherChangeEvents : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writeWatcherListeners : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writeXMLWatcher : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writeArrayElementWatcher : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writeEvaluationWatcherPart : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writeArrayElementWatcherBottom : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writeFunctionReturnWatcher : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writePropertyWatcher : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writeRepeaterComponentWatcher : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writeRepeaterItemWatcher : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writeWatcher : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writeWatcherBottom : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writeArrayElementWatcherBottom : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writeFunctionReturnWatcher : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writePropertyWatcher : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writeRepeaterComponentWatcher : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writeRepeaterItemWatcher : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [warn] Velocimacro : VM addition rejected : writeWatcher : inline not allowed to replace existing VM
+Sun Mar 30 10:49:37 IDT 2014   [info] ResourceManager : found flex2/compiler/as3/binding/WatcherSetupUtil.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
+Sun Mar 30 10:49:37 IDT 2014   [info] ResourceManager : found flex2/compiler/as3/managed/ManagedProperty.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
+Sun Mar 30 10:49:37 IDT 2014   [info] ResourceManager : found flex2/compiler/media/SkinClass.vm with loader org.apache.flex.forks.velocity.runtime.resource.loader.FileResourceLoader
