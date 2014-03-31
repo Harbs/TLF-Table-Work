@@ -52,7 +52,7 @@ package flashx.textLayout.edit
 	import flashx.textLayout.elements.ParagraphElement;
 	import flashx.textLayout.elements.SubParagraphGroupElement;
 	import flashx.textLayout.elements.TCYElement;
-	import flashx.textLayout.elements.TableDataCellElement;
+	import flashx.textLayout.elements.TableCellElement;
 	import flashx.textLayout.elements.TableElement;
 	import flashx.textLayout.elements.TextFlow;
 	import flashx.textLayout.elements.TextRange;

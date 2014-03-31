@@ -820,7 +820,7 @@ package flashx.textLayout.elements
 		/** @private */
 		tlf_internal override function canOwnFlowElement(elem:FlowElement):Boolean
 		{
-			return elem is FlowLeafElement || elem is SubParagraphGroupElementBase;
+			return elem is FlowLeafElement || elem is SubParagraphGroupElementBase || elem is TableElement;
 		}
 		
 		/** @private */
@@ -887,24 +887,16 @@ package flashx.textLayout.elements
 		// mjzhang : new API for table feature, to discuss
 		public function isInTable():Boolean
 		{
-			var parent:FlowElement = this.parent;
-			while ( parent )
-			{
-				if ( (parent is TableDataCellElement) )
-					return true;
-				parent = parent.parent;
-			}
-				
-			return false;
+			return getTableCellElement() ? true : false;
 		}
 		
-		public function getTableDataCellElement():TableDataCellElement
+		public function getTableCellElement():TableCellElement
 		{
 			var parent:FlowElement = this.parent;
 			while ( parent )
 			{
-				if ( (parent is TableDataCellElement) )
-					return parent as TableDataCellElement;
+				if ( (parent is TableCellElement) )
+					return parent as TableCellElement;
 				parent = parent.parent;
 			}
 			

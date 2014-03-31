@@ -55,7 +55,7 @@ package flashx.textLayout.edit
     import flashx.textLayout.elements.IConfiguration;
     import flashx.textLayout.elements.InlineGraphicElement;
     import flashx.textLayout.elements.ParagraphElement;
-    import flashx.textLayout.elements.TableDataCellElement;
+    import flashx.textLayout.elements.TableCellElement;
     import flashx.textLayout.elements.TableElement;
     import flashx.textLayout.elements.TableRowElement;
     import flashx.textLayout.elements.TextFlow;
@@ -772,7 +772,7 @@ package flashx.textLayout.edit
             //if we don't do this, we won't be able to select across column boundaries.
             var nearestColIdx:int = locateNearestColumn(controller, localX, localY, textFlow.computedFormat.blockProgression,textFlow.computedFormat.direction);
 			//For the table feature, we are trying to make sure if the current point is in the table and which cell it is in
-			var nearestCell:TableDataCellElement = locateNearestCell(controller, localX, localY, textFlow.computedFormat.blockProgression,textFlow.computedFormat.direction);
+			var nearestCell:TableCellElement = locateNearestCell(controller, localX, localY, textFlow.computedFormat.blockProgression,textFlow.computedFormat.direction);
             
             var prevLineBounds:Rectangle = null;
             var previousLineIndex:int = -1;
@@ -852,7 +852,7 @@ package flashx.textLayout.edit
 						if ( inPrevLine && testIndex != lastLineIndexInColumn )
 						{
 							var rtPara:ParagraphElement = rtline.paragraph;
-							var rtCell:TableDataCellElement = rtPara.getTableDataCellElement();
+							var rtCell:TableCellElement = rtPara.getTableCellElement();
 							//get the last element of the cell
 							var lastElement:FlowElement = rtCell.getLastLeaf();
 							var rtLastTbLine:TextFlowLine = lastElement.getParagraph().getTextBlock().lastLine.userData;
@@ -864,7 +864,7 @@ package flashx.textLayout.edit
 								var nextRow:TableRowElement = rtRow.getNextSibling() as TableRowElement;
 								if ( nextRow && rtCell )
 								{
-									var nextCell:TableDataCellElement = nextRow.getChildAt(rtCell.colIndex) as TableDataCellElement;
+									var nextCell:TableCellElement = nextRow.getChildAt(rtCell.colIndex) as TableCellElement;
 									lineIndex = textFlow.flowComposer.findLineIndexAtPosition(nextCell.getFirstLeaf().getParagraph().getAbsoluteStart());
 								}
 							}
@@ -960,14 +960,14 @@ package flashx.textLayout.edit
             return result != -1 ? result : firstCharVisible + length;   
         }
 		
-		static private function locateNearestCell(container:ContainerController, localX:Number, localY:Number, wm:String, direction:String):TableDataCellElement
+		static private function locateNearestCell(container:ContainerController, localX:Number, localY:Number, wm:String, direction:String):TableCellElement
 		{
 			var cellIdx:int = 0;
 			//if we only have 1 column, no need to perform calculation...
 			var columnState:ColumnState = container.columnState;
 			
 			var isFound:Boolean = false;
-			var curCell:TableDataCellElement = null;
+			var curCell:TableCellElement = null;
 			
 			//we need to compare the current column to the nextColmn
 			while(cellIdx < columnState.cellCount - 1)

@@ -23,7 +23,7 @@ package flashx.textLayout.elements
 	use namespace tlf_internal;
 	
 	/** 
-	 * <p> TableRowElement is an item in a TableElement. It most commonly contains one or more TableDataCellElement objects, 
+	 * <p> TableRowElement is an item in a TableElement. It most commonly contains one or more TableCellElement objects, 
 	 * A TableRowElement always appears within a TableElement, TableBodyElement.</p>
 	 *
 	 * 
@@ -57,7 +57,7 @@ package flashx.textLayout.elements
 		/** @private */
 		tlf_internal override function canOwnFlowElement(elem:FlowElement):Boolean
 		{
-			return (elem is TableDataCellElement);
+			return (elem is TableCellElement);
 		}
 		
 		/** @private if its in a numbered list expand the damage to all list items - causes the numbers to be regenerated */

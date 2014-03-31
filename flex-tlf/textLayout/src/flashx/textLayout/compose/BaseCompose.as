@@ -50,7 +50,7 @@ package flashx.textLayout.compose
 	import flashx.textLayout.elements.TCYElement;
 	import flashx.textLayout.elements.TableBodyElement;
 	import flashx.textLayout.elements.TableColElement;
-	import flashx.textLayout.elements.TableDataCellElement;
+	import flashx.textLayout.elements.TableCellElement;
 	import flashx.textLayout.elements.TableElement;
 	import flashx.textLayout.elements.TableFormattedElement;
 	import flashx.textLayout.elements.TableRowElement;
@@ -504,9 +504,9 @@ package flashx.textLayout.compose
 					if ( ! composeTableRowElement(elem as TableElement, rowElement, absStart, isInTable) )
 						return false;
 				}
-				else if (child is TableDataCellElement) // Compose TableDataCellElement
+				else if (child is TableCellElement) // Compose TableCellElement
 				{
-					if ( ! composeTableDataCellElement(elem as TableRowElement, child as TableDataCellElement, absStart, isInTable) )
+					if ( ! composeTableCellElement(elem as TableRowElement, child as TableCellElement, absStart, isInTable) )
 						return false;
 				}
 				else 
@@ -533,8 +533,8 @@ package flashx.textLayout.compose
 				absStart += child.textLength;
 			}
 			
-			//for elements, whose text are all visible, except for TableElement, TableRowElement and TableDataCellElement
-			if(!(elem is TableElement || elem is TableRowElement || elem is TableDataCellElement))
+			//for elements, whose text are all visible, except for TableElement, TableRowElement and TableCellElement
+			if(!(elem is TableElement || elem is TableRowElement || elem is TableCellElement))
 				BackgroundManager.collectBlock(_textFlow, elem);
 			
 			return true;
@@ -652,7 +652,7 @@ package flashx.textLayout.compose
                     // Release textLines before re-compose
                     for ( var i:int = 0; i < rowElement.numChildren; i ++ )
                     {
-                        var cell:TableDataCellElement = rowElement.getChildAt(i) as TableDataCellElement;
+                        var cell:TableCellElement = rowElement.getChildAt(i) as TableCellElement;
                         for ( var j:int = 0; j < cell.numChildren; j ++ )
                         {
                             var paragraph:ParagraphElement = cell.getChildAt(j) as ParagraphElement;
@@ -729,7 +729,7 @@ package flashx.textLayout.compose
 			var ccOfRow:ContainerController = _parcelList.getParcelAt(rowElement.parcelIndex).controller;
 			for ( i = 0; i < rowElement.numChildren; i ++ )
 			{
-				cell = rowElement.getChildAt(i) as TableDataCellElement;
+				cell = rowElement.getChildAt(i) as TableCellElement;
 				cell.height = rowElement.height;
 				_parcelList.addTableCell2ColumnState(ccOfRow, cell);
 			}
@@ -741,12 +741,12 @@ package flashx.textLayout.compose
 		
 		/** @private
 		 * Compose a entire table row element
-		 * In  : TableRowElement, TableDataCellElement, table's absStart position, isInTable
+		 * In  : TableRowElement, TableCellElement, table's absStart position, isInTable
 		 * Out : Boolean value, composition result, true - successful, false - failed
 		 */
-		private function composeTableDataCellElement(rowElement:TableRowElement, cellElement:TableDataCellElement, absStart:int, isInTable:Boolean):Boolean
+		private function composeTableCellElement(rowElement:TableRowElement, cellElement:TableCellElement, absStart:int, isInTable:Boolean):Boolean
 		{
-			//TableDataCellElement's parent must be TableRowElement
+			//TableCellElement's parent must be TableRowElement
 			var tableElement:TableElement = rowElement.getTable();
 			
 			//TO-DO: This is temporary codes, needs to be updated when the real column attribute is implemented

@@ -118,17 +118,17 @@ package flashx.textLayout.elements
 
 			if(elem)
 			{
-				//The height of TableDataCellElement can only be identified after all the cells in the row are composed.
+				//The height of TableCellElement can only be identified after all the cells in the row are composed.
 				//So, pick it out of the common process 
 				if(elem is TableRowElement)
 				{
 					var tabRow:TableRowElement = elem as TableRowElement;
 					//for table cells
-					var cell:TableDataCellElement;
+					var cell:TableCellElement;
 					var cellParcel:Parcel;
 					for(var cIdx:Number = 0; cIdx < elem.numChildren; cIdx++)
 					{
-						cell = elem.getChildAt(cIdx) as TableDataCellElement;
+						cell = elem.getChildAt(cIdx) as TableCellElement;
 						if(BackgroundManager.hasBorderOrBackground(cell) || BackgroundManager.hasBorderOrBackground(elem))
 						{
 							//mark the paragraph that has border or background

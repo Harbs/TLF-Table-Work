@@ -27,11 +27,11 @@ package flashx.textLayout.elements
 		
 		public function getTable():TableElement
 		{
-			// find the root element entry and either return null or the containing textFlow
+			// find the root element entry and either return null or the containing TableElement
 			var elem:FlowGroupElement = this;
-			while ((elem.parent) != null && !( elem.parent is TableElement))
+			while (elem && !( elem is TableElement))
 				elem = elem.parent;
-			return elem.parent as TableElement;		
+			return elem as TableElement;
 		}	
 	}
 }
