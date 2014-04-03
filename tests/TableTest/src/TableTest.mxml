@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="955" minHeight="600" creationComplete="onComplete()">
+	<fx:Script>
+		<![CDATA[
+			import flashx.textLayout.elements.ParagraphElement;
+			import flashx.textLayout.elements.SpanElement;
+			import flashx.textLayout.elements.TableBodyElement;
+			import flashx.textLayout.elements.TableCellElement;
+			import flashx.textLayout.elements.TableColElement;
+			import flashx.textLayout.elements.TableColGroupElement;
+			import flashx.textLayout.elements.TableElement;
+			import flashx.textLayout.elements.TableRowElement;
+			import flashx.textLayout.elements.TextFlow;
+			import flashx.textLayout.formats.TableFrame;
+			import flashx.textLayout.formats.TableRules;
+			
+			import mx.events.FlexEvent;
+			[Bindable]private var textFlow:TextFlow;
+			
+			private function onComplete():void{
+				textFlow = new TextFlow();
+				var table:TableElement = new TableElement();
+				table.tableWidth = 600;
+				//var body:TableBodyElement = new TableBodyElement();
+				//table.addChild(body);
+				for(var i:int=0;i<4;i++){
+					var row:TableRowElement = getTableRow(4);
+					table.addChild(row);var a:TableBodyElement
+				}
+
+				var para:ParagraphElement = new ParagraphElement();
+				var span:SpanElement = new SpanElement();
+				span.text = "Let's try a table...";
+				para.addChild(span);
+				para.addChild(table);
+				textFlow.addChild(para);
+			}
+			private function getTableRow(numCells:int):TableRowElement{
+				var row:TableRowElement = new TableRowElement();
+				for(var i:int=0;i<numCells;i++){
+					var cell:TableCellElement = new TableCellElement();
+					var para:ParagraphElement = new ParagraphElement();
+					var span:SpanElement = new SpanElement();
+					span.text = "This is cell #" + i;
+					para.addChild(span);
+					cell.addChild(para);
+					row.addChild(cell);
+				}
+				return row;
+			}
+			
+		]]>
+	</fx:Script>
+	<s:RichEditableText textFlow="{textFlow}" width="100%" height="100%"/>
+</s:Application>

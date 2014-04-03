@@ -49,8 +49,6 @@ package flashx.textLayout.elements
 	 */
 	public class TableElement extends TableFormattedElement 
 	{
-		private var _row:int;
-		private var _column:int;
 		
 		private var _height:Array = []; // parcel-indexed
 		public var computedWidth:Number;
@@ -64,26 +62,21 @@ package flashx.textLayout.elements
 		public var numAcrossParcels:int;
         public var curRowIdx:int = 0; // this value should be only used while composing
         public var outOfLastParcel:Boolean = false; 
-			
-		private var arColumn:Array = [];
+		
+		private var columns:Vector.<TableColElement> = new Vector.<TableColElement>;
+		private var rows:Vector.<TableRowElement> = new Vector.<TableRowElement>;
+		private var _childrenValidated:Boolean;
 		
 		public function TableElement()
 		{
 			super();
 		}
 		
-		public function initTableElement(row:Number, column:Number):void
-		{
-			_row = row;
-			_column = column;
-			
-			for ( var i:int = 0; i < column; i ++ )
-			{
-				var col:TableColElement = new TableColElement();	
-				arColumn[i] = col;
-			}
+		override public function replaceChildren(beginChildIndex:int, endChildIndex:int, ...rest):void{
+			var args:Array = [beginChildIndex,endChildIndex].concat(rest);
+			super.replaceChildren.apply( this, args );
+			_childrenValidated = false;
 		}
-		
 		/** @private */
 		override protected function get abstract():Boolean
 		{ return false; }
@@ -103,22 +96,60 @@ package flashx.textLayout.elements
 		{
 			super.modelChanged(changeType,elem,changeStart,changeLen,needNormalize,bumpGeneration);
 		}
-		
-		public function get row():int
+		/** @private */
+		private function validateRowsAndColumns():void
 		{
-			return _row;
+			if(_childrenValidated){return;}
+			
+			var rowArr:Array = [];
+			var colArr:Array = [];
+			for(var i:int=0;i<mxmlChildren.length;i++)
+			{
+				if(mxmlChildren[i] is TableColElement)
+					colArr.push(mxmlChildren[i]);
+				else if(mxmlChildren[i] is TableRowElement)
+					rowArr.push(mxmlChildren[i]);
+			}
+			for(i=0;i<rowArr.length;i++){
+				if(rows[i] != rowArr[i])
+					rows[i] = rowArr[i];
+			}
+			if(rows.length != rowArr.length)
+				rows.length = rowArr.length;
+			
+			for(i=0;i<colArr.length;i++){
+				if(columns[i] != colArr[i])
+					columns[i] = colArr[i];
+			}
+			if(columns.length != colArr.length)
+				columns.length = colArr.length;
+			
+			_childrenValidated = true;
+		}
+		public function get numRows():int
+		{
+			validateRowsAndColumns();
+			return rows.length;
 		}
 		
-		public function get column():int
+		public function get numColumns():int
 		{
-			return _column;
+			validateRowsAndColumns();
+			return columns.length;
 		}
 
 		public function getColumnAt(columnIndex:int):TableColElement
 		{
-			if ( columnIndex < 0 || columnIndex >= _column )
+			if ( columnIndex < 0 || columnIndex >= numColumns )
 				return null;
-			return arColumn[columnIndex];
+			return columns[columnIndex];
+		}
+		
+		public function getRowAt(rowIndex:int):TableRowElement
+		{
+			if ( rowIndex < 0 || rowIndex >= numRows )
+				return null;
+			return rows[rowIndex];
 		}
 		
 		public function setColumnWidth(columnIndex:int, value:*):Boolean
