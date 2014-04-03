@@ -74,7 +74,7 @@ package flashx.textLayout.formats
 
 	/**
 	 * The TextLayoutFormat class holds all of the text layout properties. These properties affect the format and style of a text flow at the container level, paragraph level, and text level.  Both the ContainerController class and the FlowElement base class have <code>format</code> properties that enable you to assign a TextLayoutFormat instance to them. Assign a TextLayoutFormat object to a container to affect the format of all of the container's content. Assign a TextLayoutFormat object to a FlowElement descendant to specify formatting for that particular element: TextFlow, ParagraphElement, DivElement, SpanElement, InlineGraphicElement, LinkElement, and TCYElement.
-	 * In addition to the <code>format</code> property, these classes also define each of the individual TextLayoutFormat properties so that you can override the setting of a particular style property for that element, if you wish. <p>Because you can set a given style at multiple levels, it is possible to have conflicts. For example, the color of the text at the TextFlow level could be set to black while a SpanElement object sets it to blue. The general rule is that the setting at the lowest level on the text flow tree takes precedence. So if the ligature level is set for a TextFlow instance and also set for a DivElement, the DivElement setting takes precedence. </p><p>Cascading styles refers to the process of adopting styles from a higher level in the text flow if a style value is undefined at a lower level. When a style is undefined on an element at the point it is about to be rendered, it either takes its default value or the value cascades or descends from the value on a parent element. For example, if the transparency (<code>textAlpha</code> property) of the text is undefined on a SpanElement object, but is set on the TextFlow, the value of the <code>TextFlow.textAlpha</code> property cascades to the SpanElement object and is applied to the text for that span. The result of the cascade, or the sum of the styles that is applied to the element, is stored in the element's <code>computedFormat</code> property.</p><p>In the same way, you can apply user styles using the <code>userStyles</code> property of the ContainerController and FlowElement classes. This  property allows you to read or write a dictionary of user styles and apply its settings to a container or a text flow element. The user styles dictionary is an object that consists of <em>stylename-value</em> pairs. Styles specified by the <code>userStyles</code> property take precedence over all others.</p><p>Most styles that are undefined inherit the value of their immediate parent during a cascade. A small number of styles, however, do not inherit their parentÕs value and take on their default values instead.</p><p><strong>Style properties that adopt their default values, if undefined, include:</strong> <code>backgroundAlpha</code>, <code>backgroundColor</code>, <code>columnCount</code>, <code>columnGap</code>, <code>columnWidth</code>, <code>lineBreak</code>, <code>paddingBottom</code>, <code>paddingLeft</code>, <code>paddingRight</code>, <code>paddingTop</code>, <code>verticalAlign</code></p>.
+	 * In addition to the <code>format</code> property, these classes also define each of the individual TextLayoutFormat properties so that you can override the setting of a particular style property for that element, if you wish. <p>Because you can set a given style at multiple levels, it is possible to have conflicts. For example, the color of the text at the TextFlow level could be set to black while a SpanElement object sets it to blue. The general rule is that the setting at the lowest level on the text flow tree takes precedence. So if the ligature level is set for a TextFlow instance and also set for a DivElement, the DivElement setting takes precedence. </p><p>Cascading styles refers to the process of adopting styles from a higher level in the text flow if a style value is undefined at a lower level. When a style is undefined on an element at the point it is about to be rendered, it either takes its default value or the value cascades or descends from the value on a parent element. For example, if the transparency (<code>textAlpha</code> property) of the text is undefined on a SpanElement object, but is set on the TextFlow, the value of the <code>TextFlow.textAlpha</code> property cascades to the SpanElement object and is applied to the text for that span. The result of the cascade, or the sum of the styles that is applied to the element, is stored in the element's <code>computedFormat</code> property.</p><p>In the same way, you can apply user styles using the <code>userStyles</code> property of the ContainerController and FlowElement classes. This  property allows you to read or write a dictionary of user styles and apply its settings to a container or a text flow element. The user styles dictionary is an object that consists of <em>stylename-value</em> pairs. Styles specified by the <code>userStyles</code> property take precedence over all others.</p><p>Most styles that are undefined inherit the value of their immediate parent during a cascade. A small number of styles, however, do not inherit their parentï¿½s value and take on their default values instead.</p><p><strong>Style properties that adopt their default values, if undefined, include:</strong> <code>backgroundAlpha</code>, <code>backgroundColor</code>, <code>columnCount</code>, <code>columnGap</code>, <code>columnWidth</code>, <code>lineBreak</code>, <code>paddingBottom</code>, <code>paddingLeft</code>, <code>paddingRight</code>, <code>paddingTop</code>, <code>verticalAlign</code></p>.
 	 * @includeExample examples\TextLayoutFormatExample.as -noswf
 	 * @includeExample examples\TextLayoutFormatExample2.as -noswf
 	 * @see flashx.textLayout.elements.FlowElement#format
@@ -953,6 +953,38 @@ package flashx.textLayout.formats
 			return _borderBottomColorProperty;
 		}
 		/** @private */
+		static private var _borderLeftPriorityProperty:Property;
+		static public function get borderLeftPriorityProperty():Property
+		{
+			if (!_borderLeftPriorityProperty)
+				_borderLeftPriorityProperty = Property.NewNumberProperty("borderLeftPriority",0,false,Vector.<String>([Category.TABLE,Category.TABLECELL,Category.TABLECOLUMN,Category.TABLEROW]),-8000,8000);
+			return _borderLeftPriorityProperty;
+		}
+		/** @private */
+		static private var _borderRightPriorityProperty:Property;
+		static public function get borderRightPriorityProperty():Property
+		{
+			if (!_borderRightPriorityProperty)
+				_borderRightPriorityProperty = Property.NewNumberProperty("borderRightPriority",0,false,Vector.<String>([Category.TABLE,Category.TABLECELL,Category.TABLECOLUMN,Category.TABLEROW]),-8000,8000);
+			return _borderRightPriorityProperty;
+		}
+		/** @private */
+		static private var _borderTopPriorityProperty:Property;
+		static public function get borderTopPriorityProperty():Property
+		{
+			if (!_borderTopPriorityProperty)
+				_borderTopPriorityProperty = Property.NewNumberProperty("borderTopPriority",0,false,Vector.<String>([Category.TABLE,Category.TABLECELL,Category.TABLECOLUMN,Category.TABLEROW]),-8000,8000);
+			return _borderTopPriorityProperty;
+		}
+		/** @private */
+		static private var _borderBottomPriorityProperty:Property;
+		static public function get borderBottomPriorityProperty():Property
+		{
+			if (!_borderBottomPriorityProperty)
+				_borderBottomPriorityProperty = Property.NewNumberProperty("borderBottomPriority",0,false,Vector.<String>([Category.TABLE,Category.TABLECELL,Category.TABLECOLUMN,Category.TABLEROW]),-8000,8000);
+			return _borderBottomPriorityProperty;
+		}
+		/** @private */
 		static private var _marginLeftProperty:Property;
 		static public function get marginLeftProperty():Property
 		{
@@ -1015,6 +1047,54 @@ package flashx.textLayout.formats
 			if (!_tableColumnWidthProperty)
 			_tableColumnWidthProperty = Property.NewNumberOrPercentProperty("tableColumnWidth",0,false,Vector.<String>([Category.TABLECOLUMN]),0,8000,"0%","100%")
 			return _tableColumnWidthProperty;
+		}
+		/** @private */
+		static private var _rowSpanProperty:Property;
+		static public function get rowSpanProperty():Property
+		{
+			if (!_rowSpanProperty)
+				_rowSpanProperty = Property.NewIntOrEnumProperty( "rowSpan",1,false,Vector.<String([Category.TABLECELL]),1,8000);
+			return _rowSpanProperty;
+		}
+		/** @private */
+		static private var _columnSpanProperty:Property;
+		static public function get columnSpanProperty():Property
+		{
+			if (!_columnSpanProperty)
+				_columnSpanProperty = Property.NewIntOrEnumProperty( "columnSpan",1,false,Vector.<String([Category.TABLECELL]),1,8000);
+			return _columnSpanProperty;
+		}
+		/** @private */
+		static private var _headerRowCountProperty:Property;
+		static public function get headerRowCountProperty():Property
+		{
+			if (!_headerRowCountProperty)
+				_headerRowCountProperty = Property.NewIntOrEnumProperty( "headerRowCount",1,false,Vector.<String([Category.TABLE]),0,8000);
+			return _headerRowCountProperty;
+		}
+		/** @private */
+		static private var _footerRowCountProperty:Property;
+		static public function get footerRowCountProperty():Property
+		{
+			if (!_footerRowCountProperty)
+				_footerRowCountProperty = Property.NewIntOrEnumProperty( "footerRowCount",1,false,Vector.<String([Category.TABLE]),0,8000);
+			return _footerRowCountProperty;
+		}
+		/** @private */
+		static private var _minCellHeightProperty:Property;
+		static public function get minCellHeightProperty():Property
+		{
+			if (!_minCellHeightProperty)
+				_minCellHeightProperty = Property.NewNumberOrEnumProperty("minCellHeight",2,false,Vector.<String>([Category.TABLE,Category.TABLECELL]),2,8000);
+			return _minCellHeightProperty;
+		}
+		/** @private */
+		static private var _maxCellHeightProperty:Property;
+		static public function get maxCellHeightProperty():Property
+		{
+			if (!_maxCellHeightProperty)
+				_maxCellHeightProperty = Property.NewNumberOrEnumProperty("maxCellHeight",8000,false,Vector.<String>([Category.TABLE,Category.TABLECELL]),2,8000);
+			return _maxCellHeightProperty;
 		}
 		/** @private */
 		static private var _frameProperty:Property;
@@ -1136,6 +1216,16 @@ package flashx.textLayout.formats
 			, tableColumnWidth:tableColumnWidthProperty
 			, frame:frameProperty
 			, rules:rulesProperty
+			, borderLeftPriority:borderLeftPriorityProperty
+			, borderRightPriority:borderRightPriorityProperty
+			, borderTopPriority:borderTopPriorityProperty
+			, borderBottomPriority:borderBottomPriorityProperty
+			, rowSpan:rowSpanProperty
+			, columnSpan:columnSpanProperty
+			, headerRowCount:headerRowCountProperty
+			, footerRowCount:footerRowCountProperty
+			, minCellHeight:minCellHeightProperty
+			, maxCellHeight:maxCellHeightProperty
 		}
 
 		/** Property descriptions accessible by name. @private */
@@ -2962,6 +3052,74 @@ package flashx.textLayout.formats
 		{ setStyleByProperty(TextLayoutFormat.borderBottomColorProperty,value); }
 
 		/**
+		 * Specifies the priority when drawing cell boundaries. When settings between two adjacent cells conflict, the border with the higher priority wins. If the priorities are equal, the latter of the two cells takes priority.
+		 * <p>Legal values are any rational number. Conflicts are resolved with the properties of the higher number being drawn.</p>
+		 * <p>Default value is undefined indicating not set.</p>
+		 * <p>If undefined during the cascade this property will inherit, and default to 0.</p>
+		 * 
+		 * @throws RangeError when set value is not within range for this property
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		function get borderLeftPriority():*
+		{ return _styles.borderLeftPriority; }
+		public function set borderLeftPriority(value:*):void
+		{ setStyleByProperty(TextLayoutFormat.borderLeftPriorityProperty,value); }
+		
+		/**
+		 * Specifies the priority when drawing cell boundaries. When settings between two adjacent cells conflict, the border with the higher priority wins. If the priorities are equal, the latter of the two cells takes priority.
+		 * <p>Legal values are any rational number. Conflicts are resolved with the properties of the higher number being drawn.</p>
+		 * <p>Default value is undefined indicating not set.</p>
+		 * <p>If undefined during the cascade this property will inherit, and default to 0.</p>
+		 * 
+		 * @throws RangeError when set value is not within range for this property
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		function get borderRightPriority():*
+		{ return _styles.borderRightPriority; }
+		public function set borderRightPriority(value:*):void
+		{ setStyleByProperty(TextLayoutFormat.borderRightPriorityProperty,value); }
+		
+		/**
+		 * Specifies the priority when drawing cell boundaries. When settings between two adjacent cells conflict, the border with the higher priority wins. If the priorities are equal, the latter of the two cells takes priority.
+		 * <p>Legal values are any rational number. Conflicts are resolved with the properties of the higher number being drawn.</p>
+		 * <p>Default value is undefined indicating not set.</p>
+		 * <p>If undefined during the cascade this property will inherit, and default to 0.</p>
+		 * 
+		 * @throws RangeError when set value is not within range for this property
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		function get borderTopPriority():*
+		{ return _styles.borderTopPriority; }
+		public function set borderTopPriority(value:*):void
+		{ setStyleByProperty(TextLayoutFormat.borderTopPriorityProperty,value); }
+		
+		/**
+		 * Specifies the priority when drawing cell boundaries. When settings between two adjacent cells conflict, the border with the higher priority wins. If the priorities are equal, the latter of the two cells takes priority.
+		 * <p>Legal values are any rational number. Conflicts are resolved with the properties of the higher number being drawn.</p>
+		 * <p>Default value is undefined indicating not set.</p>
+		 * <p>If undefined during the cascade this property will inherit, and default to 0.</p>
+		 * 
+		 * @throws RangeError when set value is not within range for this property
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		function get borderBottomPriority():*
+		{ return _styles.borderBottomPriority; }
+		public function set borderBottomPriority(value:*):void
+		{ setStyleByProperty(TextLayoutFormat.borderBottomPriorityProperty,value); }
+
+		/**
 		 * left margin in pixels(adopts default value if undefined during cascade).
 		 * <p>Legal values are numbers from -8000 to 8000 and FormatValue.INHERIT.</p>
 		 * <p>Default value is undefined indicating not set.</p>
@@ -3102,6 +3260,110 @@ package flashx.textLayout.formats
 		{ return _styles.tableColumnWidth; }
 		public function set tableColumnWidth(value:*):void
 		{ setStyleByProperty(TextLayoutFormat.tableColumnWidthProperty,value); }
+		
+		/**
+		 * Number of rows a cell spans
+		 * <p>Legal values as a integer are from 1 an up.</p>
+		 * <p>Default value is undefined indicating not set.</p>
+		 * 
+		 * @throws RangeError when set value is not within range for this property
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		public function get rowSpan():*
+		{ return _styles.rowSpan; }
+		public function set rowSpan(value:*):void
+		{ setStyleByProperty(TextLayoutFormat.rowSpanProperty,value); }
+		
+		/**
+		 * Number of columns a cell spans
+		 * <p>Legal values as a integer are from 1 an up.</p>
+		 * <p>Default value is undefined indicating not set.</p>
+		 * 
+		 * @throws RangeError when set value is not within range for this property
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		function get columnSpan():*
+		{ return _styles.columnSpan; }
+		public function set columnSpan(value:*):void
+		{ setStyleByProperty(TextLayoutFormat.columnSpanProperty,value); }
+		
+		/**
+		 * Number of header rows in a table. Header rows will display at the top of each container.
+		 * <p>Legal values as an integer 0 or higher.</p>
+		 * <p>Default value is undefined indicating not set.</p>
+		 * <p>If undefined during the cascade this property will have a value of 0.</p>
+		 * 
+		 * @throws RangeError when set value is not within range for this property
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		function get headerRowCount():*
+		{ return _styles.headerRowCount; }
+		public function set headerRowCount(value:*):void
+		{ setStyleByProperty(TextLayoutFormat.headerRowCountProperty,value); }
+		
+		/**
+		 * Number of footer rows in a table. Footer rows will display at the bottom of each container.
+		 * <p>Legal values as an integer 0 or higher.</p>
+		 * <p>Default value is undefined indicating not set.</p>
+		 * <p>If undefined during the cascade this property will have a value of 0.</p>
+		 * 
+		 * @throws RangeError when set value is not within range for this property
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		function get footerRowCount():*
+		{ return _styles.footerRowCount; }
+		public function set footerRowCount(value:*):void
+		{ setStyleByProperty(TextLayoutFormat.footerRowCountProperty,value); }
+		
+		/**
+		 * Minimum height of a table cell. If there is no maximum, the cell will grow in height to fit the content. Minimum and maximum of the same values will give the cell a fixed height.
+		 * <p>Legal values as a number are from 2 to 10000.</p>
+		 * <p>Legal values include FormatValue.INHERIT.</p>
+		 * <p>Default value is undefined indicating not set.</p>
+		 * <p>If undefined during the cascade this property will have a value of 2.</p>
+		 * 
+		 * @throws RangeError when set value is not within range for this property
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		function get minCellHeight():*
+		{ return _styles.minCellHeight; }
+		public function set minCellHeight(value:*):void
+		{ setStyleByProperty(TextLayoutFormat.minCellHeightProperty,value); }
+		
+		/**
+		 * Maximum height of a table cell. If there is no maximum, the cell will grow in height to fit the content. Minimum and maximum of the same values will give the cell a fixed height.
+		 * <p>Legal values as a number are from 2 to 10000.</p>
+		 * <p>Legal values include FormatValue.INHERIT.</p>
+		 * <p>Default value is undefined indicating not set.</p>
+		 * <p>If undefined during the cascade this property will have a value of 2.</p>
+		 * 
+		 * @throws RangeError when set value is not within range for this property
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		function get maxCellHeight():*
+		{ return _styles.maxCellHeight; }
+		public function set maxCellHeight(value:*):void
+		{ setStyleByProperty(TextLayoutFormat.maxCellHeightProperty,value); }
+
+
 
 		[Inspectable(enumeration="void,above,below,hsides,vsides,lhs,rhs,box,border,inherit")]
 		/**
@@ -3241,6 +3503,26 @@ package flashx.textLayout.formats
 				stylesObject.frame = TextLayoutFormat.frameProperty.defaultValue;
 			if (stylesObject.rules != undefined && stylesObject.rules != TextLayoutFormat.rulesProperty.defaultValue)
 				stylesObject.rules = TextLayoutFormat.rulesProperty.defaultValue;
+			if( stylesObject.borderBottomPriority != undefined &&  stylesObject.borderBottomPriority != TextLayoutFormat.borderBottomPriorityProperty.defaultValue)
+				stylesObject.borderBottomPriority = TextLayoutFormat.borderBottomPriorityProperty.defaultValue;
+			if( stylesObject.borderTopPriority != undefined &&  stylesObject.borderTopPriority != TextLayoutFormat.borderTopPriorityProperty.defaultValue)
+				stylesObject.borderTopPriority = TextLayoutFormat.borderTopPriorityProperty.defaultValue;
+			if( stylesObject.borderLeftPriority != undefined &&  stylesObject.borderLeftPriority != TextLayoutFormat.borderLeftPriorityProperty.defaultValue)
+				stylesObject.borderLeftPriority = TextLayoutFormat.borderLeftPriorityProperty.defaultValue;
+			if( stylesObject.borderRightPriority != undefined &&  stylesObject.borderRightPriority != TextLayoutFormat.borderRightPriorityProperty.defaultValue)
+				stylesObject.borderRightPriority = TextLayoutFormat.borderRightPriorityProperty.defaultValue;
+			if (stylesObject.rowSpan != undefined && stylesObject.rowSpan != TextLayoutFormat.rowSpanProperty.defaultValue)
+				stylesObject.rowSpan = TextLayoutFormat.rowSpanProperty.defaultValue;
+			if (stylesObject.columnSpan != undefined && stylesObject.columnSpan != TextLayoutFormat.columnSpanProperty.defaultValue)
+				stylesObject.columnSpan = TextLayoutFormat.columnSpanProperty.defaultValue;
+			if (stylesObject.headerRowCount != undefined && stylesObject.headerRowCount != TextLayoutFormat.headerRowCountProperty.defaultValue)
+				stylesObject.headerRowCount = TextLayoutFormat.headerRowCountProperty.defaultValue;
+			if (stylesObject.footerRowCount != undefined && stylesObject.footerRowCount != TextLayoutFormat.footerRowCountProperty.defaultValue)
+				stylesObject.footerRowCount = TextLayoutFormat.footerRowCountProperty.defaultValue;
+			if (stylesObject.minCellHeight != undefined && stylesObject.minCellHeight != TextLayoutFormat.minCellHeightProperty.defaultValue)
+				stylesObject.minCellHeight = TextLayoutFormat.minCellHeightProperty.defaultValue;
+			if (stylesObject.maxCellHeight != undefined && stylesObject.maxCellHeight != TextLayoutFormat.maxCellHeightProperty.defaultValue)
+				stylesObject.maxCellHeight = TextLayoutFormat.maxCellHeightProperty.defaultValue;
 		}
 
 		/**

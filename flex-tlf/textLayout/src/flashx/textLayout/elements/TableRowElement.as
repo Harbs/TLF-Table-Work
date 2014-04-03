@@ -57,7 +57,7 @@ package flashx.textLayout.elements
 		/** @private */
 		tlf_internal override function canOwnFlowElement(elem:FlowElement):Boolean
 		{
-			return (elem is TableCellElement);
+			return false;//(elem is TableCellElement);
 		}
 		
 		/** @private if its in a numbered list expand the damage to all list items - causes the numbers to be regenerated */
