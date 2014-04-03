@@ -18,15 +18,16 @@
 			
 			import mx.events.FlexEvent;
 			[Bindable]private var textFlow:TextFlow;
+			private var table:TableElement;
 			
 			private function onComplete():void{
 				textFlow = new TextFlow();
-				var table:TableElement = new TableElement();
+				table = new TableElement();
 				table.tableWidth = 600;
 				//var body:TableBodyElement = new TableBodyElement();
 				//table.addChild(body);
 				for(var i:int=0;i<4;i++){
-					var row:TableRowElement = getTableRow(4);
+					var row:TableRowElement = addTableRow(4);
 					table.addChild(row);var a:TableBodyElement
 				}
 
@@ -37,16 +38,18 @@
 				para.addChild(table);
 				textFlow.addChild(para);
 			}
-			private function getTableRow(numCells:int):TableRowElement{
+			private function addTableRow(numCells:int):TableRowElement{
 				var row:TableRowElement = new TableRowElement();
+				table.addChild(row);
 				for(var i:int=0;i<numCells;i++){
 					var cell:TableCellElement = new TableCellElement();
+					cell.colIndex = i;
 					var para:ParagraphElement = new ParagraphElement();
 					var span:SpanElement = new SpanElement();
 					span.text = "This is cell #" + i;
 					para.addChild(span);
 					cell.addChild(para);
-					row.addChild(cell);
+					table.addChild(cell);
 				}
 				return row;
 			}

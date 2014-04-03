@@ -137,6 +137,90 @@ package flashx.textLayout.elements
 			validateRowsAndColumns();
 			return columns.length;
 		}
+		public function set numRows(value:int):void
+		{
+			while(value < numRows){
+				removeChild(rows[rows.length-1]);
+			}
+			var num:int = numRows;
+			for(var i:int = num;i<value;i++){
+				addChild(new TableRowElement(defaultRowFormat));
+			}
+		}
+
+		public function set numColumns(value:int):void
+		{
+			while(value < numColumns){
+				removeChild(columns[columns.length-1]);
+			}
+			var num:int = numColumns;
+			for(var i:int = num;i<value;i++){
+				addChild(new TableColElement(defaultColumnFormat));
+			}
+		}
+		private var _defaultRowFormat:ITextLayoutFormat;
+
+		public function get defaultRowFormat():ITextLayoutFormat
+		{
+			if(!_defaultRowFormat)
+				_defaultRowFormat = new TextLayoutFormat();
+			return _defaultRowFormat;
+		}
+
+		public function set defaultRowFormat(value:ITextLayoutFormat):void
+		{
+			_defaultRowFormat = value;
+		}
+		
+		private var _defaultColumnFormat:ITextLayoutFormat;
+
+		public function get defaultColumnFormat():ITextLayoutFormat
+		{
+			if(!_defaultColumnFormat)
+				_defaultColumnFormat = new TextLayoutFormat();
+			return _defaultColumnFormat;
+		}
+
+		public function set defaultColumnFormat(value:ITextLayoutFormat):void
+		{
+			_defaultColumnFormat = value;
+		}
+		
+		public function addRow(format:ITextLayoutFormat=null):void{
+			addRowAt(rows.length,format);
+		}
+		public function addRowAt(idx:int,format:ITextLayoutFormat=null):void{
+			if(idx < 0 || idx > rows.length)
+				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
+			
+			var insertIdx:int = 0;
+			if(rows.length){
+				insertIdx = getChildIndex(rows[idx]);
+			} else if(columns.length){
+				insertIdx = getChildIndex(columns[columns.length-1]);
+			}
+			if(!format)
+				format = defaultRowFormat;
+			
+			addChildAt(insertIdx,new TableRowElement(format));
+		}
+
+		public function addColumn(format:ITextLayoutFormat=null):void{
+			addColumnAt(rows.length,format);
+		}
+		public function addColumnAt(idx:int,format:ITextLayoutFormat=null):void{
+			if(idx < 0 || idx > columns.length)
+				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
+			
+			var insertIdx:int = 0;
+			if(rows.length){
+				insertIdx = getChildIndex(columns[idx]);
+			}
+			if(!format)
+				format = defaultColumnFormat;
+			
+			addChildAt(insertIdx,new TableColElement(format));
+		}
 
 		public function getColumnAt(columnIndex:int):TableColElement
 		{

@@ -47,8 +47,8 @@ package flashx.textLayout.elements
 		public var height:Number;
 		private var _parcelIndex:int;
 		
-		private var _rowIndex:int;
-		private var _colIndex:int;
+		private var _rowIndex:int = -1;
+		private var _colIndex:int = -1;
 		
 		/** @private */
 		override protected function get abstract():Boolean
