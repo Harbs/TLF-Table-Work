@@ -65,18 +65,12 @@ package flashx.textLayout.elements
 		
 		private var columns:Vector.<TableColElement> = new Vector.<TableColElement>;
 		private var rows:Vector.<TableRowElement> = new Vector.<TableRowElement>;
-		private var _childrenValidated:Boolean;
 		
 		public function TableElement()
 		{
 			super();
 		}
 		
-		override public function replaceChildren(beginChildIndex:int, endChildIndex:int, ...rest):void{
-			var args:Array = [beginChildIndex,endChildIndex].concat(rest);
-			super.replaceChildren.apply( this, args );
-			_childrenValidated = false;
-		}
 		/** @private */
 		override protected function get abstract():Boolean
 		{ return false; }
@@ -88,7 +82,7 @@ package flashx.textLayout.elements
 		/** @private */
 		tlf_internal override function canOwnFlowElement(elem:FlowElement):Boolean
 		{
-			return  (elem is TableBodyElement) || (elem is TableRowElement) || (elem is TableColElement) || (elem is TableColGroupElement);
+			return  (elem is TableBodyElement) || (elem is TableCellElement); //(elem is TableRowElement) || (elem is TableColElement) || (elem is TableColGroupElement);
 		}
 		
 		/** @private if its in a numbered list expand the damage to all list items - causes the numbers to be regenerated */
@@ -96,66 +90,35 @@ package flashx.textLayout.elements
 		{
 			super.modelChanged(changeType,elem,changeStart,changeLen,needNormalize,bumpGeneration);
 		}
-		/** @private */
-		private function validateRowsAndColumns():void
-		{
-			if(_childrenValidated){return;}
-			
-			var rowArr:Array = [];
-			var colArr:Array = [];
-			for(var i:int=0;i<mxmlChildren.length;i++)
-			{
-				if(mxmlChildren[i] is TableColElement)
-					colArr.push(mxmlChildren[i]);
-				else if(mxmlChildren[i] is TableRowElement)
-					rowArr.push(mxmlChildren[i]);
-			}
-			for(i=0;i<rowArr.length;i++){
-				if(rows[i] != rowArr[i])
-					rows[i] = rowArr[i];
-			}
-			if(rows.length != rowArr.length)
-				rows.length = rowArr.length;
-			
-			for(i=0;i<colArr.length;i++){
-				if(columns[i] != colArr[i])
-					columns[i] = colArr[i];
-			}
-			if(columns.length != colArr.length)
-				columns.length = colArr.length;
-			
-			_childrenValidated = true;
-		}
+		
 		public function get numRows():int
 		{
-			validateRowsAndColumns();
 			return rows.length;
 		}
 		
 		public function get numColumns():int
 		{
-			validateRowsAndColumns();
 			return columns.length;
 		}
 		public function set numRows(value:int):void
 		{
 			while(value < numRows){
-				removeChild(rows[rows.length-1]);
+				rows.pop();
 			}
 			var num:int = numRows;
 			for(var i:int = num;i<value;i++){
-				addChild(new TableRowElement(defaultRowFormat));
+				rows.push(new TableRowElement(defaultRowFormat));
 			}
 		}
 
 		public function set numColumns(value:int):void
 		{
 			while(value < numColumns){
-				removeChild(columns[columns.length-1]);
+				columns.pop();
 			}
 			var num:int = numColumns;
 			for(var i:int = num;i<value;i++){
-				addChild(new TableColElement(defaultColumnFormat));
+				columns.push(new TableColElement(defaultColumnFormat));
 			}
 		}
 		private var _defaultRowFormat:ITextLayoutFormat;
@@ -163,7 +126,7 @@ package flashx.textLayout.elements
 		public function get defaultRowFormat():ITextLayoutFormat
 		{
 			if(!_defaultRowFormat)
-				_defaultRowFormat = new TextLayoutFormat();
+				_defaultRowFormat = new TextLayoutFormat(computedFormat);
 			return _defaultRowFormat;
 		}
 
@@ -177,7 +140,7 @@ package flashx.textLayout.elements
 		public function get defaultColumnFormat():ITextLayoutFormat
 		{
 			if(!_defaultColumnFormat)
-				_defaultColumnFormat = new TextLayoutFormat();
+				_defaultColumnFormat = new TextLayoutFormat(computedFormat);
 			return _defaultColumnFormat;
 		}
 
@@ -193,16 +156,7 @@ package flashx.textLayout.elements
 			if(idx < 0 || idx > rows.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
 			
-			var insertIdx:int = 0;
-			if(rows.length){
-				insertIdx = getChildIndex(rows[idx]);
-			} else if(columns.length){
-				insertIdx = getChildIndex(columns[columns.length-1]);
-			}
-			if(!format)
-				format = defaultRowFormat;
-			
-			addChildAt(insertIdx,new TableRowElement(format));
+			rows.splice(idx,0,new TableRowElement(format));
 		}
 
 		public function addColumn(format:ITextLayoutFormat=null):void{
@@ -212,14 +166,7 @@ package flashx.textLayout.elements
 			if(idx < 0 || idx > columns.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
 			
-			var insertIdx:int = 0;
-			if(rows.length){
-				insertIdx = getChildIndex(columns[idx]);
-			}
-			if(!format)
-				format = defaultColumnFormat;
-			
-			addChildAt(insertIdx,new TableColElement(format));
+			columns.splice(idx,0,new TableColElement(format));
 		}
 
 		public function getColumnAt(columnIndex:int):TableColElement
@@ -234,6 +181,56 @@ package flashx.textLayout.elements
 			if ( rowIndex < 0 || rowIndex >= numRows )
 				return null;
 			return rows[rowIndex];
+		}
+		public function insertColumn(column:TableColElement):Boolean{
+			return insertColumnAt(numColumns,column);
+		}
+		public function insertColumnAt(idx:int,column:TableColElement):Boolean{
+			if(idx < 0 || idx > columns.length)
+				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
+			
+			columns.splice(idx,0,column);
+			return true;
+		}
+		
+		public function insertRow(row:TableRowElement):Boolean{
+			return insertColumnAt(numRows,row);
+		}
+		public function insertRowAt(idx:int,row:TableColElement):Boolean{
+			if(idx < 0 || idx > rows.length)
+				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
+			
+			rows.splice(idx,0,row);
+			return true;
+		}
+		public function removeRow(row:TableRowElement):Boolean{
+			var i:int = rows.indexOf(row);
+			if(i < 0)
+				return false;
+			rows.splice(i,1);
+			return true;
+		}
+		public function removeRowAt(idx:int):Boolean{
+			if(idx < 0 || idx > rows.length - 1)
+				return false;
+			
+			rows.splice(idx,1);
+			return true;
+		}
+		
+		public function removeColumn(column:TableColElement):Boolean{
+			var i:int = columns.indexOf(column);
+			if(i < 0)
+				return false;
+			columns.splice(i,1);
+			return true;
+		}
+		public function removeColumnAt(idx:int):Boolean{
+			if(idx < 0 || idx > columns.length - 1)
+				return false;
+			
+			columns.splice(idx,1);
+			return true;
 		}
 		
 		public function setColumnWidth(columnIndex:int, value:*):Boolean
