@@ -25,13 +25,18 @@ package flashx.textLayout.elements
 	import flash.geom.Point;
 	
 	import flashx.textLayout.container.ContainerController;
+	import flashx.textLayout.container.SimpleContainer;
+	import flashx.textLayout.edit.EditManager;
+	import flashx.textLayout.edit.IEditManager;
+	import flashx.textLayout.edit.ISelectionManager;
+	import flashx.textLayout.events.DamageEvent;
 	import flashx.textLayout.tlf_internal;
+	import flashx.undo.UndoManager;
 	
 	use namespace tlf_internal;
 	
 	/** 
-	 * <p> TableCellElement is an item in a TableRowElement. It most commonly contains one or more ParagraphElement objects, 
-	 * A TableCellElement always appears within a TableRowElement.</p>
+	 * <p> TableCellElement is an item in a TableElement. It most commonly contains one or more ParagraphElement objects.
 	 *
 	 * 
 	 * @playerversion Flash 10
@@ -43,13 +48,24 @@ package flashx.textLayout.elements
 	{		
 		public var x:Number;
 		public var y:Number;
-		public var width:Number;
-		public var height:Number;
+		private var _width:Number;
+		private var _height:Number;
 		private var _parcelIndex:int;
+		private var _container:SimpleContainer;
+		private var _enableIME:Boolean = true;
+		private var _damaged:Boolean = true;
+		private var _controller:ContainerController;
+
 		
 		private var _rowIndex:int = -1;
 		private var _colIndex:int = -1;
 		
+		public function TableCellElement()
+		{
+			super();
+			_controller = new ContainerController(container,NaN,NaN);
+		}
+
 		/** @private */
 		override protected function get abstract():Boolean
 		{ return false; }
@@ -58,42 +74,29 @@ package flashx.textLayout.elements
 		tlf_internal override function get defaultTypeName():String
 		{ return "td"; }
 		
-		/** @private if its in a numbered list expand the damage to all list items - causes the numbers to be regenerated */
-		tlf_internal override function modelChanged(changeType:String, elem:FlowElement, changeStart:int, changeLen:int, needNormalize:Boolean = true, bumpGeneration:Boolean = true):void
-		{
-			super.modelChanged(changeType,elem,changeStart,changeLen,needNormalize,bumpGeneration);
-		}
-		
-		/** @private ListItems must begin with zero or more divs with a paragraph */
-		tlf_internal function normalizeNeedsInitialParagraph():Boolean
-		{
-			var p:FlowGroupElement = this;
-			while (p)
-			{
-				p = p.getChildAt(0) as FlowGroupElement;
-				if (p is ParagraphElement)
-					return false;
-				if (!(p is DivElement))
-					return true;
-			}
-			return true;
-		}
-		
 		/** @private */
-		tlf_internal override function normalizeRange(normalizeStart:uint,normalizeEnd:uint):void
+		tlf_internal override function canOwnFlowElement(elem:FlowElement):Boolean
+		{// Table cells have no TLF children. Instead it contains its own TextFlow.
+			return false;
+		}
+		
+		public function isDamaged():Boolean{
+			return _damaged;
+		}
+		
+		public function compose():Boolean{
+			_damaged = false;
+			if(_textFlow && _textFlow.flowComposer)
+				return _textFlow.flowComposer.compose();
+			return false;
+		}
+		
+		public function update():Boolean
 		{
-			super.normalizeRange(normalizeStart,normalizeEnd);
-			
-			// A TableCellElement must have a Paragraph at the start. 
-			// note not all browsers behave this way.
-			if (normalizeNeedsInitialParagraph())
-			{
-				var p:ParagraphElement = new ParagraphElement();
-				
-				p.replaceChildren(0,0,new SpanElement());
-				replaceChildren(0,0,p);	
-				p.normalizeRange(0,p.textLength);	
+			if(_textFlow && _textFlow.flowComposer){
+				return _textFlow.flowComposer.updateAllControllers();
 			}
+			return false;
 		}
 		
 		public function get parcelIndex():int
@@ -125,6 +128,69 @@ package flashx.textLayout.elements
 		{
 			_colIndex = value;
 		}
+		
+		protected var _textFlow:TextFlow;
+		
+		public function get textFlow():TextFlow
+		{
+			return _textFlow;
+		}
+		
+		public function set textFlow(value:TextFlow):void
+		{
+			if(_textFlow)var a:DamageEvent
+				_textFlow.removeEventListener(DamageEvent.DAMAGE,handleCellDamage);
+			_textFlow = value;
+				_textFlow.addEventListener(DamageEvent.DAMAGE,handleCellDamage);
+		}
+		
+		private function handleCellDamage(ev:DamageEvent):void{
+			getTable().hasCellDamage = true;
+			_damaged = true;
+		}
+
+		public function get enableIME():Boolean
+		{
+			return _enableIME;
+		}
+
+		public function set enableIME(value:Boolean):void
+		{
+			_enableIME = value;
+		}
+		
+		protected function get container():SimpleContainer{
+			if(!_container)
+				_container = new SimpleContainer(enableIME);
+			
+			return _container;
+		}
+
+		public function get width():Number
+		{
+			return _width;
+		}
+
+		public function set width(value:Number):void
+		{
+			_width = _controller.compositionWidth = value;
+			_damaged = true;
+		}
+
+		public function get height():Number
+		{
+			return _height;
+		}
+
+		public function set height(value:Number):void
+		{
+			_height = _controller.compositionHeight = value;
+		}
+		public function getComposedHeight():Number
+		{
+			_controller.getContentBounds().height;
+		}
+
 		
 	}
 }

@@ -63,8 +63,11 @@ package flashx.textLayout.elements
         public var curRowIdx:int = 0; // this value should be only used while composing
         public var outOfLastParcel:Boolean = false; 
 		
-		private var columns:Vector.<TableColElement> = new Vector.<TableColElement>;
-		private var rows:Vector.<TableRowElement> = new Vector.<TableRowElement>;
+		private var columns:Vector.<TableColElement> = new Vector.<TableColElement>();
+		private var rows:Vector.<TableRowElement> = new Vector.<TableRowElement>();
+		private var damagedColumns:Vector.<TableColElement> = new Vector.<TableColElement>();
+		private var damageRows:Vector.<TableRowElement> = new Vector.<TableRowElement>();
+		private var _hasCellDamage:Boolean = true;
 		
 		public function TableElement()
 		{
@@ -235,7 +238,8 @@ package flashx.textLayout.elements
 		
 		public function setColumnWidth(columnIndex:int, value:*):Boolean
 		{
-			var tableColElement:TableColElement = getColumnAt(columnIndex) as TableColElement;
+			//TODO: changing the column width probably requires a recompose of all cells in that column. Mark the cells in that row damaged.
+			var tableColElement:TableColElement = getColumnAt(columnIndex);
 			if ( ! tableColElement )
 				return false;
 			
@@ -243,6 +247,15 @@ package flashx.textLayout.elements
 			return true;
 		}
 		
+		public function setRowHeight(rowIdx:int, value:*):Boolean{
+			//TODO: setting the row hieght might change the composition height of the cells. We'll need to do some housekeeping here.
+			// I'm not sure this function makes sense. We need to handle both min and max values to allow for expanding cells.
+			var row:TableRowElement = getRowAt(rowIdx);
+			if(!row)
+				return false;
+			
+			return true;
+		}
 		public function getColumnWidth(columnIndex:int):*
 		{
 			var tableColElement:TableColElement = getColumnAt(columnIndex) as TableColElement;
@@ -250,7 +263,26 @@ package flashx.textLayout.elements
 				return tableColElement.tableColumnWidth;
 			return 0;
         }
+		
+		public function composeCells():void{
+			// make sure the height that defines the row height did not change. If it did we might need to change the row height.
+			if(!hasCellDamage)
+				return;
+			var damaagedCells:Vector.<TableCellElement> = getDamagedCells();
+			var cell:TableCellElement;
+			for each(cell in damaagedCells){
+				// recompose the cells while tracking row height if necessary
+			}
+		}
         
+		private function getDamagedCells():Vector.<TableCellElement>{
+			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
+			for each (var cell:* in this.mxmlChildren){
+				if((cell is TableCellElement) && cell.isDamaged())
+					cells.push(cell as TableCellElement);
+			}
+			return cells;
+		}
         public function get height():Number
         {
             return _height[numAcrossParcels];
@@ -270,6 +302,17 @@ package flashx.textLayout.elements
         {
             _height = newArray;
         }
+
+		public function get hasCellDamage():Boolean
+		{
+			return _hasCellDamage;
+		}
+
+		public function set hasCellDamage(value:Boolean):void
+		{
+			_hasCellDamage = value;
+		}
+
 		
 	}
 }
