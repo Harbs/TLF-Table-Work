@@ -49,8 +49,8 @@ package flashx.textLayout.compose
 	import flashx.textLayout.elements.SpanElement;
 	import flashx.textLayout.elements.TCYElement;
 	import flashx.textLayout.elements.TableBodyElement;
-	import flashx.textLayout.elements.TableColElement;
 	import flashx.textLayout.elements.TableCellElement;
+	import flashx.textLayout.elements.TableColElement;
 	import flashx.textLayout.elements.TableElement;
 	import flashx.textLayout.elements.TableFormattedElement;
 	import flashx.textLayout.elements.TableRowElement;
@@ -334,64 +334,60 @@ package flashx.textLayout.compose
 			var idx:int = 0;
 			if ( startChildIdx != -1 )
 				idx = startChildIdx;
-			if(!isInTable)
+			
+			if (absStart != _curElementStart + _curElementOffset) 	// starting partway in
 			{
-				if (absStart != _curElementStart + _curElementOffset) 	// starting partway in
+				idx = elem.findChildIndexAtPosition((_curElementStart + _curElementOffset) - absStart);
+				child = elem.getChildAt(idx);
+				absStart += child.parentRelativeStart;
+				
+				// Fix bug#2907691 When composition starts in middle of the container, paddingBottom for the previous paragraph is ignored
+				// add prevous paragraph's paddingBottom values to totalDepth
+				var previousElement:FlowLeafElement = _textFlow.findLeaf(_startComposePosition - 1);
+				if (previousElement)
 				{
-					idx = elem.findChildIndexAtPosition((_curElementStart + _curElementOffset) - absStart);
-					child = elem.getChildAt(idx);
-					absStart += child.parentRelativeStart;
+					var previousParagraph:ParagraphElement = previousElement.getParagraph();
+					if (previousParagraph && previousParagraph != _curElement.getParagraph())
+						if (previousParagraph.paddingBottom != undefined)
+							_parcelList.addTotalDepth(previousParagraph.paddingBottom);
+				}
+				
+				// child is table means recompose starts in the middle of a table. 
+				// In this case, we finished compose the table, then continue
+				// Harbs - need to analize whether this makes sense at all...
+				if ( child is TableElement )
+				{
+					child = _curElement;
+					while ( child && ! (child is TableRowElement) )
+						child = child.parent;
 					
-					// Fix bug#2907691 When composition starts in middle of the container, paddingBottom for the previous paragraph is ignored
-					// add prevous paragraph's paddingBottom values to totalDepth
-					var previousElement:FlowLeafElement = _textFlow.findLeaf(_startComposePosition - 1);
-					if (previousElement)
+					var tableElement:TableElement = child.parent as TableElement;
+					tableElement.totalRowDepth = 0;
+					tableElement.numAcrossParcels = 0;
+					tableElement.originParcelIndex = 0;
+					tableElement.heightArray = [];
+					if ( ! composeBlockElement(child.parent, _curElementStart, true, (child as TableRowElement).rowIndex) )
 					{
-						var previousParagraph:ParagraphElement = previousElement.getParagraph();
-						if (previousParagraph && previousParagraph != _curElement.getParagraph())
-							if (previousParagraph.paddingBottom != undefined)
-								_parcelList.addTotalDepth(previousParagraph.paddingBottom);
-					}
-					
-					// child is table means recompose starts in the middle of a table. 
-					// In this case, we finished compose the table, then continue
-					if ( child is TableElement )
-					{
-						child = _curElement;
-						while ( child && ! (child is TableRowElement) )
-							child = child.parent;
-						
-						var tableElement:TableElement = child.parent as TableElement;
-						tableElement.totalRowDepth = 0;
-						tableElement.numAcrossParcels = 0;
-						tableElement.originParcelIndex = 0;
-						tableElement.heightArray = [];
-						if ( ! composeBlockElement(child.parent, _curElementStart, true, (child as TableRowElement).rowIndex) )
-						{
-							BackgroundManager.collectBlock(_textFlow, tableElement, _parcelList, true);
-							return false;
-						}
-						
-						// Add table border info
-						tableElement.totalRowDepth += tableElement.getEffectiveBorderBottomWidth() + tableElement.computedFormat.cellSpacing;
-						tableElement.height = tableElement.totalRowDepth;
-						
-						absStart = _curElementStart;
-						idx ++;
-						
-						if ( ! gotoParcel(tableElement.numAcrossParcels, tableElement.totalRowDepth) )	
-							return false;
-						
-						_atColumnStart = false;
-						_parcelList.addTotalDepth(tableElement.getEffectiveMarginBottom());
-						
 						BackgroundManager.collectBlock(_textFlow, tableElement, _parcelList, true);
+						return false;
 					}
+					
+					// Add table border info
+					tableElement.totalRowDepth += tableElement.getEffectiveBorderBottomWidth() + tableElement.computedFormat.cellSpacing;
+					tableElement.height = tableElement.totalRowDepth;
+					
+					absStart = _curElementStart;
+					idx ++;
+					
+					if ( ! gotoParcel(tableElement.numAcrossParcels, tableElement.totalRowDepth) )	
+						return false;
+					
+					_atColumnStart = false;
+					_parcelList.addTotalDepth(tableElement.getEffectiveMarginBottom());
+					
+					BackgroundManager.collectBlock(_textFlow, tableElement, _parcelList, true);
 				}
 			}
-
-			
-			
 			
 			var composeEntireElement:Boolean = (absStart == _curElementStart + _curElementOffset);
 
@@ -400,41 +396,38 @@ package flashx.textLayout.compose
 			{
 				child = elem.getChildAt(idx);
 				
-				if(!isInTable)
+				// If the element has clear applied, handle that now
+				if (child.computedFormat.clearFloats != ClearFloats.NONE)
 				{
-					// If the element has clear applied, handle that now
-					if (child.computedFormat.clearFloats != ClearFloats.NONE)
-					{
-						var adjustedDepth:Number = _curParcel.applyClear(child.computedFormat.clearFloats, _parcelList.totalDepth, child.computedFormat.direction);
-						_parcelList.addTotalDepth(adjustedDepth);
-						_verticalSpaceCarried = 0;
-					}
-	
-					var boxLeftIndent:Number;		// logical with respect to horizontal/vertical text
-					var boxRightIndent:Number;		// logical with respect to horizontal/vertical text
-					var boxTopIndent:Number;		// logical with respect to horizontal/vertical text
-					var boxBottomIndent:Number;		// logical with respect to horizontal/vertical text
-					if (_blockProgression == BlockProgression.RL)
-					{
-						boxLeftIndent = child.getEffectivePaddingTop() + child.getEffectiveBorderTopWidth() + child.getEffectiveMarginTop();
-						boxRightIndent = child.getEffectivePaddingBottom() + child.getEffectiveBorderBottomWidth() + child.getEffectiveMarginBottom();
-						boxTopIndent = child.getEffectivePaddingRight() + child.getEffectiveBorderRightWidth() + child.getEffectiveMarginRight();
-						boxBottomIndent = child.getEffectivePaddingLeft() + child.getEffectiveBorderLeftWidth() + child.getEffectiveMarginLeft();
-					}
-					else
-					{
-						boxLeftIndent = child.getEffectivePaddingLeft() + child.getEffectiveBorderLeftWidth() + child.getEffectiveMarginLeft();
-						boxRightIndent = child.getEffectivePaddingRight() + child.getEffectiveBorderRightWidth() + child.getEffectiveMarginRight();
-						boxTopIndent = child.getEffectivePaddingTop() + child.getEffectiveBorderTopWidth() + child.getEffectiveMarginTop();
-						boxBottomIndent = child.getEffectivePaddingBottom() + child.getEffectiveBorderBottomWidth() + child.getEffectiveMarginBottom();
-					}
-					CONFIG::debug { assert(!isNaN(boxLeftIndent) && ! isNaN(boxRightIndent),"BAD indents"); }
-					_parcelList.pushLeftMargin(boxLeftIndent);
-					_parcelList.pushRightMargin(boxRightIndent);
-					if (composeEntireElement && boxTopIndent > _verticalSpaceCarried)
-						_parcelList.addTotalDepth(boxTopIndent - _verticalSpaceCarried);
-					_verticalSpaceCarried = Math.max(boxTopIndent, 0);
+					var adjustedDepth:Number = _curParcel.applyClear(child.computedFormat.clearFloats, _parcelList.totalDepth, child.computedFormat.direction);
+					_parcelList.addTotalDepth(adjustedDepth);
+					_verticalSpaceCarried = 0;
 				}
+				
+				var boxLeftIndent:Number;		// logical with respect to horizontal/vertical text
+				var boxRightIndent:Number;		// logical with respect to horizontal/vertical text
+				var boxTopIndent:Number;		// logical with respect to horizontal/vertical text
+				var boxBottomIndent:Number;		// logical with respect to horizontal/vertical text
+				if (_blockProgression == BlockProgression.RL)
+				{
+					boxLeftIndent = child.getEffectivePaddingTop() + child.getEffectiveBorderTopWidth() + child.getEffectiveMarginTop();
+					boxRightIndent = child.getEffectivePaddingBottom() + child.getEffectiveBorderBottomWidth() + child.getEffectiveMarginBottom();
+					boxTopIndent = child.getEffectivePaddingRight() + child.getEffectiveBorderRightWidth() + child.getEffectiveMarginRight();
+					boxBottomIndent = child.getEffectivePaddingLeft() + child.getEffectiveBorderLeftWidth() + child.getEffectiveMarginLeft();
+				}
+				else
+				{
+					boxLeftIndent = child.getEffectivePaddingLeft() + child.getEffectiveBorderLeftWidth() + child.getEffectiveMarginLeft();
+					boxRightIndent = child.getEffectivePaddingRight() + child.getEffectiveBorderRightWidth() + child.getEffectiveMarginRight();
+					boxTopIndent = child.getEffectivePaddingTop() + child.getEffectiveBorderTopWidth() + child.getEffectiveMarginTop();
+					boxBottomIndent = child.getEffectivePaddingBottom() + child.getEffectiveBorderBottomWidth() + child.getEffectiveMarginBottom();
+				}
+				CONFIG::debug { assert(!isNaN(boxLeftIndent) && ! isNaN(boxRightIndent),"BAD indents"); }
+				_parcelList.pushLeftMargin(boxLeftIndent);
+				_parcelList.pushRightMargin(boxRightIndent);
+				if (composeEntireElement && boxTopIndent > _verticalSpaceCarried)
+					_parcelList.addTotalDepth(boxTopIndent - _verticalSpaceCarried);
+				_verticalSpaceCarried = Math.max(boxTopIndent, 0);
 								
 				
 				var para:ParagraphElement = child as ParagraphElement;
@@ -468,7 +461,7 @@ package flashx.textLayout.compose
 				}
 				else if (child is ListElement)
 				{						
-					rslt = composeBlockElement(FlowGroupElement(child),absStart,isInTable);
+					rslt = composeBlockElement(FlowGroupElement(child),absStart);
 					
 					if (!rslt)
 					{
@@ -481,7 +474,7 @@ package flashx.textLayout.compose
 				{
 					var savedListItemElement:ListItemElement = _listItemElement;
 					_listItemElement = child as ListItemElement;
-					rslt = composeBlockElement(FlowGroupElement(child),absStart,isInTable);
+					rslt = composeBlockElement(FlowGroupElement(child),absStart);
 					_listItemElement = savedListItemElement;
 						
 					if (!rslt)
@@ -493,20 +486,7 @@ package flashx.textLayout.compose
 				}
 				else if (child is TableElement)         // Compose TableElement
 				{
-					if ( ! composeTableElement(child as TableElement, absStart, isInTable) )
-						return false;
-				}
-				else if (child is TableRowElement)     // Compose TableRowElement
-				{
-					var rowElement:TableRowElement = child as TableRowElement;
-					rowElement.rowIndex = idx;
-					
-					if ( ! composeTableRowElement(elem as TableElement, rowElement, absStart, isInTable) )
-						return false;
-				}
-				else if (child is TableCellElement) // Compose TableCellElement
-				{
-					if ( ! composeTableCellElement(elem as TableRowElement, child as TableCellElement, absStart, isInTable) )
+					if ( ! composeTableElement(child as TableElement, absStart) )
 						return false;
 				}
 				else 
@@ -519,22 +499,20 @@ package flashx.textLayout.compose
 					}
 				}
 				
-				if(! isInTable)
-				{
-					if (boxBottomIndent > _verticalSpaceCarried)
-						_parcelList.addTotalDepth(boxBottomIndent - _verticalSpaceCarried);
-					_verticalSpaceCarried = Math.max(boxBottomIndent, 0);
-	
-					// restore to original values
-					_parcelList.popLeftMargin(boxLeftIndent);
-					_parcelList.popRightMargin(boxRightIndent);
-					composeEntireElement = true;
-				}
+				if (boxBottomIndent > _verticalSpaceCarried)
+					_parcelList.addTotalDepth(boxBottomIndent - _verticalSpaceCarried);
+				_verticalSpaceCarried = Math.max(boxBottomIndent, 0);
+				
+				// restore to original values
+				_parcelList.popLeftMargin(boxLeftIndent);
+				_parcelList.popRightMargin(boxRightIndent);
+				composeEntireElement = true;
+				
 				absStart += child.textLength;
 			}
 			
 			//for elements, whose text are all visible, except for TableElement, TableRowElement and TableCellElement
-			if(!(elem is TableElement || elem is TableRowElement || elem is TableCellElement))
+			if(!(elem is TableElement))//  || elem is TableRowElement || elem is TableCellElement (we don't process these...)
 				BackgroundManager.collectBlock(_textFlow, elem);
 			
 			return true;
@@ -545,8 +523,20 @@ package flashx.textLayout.compose
 		 * In  : TableElement, table's absStart position, isInTable
 		 * Out : Boolean value, composition result, true - successful, false - failed
 		 */
-		private function composeTableElement(tableElement:TableElement, absStart:int, isInTable:Boolean):Boolean
+		private function composeTableElement(tableElement:TableElement, absStart:int):Boolean
 		{
+			// step 1 -- make sure all cells are composed
+			tableElement.composeCells();
+			
+			// step 2 get header and footer heights
+			var baseTableHeight:Number = tableElement.getHeaderHight() + tableElement.getFooterHeight();
+			
+			// step 3 loop through the cells and assign them to containers and set the positions
+			
+			// step 4 draw the backgrounds and borders
+			
+			/*
+			// old process. Leaving it here for reference...
 			//1st step findout the TableGroup element and get the composing parameter for the columns
 			//my first idea is to read them to be a TableElement list or map. And remove all the column 
 			//element so that the column element will not fall into the recursive loop
@@ -610,194 +600,10 @@ package flashx.textLayout.compose
 			
 			BackgroundManager.collectBlock(_textFlow, tableElement, _parcelList);
 			return true;
+			*/
 		}
 		
-		/** @private
-		 * Compose a entire table row element
-		 * In  : TableElement, TableRowElement, table's absStart position, isInTable
-		 * Out : Boolean value, composition result, true - successful, false - failed
-		 */
-		private function composeTableRowElement(tableElement:TableElement, rowElement:TableRowElement, absStart:int, isInTable:Boolean):Boolean
-		{
-			rowElement.iMaxRowDepth = 0;
-            rowElement.columnIndex = 0;
-			
-			// Add table cell spacing value
-			tableElement.totalRowDepth += tableElement.computedFormat.cellSpacing;
-			
-			// Save environment parameters before compose a table row, because maybe this row out of "current" parcel, 
-			// in that case, we need to reload these parameters, then recompose this row.
-			var curParaStart:int = _curParaStart;
-			var curElementStart:int = _curElementStart;
-			var curParcelStart:int = _curParcelStart;
-			var curElement:FlowLeafElement = _curElement;
-			var curParaElement:ParagraphElement = _curParaElement;
-            
-            if ( ! composeBlockElement(FlowGroupElement(rowElement), absStart, isInTable) )
-			{
-				// Compose row failed, see if we it's because of out of parcel
-				if ( rowElement.beyondParcel )
-				{
-                    var nextParcel:Parcel = _parcelList.getParcelAt(tableElement.originParcelIndex + tableElement.numAcrossParcels + 1);
 
-                    if(tableElement.curRowIdx == 0)
-                    {
-                        if(!nextParcel || nextParcel.isTableParcel)
-                        {
-                            tableElement.x = tableElement.computedFormat.marginLeft;
-                            tableElement.y = tableElement.totalRowDepth;
-                        }
-                    }
-                    
-                    // Release textLines before re-compose
-                    for ( var i:int = 0; i < rowElement.numChildren; i ++ )
-                    {
-                        var cell:TableCellElement = rowElement.getChildAt(i) as TableCellElement;
-                        for ( var j:int = 0; j < cell.numChildren; j ++ )
-                        {
-                            var paragraph:ParagraphElement = cell.getChildAt(j) as ParagraphElement;
-                            var textBlock:TextBlock = paragraph.getTextBlock();
-                            _parcelList.currentParcel.controller.clearFloatsAt(paragraph.getAbsoluteStart());
-                            for (var textLine:TextLine = textBlock.lastLine; textLine; )
-                            {
-                                textBlock.releaseLines(textLine, textLine);
-                                textLine.userData = null;
-                                textLine.visible = false;
-                                //TextLineRecycler.addLineForReuse(textLine);
-                                if (_textFlow.backgroundManager)
-                                    _textFlow.backgroundManager.removeLineFromCache(textLine);
-                                textLine = textBlock.lastLine;
-                            }
-                            paragraph.releaseTextBlock();
-                        }
-                    }
-                    
-					// If table already full the last column, we won't goto table cell parcel. Just goto last not table cell parcel
-					if ( ! nextParcel || nextParcel.isTableParcel)
-                    {
-                        tableElement.outOfLastParcel = true;
-						return false;
-                    }
-                    
-                    if(tableElement.curRowIdx > 0)
-                    {
-                        tableElement.numAcrossParcels ++;
-                        tableElement.heightArray.push(0);
-                        tableElement.totalRowDepth = nextParcel.y + tableElement.computedFormat.cellSpacing;
-                    }
-                    else if(tableElement.curRowIdx == 0)
-                    {
-                        tableElement.originParcelIndex++;
-                        tableElement.x = nextParcel.x + tableElement.computedFormat.marginLeft;
-                        tableElement.y = nextParcel.y;
-                        tableElement.totalRowDepth = nextParcel.y + tableElement.computedFormat.cellSpacing + tableElement.getEffectiveBorderTopWidth();
-                    }
-
-					rowElement.beyondParcel = false;
-                    
-                    // Reload values for recompose
-                    _curParaStart = curParaStart;
-                    _curElementStart = curElementStart;
-                    _curParcelStart = curParcelStart;
-                    _curElement = curElement;
-                    _curParaElement = curParaElement;
-                    _curElementOffset = 0;
-                    _contentLogicalExtent = 0;
-                    rowElement.columnIndex = 0;
-                    
-					// Recompose current table row
-					if ( ! composeBlockElement(FlowGroupElement(rowElement), absStart, isInTable) )
-						return false;
-				}
-			}
-			
-            var curParcel:Parcel = _parcelList.getParcelAt(tableElement.originParcelIndex + tableElement.numAcrossParcels);
-			rowElement.parcelIndex = tableElement.originParcelIndex + tableElement.numAcrossParcels;
-			rowElement.height = rowElement.iMaxRowDepth;
-			rowElement.x = curParcel.x;
-			rowElement.y = tableElement.totalRowDepth;
-			tableElement.totalRowDepth += rowElement.height;
-			
-			if(tableElement.numAcrossParcels == 0 && _startComposePosition <= tableElement.getAbsoluteStart())
-				tableElement.height = tableElement.totalRowDepth - tableElement.y;
-			else
-				tableElement.height = tableElement.totalRowDepth;
-			
-			tableElement.height += tableElement.cellSpacing;
-			
-			// Add table cell to columnState for hitTest
-			var ccOfRow:ContainerController = _parcelList.getParcelAt(rowElement.parcelIndex).controller;
-			for ( i = 0; i < rowElement.numChildren; i ++ )
-			{
-				cell = rowElement.getChildAt(i) as TableCellElement;
-				cell.height = rowElement.height;
-				_parcelList.addTableCell2ColumnState(ccOfRow, cell);
-			}
-			
-			BackgroundManager.collectBlock(_textFlow, rowElement, _parcelList);
-            tableElement.curRowIdx++;
-			return true;
-		}
-		
-		/** @private
-		 * Compose a entire table row element
-		 * In  : TableRowElement, TableCellElement, table's absStart position, isInTable
-		 * Out : Boolean value, composition result, true - successful, false - failed
-		 */
-		private function composeTableCellElement(rowElement:TableRowElement, cellElement:TableCellElement, absStart:int, isInTable:Boolean):Boolean
-		{
-			//TableCellElement's parent must be TableRowElement
-			var tableElement:TableElement = rowElement.getTable();
-			
-			//TO-DO: This is temporary codes, needs to be updated when the real column attribute is implemented
-			var currParcel:Parcel = _parcelList.getParcelAt(tableElement.originParcelIndex + tableElement.numAcrossParcels);
-			cellElement.x = currParcel.x + tableElement.getColumnAt(rowElement.columnIndex).x;
-			cellElement.y = tableElement.totalRowDepth;
-			cellElement.width = tableElement.getColumnWidth(rowElement.columnIndex);
-			cellElement.height = undefined;
-			var rc:Rectangle = new Rectangle(cellElement.x, cellElement.y, cellElement.width, 8000); // 8000 is Max row height
-			cellElement.parcelIndex = _parcelList.numParcels();
-			var newParcel:Parcel = _parcelList.addParcel(rc, currParcel.controller,
-				tableElement.originParcelIndex + tableElement.numAcrossParcels);
-			newParcel.isTableParcel = true;
-			
-			if ( ! gotoParcel(cellElement.parcelIndex, 0) )
-				return false;
-			
-			// Add border and cell padding
-			_parcelList.addTotalDepth(cellElement.getEffectiveBorderTopWidth() + cellElement.computedFormat.cellPadding);
-			_parcelList.pushLeftMargin(cellElement.getEffectiveBorderLeftWidth() + cellElement.computedFormat.cellPadding);
-			_parcelList.pushRightMargin(cellElement.getEffectiveBorderRightWidth() + cellElement.computedFormat.cellPadding);
-			
-			// fall into the recursive loop directly
-			if ( ! composeBlockElement(FlowGroupElement(cellElement), absStart, isInTable) )
-				return false;
-			
-			// Add border and cell padding, pop out padding margin
-			_parcelList.addTotalDepth(cellElement.getEffectiveBorderBottomWidth() + cellElement.computedFormat.cellPadding);
-			_parcelList.popLeftMargin(cellElement.getEffectiveBorderLeftWidth() + cellElement.computedFormat.cellPadding);
-			_parcelList.popRightMargin(cellElement.getEffectiveBorderRightWidth() + cellElement.computedFormat.cellPadding);
-			
-			//TO-DO, The codes may be changed, mingjun's original codes are as following:
-			//cellElement.height = _parcelList.totalDepth + paragraph.paddingBottom + paragraph.borderBottomWidth + paragraph.marginBottom;
-			cellElement.height = _parcelList.totalDepth;
-			if ( cellElement.height > rowElement.iMaxRowDepth )
-				rowElement.iMaxRowDepth = cellElement.height;
-			rowElement.columnIndex ++;
-			
-			// See if the composed line beyond "current" parcel's bottom
-			if ( tableElement.totalRowDepth + rowElement.iMaxRowDepth > currParcel.bottom)
-			{
-				rowElement.beyondParcel = true;
-				
-				// Pop out useless parcels for this row
-				for ( var n:int = 0; n < rowElement.columnIndex; n ++ )
-					_parcelList.popParcel();
-				return false;
-			}
-			
-			return true;
-		}
 		
 		/** @private
 		 * Calculate table columm width based on column's width value, the rule is :

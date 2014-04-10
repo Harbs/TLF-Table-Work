@@ -1024,6 +1024,24 @@ package flashx.textLayout.elements
 		}
 		
 		
+		public function isInTable():Boolean
+		{
+			var tf:TextFlow = getTextFlow();
+			return tf && tf.parentElement && tf.parentElement is TableCellElement;
+		}
+		
+		public function getParentCellElement():TableCellElement
+		{
+			var tf:TextFlow = getTextFlow();
+			
+			if(!tf)
+				return null;
+			if(tf.parentElement && tf.parentElement is TableCellElement)
+				return tf.parentElement as TableCellElement;
+			return null;
+		}
+
+		
 		/** 
 		 * Returns the FlowElement object that contains this FlowElement object, if this element is contained within 
 		 * an element of a particular type. 

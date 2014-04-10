@@ -142,6 +142,8 @@ package flashx.textLayout.elements
 				_textFlow.removeEventListener(DamageEvent.DAMAGE,handleCellDamage);
 			_textFlow = value;
 				_textFlow.addEventListener(DamageEvent.DAMAGE,handleCellDamage);
+				
+			_textFlow.parentElement = this;
 		}
 		
 		private function handleCellDamage(ev:DamageEvent):void{

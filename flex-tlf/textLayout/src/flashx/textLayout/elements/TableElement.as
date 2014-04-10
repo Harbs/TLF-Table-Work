@@ -274,6 +274,21 @@ package flashx.textLayout.elements
 				// recompose the cells while tracking row height if necessary
 			}
 		}
+		
+		public function getHeaderHight():Number{
+			//TODO: compute the header height from the header cells
+			return 0;
+		}
+		public function getFooterHeight():Number{
+			//TODO: compute the footer height from the footer cells
+			return 0;
+			
+		}
+		
+		public function normalizeColumnWidths(suggestedWidth:Number = 600):void{
+			//TODO: before composition make sure all column widths are rational numbers
+			// We feed in a width to use if there's no width otherwise specified.
+		}
         
 		private function getDamagedCells():Vector.<TableCellElement>{
 			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();

@@ -1259,12 +1259,14 @@ package flashx.textLayout.edit
 			if (!operationState)
 				return;
 
+			/*
+			This should not be necessary...
 			// mjzhang : fix for table
 			var leaf:FlowLeafElement = textFlow.findLeaf(operationState.absoluteStart);
 			var para:ParagraphElement = leaf.getParagraph();
 			if ( para.isInTable() )
 				return;
-			
+			*/
 			// Delete the next character if it's a caret selection, and allow adejacent delete next's to merge
 			// If it's a range selection, delete the range and disallow merge
 			var deleteOp:DeleteTextOperation;
@@ -1369,10 +1371,12 @@ package flashx.textLayout.edit
 				}
 				if(movePara)
 				{
+					/*
+					should not be necessary...
 					// mjzhang: fix for table feature
 					if ( para.isInTable() )
 						return;
-					
+					*/
 					var source:FlowGroupElement;
 					var target:FlowGroupElement;
 					var numElementsToMove:int;
