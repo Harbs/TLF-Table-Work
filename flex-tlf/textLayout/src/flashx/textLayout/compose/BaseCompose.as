@@ -529,9 +529,15 @@ package flashx.textLayout.compose
 			tableElement.composeCells();
 			
 			// step 2 get header and footer heights
+			// I'm not sure if we need to calculate table padding/margin
 			var baseTableHeight:Number = tableElement.getHeaderHight() + tableElement.getFooterHeight();
 			
 			// step 3 loop through the cells and assign them to containers and set the positions
+			
+			//reference ComposeState.composeNextLine() which creates the the TextLine.
+			// We don't need getLineSlug() because tables can extend beyond the container width
+			// We do need to get the available height and push any cells that don't fit to the next Parcel/container
+			// Repeat until there's no more Parcels.
 			
 			// step 4 draw the backgrounds and borders
 			
