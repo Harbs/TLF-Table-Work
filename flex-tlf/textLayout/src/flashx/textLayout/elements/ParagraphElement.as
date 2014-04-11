@@ -33,7 +33,6 @@ package flashx.textLayout.elements
 	import flash.text.engine.TextRotation;
 	import flash.utils.getQualifiedClassName;
 	
-	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.compose.TextFlowLine;
 	import flashx.textLayout.container.ContainerController;
 	import flashx.textLayout.debug.Debugging;
@@ -50,6 +49,7 @@ package flashx.textLayout.elements
 	import flashx.textLayout.formats.TextJustify;
 	import flashx.textLayout.formats.TextLayoutFormat;
 	import flashx.textLayout.property.Property;
+	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.utils.CharacterUtil;
 	import flashx.textLayout.utils.LocaleUtil;
 	
@@ -884,24 +884,6 @@ package flashx.textLayout.elements
 			}
 		}
 		
-		// mjzhang : new API for table feature, to discuss
-		public function isInTable():Boolean
-		{
-			return getTableCellElement() ? true : false;
-		}
-		
-		public function getTableCellElement():TableCellElement
-		{
-			var parent:FlowElement = this.parent;
-			while ( parent )
-			{
-				if ( (parent is TableCellElement) )
-					return parent as TableCellElement;
-				parent = parent.parent;
-			}
-			
-			return null;
-		}
 		/** @private */
 		tlf_internal function getEffectiveLeadingModel():String
 		{
