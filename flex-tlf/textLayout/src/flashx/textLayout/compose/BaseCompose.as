@@ -530,10 +530,60 @@ package flashx.textLayout.compose
 			
 			// step 2 get header and footer heights
 			// I'm not sure if we need to calculate table padding/margin
-			var baseTableHeight:Number = tableElement.getHeaderHight() + tableElement.getFooterHeight();
+			//var baseTableHeight:Number = tableElement.getHeaderHeight() + tableElement.getFooterHeight();
+			
+			var headerHeight:Number = tableElement.getHeaderHeight();
+			var footerHeight:Number = tableElement.getFooterHeight();
+			
+			// need to calculate margins and padding as well. (top, bottom and sides) It should inherit from the containing paragraph if necessary.
+			// I'm assuming tables can inherit proeprties from paragraphs.
 			
 			// step 3 loop through the cells and assign them to containers and set the positions
+
+			//grab the headers and footers for use in each parcel
+			var headerRows:Vector.< Vector.<TableCellElement> > = tableElement.getHeaderRows();
+			var footerRows:Vector.< Vector.<TableCellElement> > = tableElement.getFooterRows();
 			
+			var curRow:Vector.<TableCellElement> = tableElement.getNextRow();
+			
+			while(curRow){
+				
+				// I'm ignoring headers and footers for now. We need to add them in later.
+				var rIdx:int = curRow[0].rowIndex;
+				var curRowElem:TableRowElement = tableElement.getRowAt(rIdx);
+				var rowHeight:Number = curRowElem.composedHeight;
+				var minRowHeight:Number = curRowElem.totalHeight;
+				//_parcelList.addTotalDepth(tableElement.getEffectiveMarginBottom());
+				while(
+					!(_parcelList.currentParcel.fitsInHeight(_parcelList.totalDepth,minRowHeight + footerHeight))
+				){
+					//TODO: add in footer rows...
+					
+					_parcelList.next();
+					
+					//TODO: add in header rows. Collect them on the next iteration if no real rows fit.
+					
+					if(_parcelList.currentParcel == null)
+						break;
+				}
+				if(_parcelList.currentParcel == null)
+					break;
+				
+				// we have a parcel and a row. Let's add the cells.
+				for each(var cell:TableCellElement in curRow){
+					cell.container.y = _parcelList.totalDepth;
+					cell.container.x = curRowElem.x;
+					// add the cells to _parcelList.currentParcel.controller
+					// need to figure out exactly how.
+					
+				}
+				// add the row height
+				// we're assuming normal top to bottom tables -- not Japanese ones...
+				_parcelList.addTotalDepth(rowHeight);
+				
+				curRow = tableElement.getNextRow();
+			}
+
 			//reference ComposeState.composeNextLine() which creates the the TextLine.
 			// We don't need getLineSlug() because tables can extend beyond the container width
 			// We do need to get the available height and push any cells that don't fit to the next Parcel/container

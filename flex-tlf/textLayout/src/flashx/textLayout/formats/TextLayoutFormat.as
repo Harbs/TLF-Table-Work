@@ -1065,22 +1065,6 @@ package flashx.textLayout.formats
 			return _columnSpanProperty;
 		}
 		/** @private */
-		static private var _headerRowCountProperty:Property;
-		static public function get headerRowCountProperty():Property
-		{
-			if (!_headerRowCountProperty)
-				_headerRowCountProperty = Property.NewIntOrEnumProperty( "headerRowCount",1,false,Vector.<String([Category.TABLE]),0,8000);
-			return _headerRowCountProperty;
-		}
-		/** @private */
-		static private var _footerRowCountProperty:Property;
-		static public function get footerRowCountProperty():Property
-		{
-			if (!_footerRowCountProperty)
-				_footerRowCountProperty = Property.NewIntOrEnumProperty( "footerRowCount",1,false,Vector.<String([Category.TABLE]),0,8000);
-			return _footerRowCountProperty;
-		}
-		/** @private */
 		static private var _minCellHeightProperty:Property;
 		static public function get minCellHeightProperty():Property
 		{
@@ -1222,8 +1206,6 @@ package flashx.textLayout.formats
 			, borderBottomPriority:borderBottomPriorityProperty
 			, rowSpan:rowSpanProperty
 			, columnSpan:columnSpanProperty
-			, headerRowCount:headerRowCountProperty
-			, footerRowCount:footerRowCountProperty
 			, minCellHeight:minCellHeightProperty
 			, maxCellHeight:maxCellHeightProperty
 		}
@@ -3294,40 +3276,6 @@ package flashx.textLayout.formats
 		{ setStyleByProperty(TextLayoutFormat.columnSpanProperty,value); }
 		
 		/**
-		 * Number of header rows in a table. Header rows will display at the top of each container.
-		 * <p>Legal values as an integer 0 or higher.</p>
-		 * <p>Default value is undefined indicating not set.</p>
-		 * <p>If undefined during the cascade this property will have a value of 0.</p>
-		 * 
-		 * @throws RangeError when set value is not within range for this property
-		 * 
-		 * @playerversion Flash 10
-		 * @playerversion AIR 1.5
-		 * @langversion 3.0
-		 */
-		function get headerRowCount():*
-		{ return _styles.headerRowCount; }
-		public function set headerRowCount(value:*):void
-		{ setStyleByProperty(TextLayoutFormat.headerRowCountProperty,value); }
-		
-		/**
-		 * Number of footer rows in a table. Footer rows will display at the bottom of each container.
-		 * <p>Legal values as an integer 0 or higher.</p>
-		 * <p>Default value is undefined indicating not set.</p>
-		 * <p>If undefined during the cascade this property will have a value of 0.</p>
-		 * 
-		 * @throws RangeError when set value is not within range for this property
-		 * 
-		 * @playerversion Flash 10
-		 * @playerversion AIR 1.5
-		 * @langversion 3.0
-		 */
-		function get footerRowCount():*
-		{ return _styles.footerRowCount; }
-		public function set footerRowCount(value:*):void
-		{ setStyleByProperty(TextLayoutFormat.footerRowCountProperty,value); }
-		
-		/**
 		 * Minimum height of a table cell. If there is no maximum, the cell will grow in height to fit the content. Minimum and maximum of the same values will give the cell a fixed height.
 		 * <p>Legal values as a number are from 2 to 10000.</p>
 		 * <p>Legal values include FormatValue.INHERIT.</p>
@@ -3515,10 +3463,6 @@ package flashx.textLayout.formats
 				stylesObject.rowSpan = TextLayoutFormat.rowSpanProperty.defaultValue;
 			if (stylesObject.columnSpan != undefined && stylesObject.columnSpan != TextLayoutFormat.columnSpanProperty.defaultValue)
 				stylesObject.columnSpan = TextLayoutFormat.columnSpanProperty.defaultValue;
-			if (stylesObject.headerRowCount != undefined && stylesObject.headerRowCount != TextLayoutFormat.headerRowCountProperty.defaultValue)
-				stylesObject.headerRowCount = TextLayoutFormat.headerRowCountProperty.defaultValue;
-			if (stylesObject.footerRowCount != undefined && stylesObject.footerRowCount != TextLayoutFormat.footerRowCountProperty.defaultValue)
-				stylesObject.footerRowCount = TextLayoutFormat.footerRowCountProperty.defaultValue;
 			if (stylesObject.minCellHeight != undefined && stylesObject.minCellHeight != TextLayoutFormat.minCellHeightProperty.defaultValue)
 				stylesObject.minCellHeight = TextLayoutFormat.minCellHeightProperty.defaultValue;
 			if (stylesObject.maxCellHeight != undefined && stylesObject.maxCellHeight != TextLayoutFormat.maxCellHeightProperty.defaultValue)

@@ -1329,34 +1329,6 @@ package flashx.textLayout.formats
 		function get columnSpan():*;
 
 		/**
-		 * Number of header rows in a table. Header rows will display at the top of each container.
-		 * <p>Legal values as an integer 0 or higher.</p>
-		 * <p>Default value is undefined indicating not set.</p>
-		 * <p>If undefined during the cascade this property will have a value of 0.</p>
-		 * 
-		 * @throws RangeError when set value is not within range for this property
-		 * 
-		 * @playerversion Flash 10
-		 * @playerversion AIR 1.5
-		 * @langversion 3.0
-		 */
-		function get headerRowCount():*;
-		
-		/**
-		 * Number of footer rows in a table. Footer rows will display at the bottom of each container.
-		 * <p>Legal values as an integer 0 or higher.</p>
-		 * <p>Default value is undefined indicating not set.</p>
-		 * <p>If undefined during the cascade this property will have a value of 0.</p>
-		 * 
-		 * @throws RangeError when set value is not within range for this property
-		 * 
-		 * @playerversion Flash 10
-		 * @playerversion AIR 1.5
-		 * @langversion 3.0
-		 */
-		function get footerRowCount():*;
-
-		/**
 		 * Width of table element specifies the desired width of the entire table and is intended for visual user agents. When the value is a percentage value, the value is relative to the user agent's available horizontal space.
 		 * <p>Legal values as a number are from 0 to 8000.</p>
 		 * <p>Legal values as a percent are numbers from 0% to 100%.</p>

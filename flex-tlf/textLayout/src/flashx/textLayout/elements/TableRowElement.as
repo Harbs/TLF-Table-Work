@@ -32,7 +32,7 @@ package flashx.textLayout.elements
 	 * @langversion 3.0
 	 *
 	 */
-	public final class TableRowElement extends TableFormattedElement
+	public class TableRowElement extends TableFormattedElement
 	{		
 		public var x:Number;
 		public var y:Number;
@@ -45,6 +45,15 @@ package flashx.textLayout.elements
 		public var columnIndex:Number = 0;
 		public var iMaxRowDepth:Number = 0;
 		public var beyondParcel:Boolean = false;
+		public var composedHeight:Number = 0;
+		public var totalHeight:Number = 0;// used to compute if a row will fit in parcel. Need a separate value for cells that span rows.
+		public var isMaxHeight:Boolean = false;
+		
+		public function TableRowElement()
+		{
+			super();
+		}
+
 		
 		/** @private */
 		override protected function get abstract():Boolean

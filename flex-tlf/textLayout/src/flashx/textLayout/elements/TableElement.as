@@ -69,6 +69,16 @@ package flashx.textLayout.elements
 		private var damageRows:Vector.<TableRowElement> = new Vector.<TableRowElement>();
 		private var _hasCellDamage:Boolean = true;
 		
+		private var _headerRowCount:uint = 0;
+		private var _footerRowCount:uint = 0;
+		private var _tableRowsComputed:Boolean;
+		
+		private var _headerRows:Vector.< Vector.<TableCellElement> >;
+		private var _footerRows:Vector.< Vector.<TableCellElement> >;
+		private var _bodyRows:Vector.< Vector.<TableCellElement> >;
+		private var _composedRowIndex:uint = 0;
+		
+		
 		public function TableElement()
 		{
 			super();
@@ -85,12 +95,20 @@ package flashx.textLayout.elements
 		/** @private */
 		tlf_internal override function canOwnFlowElement(elem:FlowElement):Boolean
 		{
-			return  (elem is TableBodyElement) || (elem is TableCellElement); //(elem is TableRowElement) || (elem is TableColElement) || (elem is TableColGroupElement);
+			return (elem is TableCellElement); // (elem is TableBodyElement) ||  //(elem is TableRowElement) || (elem is TableColElement) || (elem is TableColGroupElement);
 		}
 		
 		/** @private if its in a numbered list expand the damage to all list items - causes the numbers to be regenerated */
 		tlf_internal override function modelChanged(changeType:String, elem:FlowElement, changeStart:int, changeLen:int, needNormalize:Boolean = true, bumpGeneration:Boolean = true):void
 		{
+			switch(changeType)
+			{
+				case ModelChange.ELEMENT_ADDED:
+				case ModelChange.ELEMENT_REMOVAL:
+					if(headerRowCount > 0 || footerRowCount > 0){
+						
+					}
+			}
 			super.modelChanged(changeType,elem,changeStart,changeLen,needNormalize,bumpGeneration);
 		}
 		
@@ -159,7 +177,10 @@ package flashx.textLayout.elements
 			if(idx < 0 || idx > rows.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
 			
-			rows.splice(idx,0,new TableRowElement(format));
+			var row:TableRowElement = new TableRowElement(format)
+			rows.splice(idx,0,row);
+			row.composedHeight = row.computedFormat.minCellHeight;
+			row.isMaxHeight = row.computedFormat.minCellHeight == row.computedFormat.maxCellHeight;
 		}
 
 		public function addColumn(format:ITextLayoutFormat=null):void{
@@ -185,6 +206,10 @@ package flashx.textLayout.elements
 				return null;
 			return rows[rowIndex];
 		}
+		public function getCellsForRow(index:int):Array{
+			var retVal:Array = [];
+			for each(var cell:TableCellElement in this.mxmlChildren
+		}
 		public function insertColumn(column:TableColElement):Boolean{
 			return insertColumnAt(numColumns,column);
 		}
@@ -197,13 +222,16 @@ package flashx.textLayout.elements
 		}
 		
 		public function insertRow(row:TableRowElement):Boolean{
-			return insertColumnAt(numRows,row);
+			return insertRowAt(numRows,row);
 		}
-		public function insertRowAt(idx:int,row:TableColElement):Boolean{
+		public function insertRowAt(idx:int,row:TableRowElement):Boolean{
 			if(idx < 0 || idx > rows.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
 			
 			rows.splice(idx,0,row);
+			row.composedHeight = row.computedFormat.minCellHeight;
+			row.isMaxHeight = row.computedFormat.minCellHeight == row.computedFormat.maxCellHeight;
+
 			return true;
 		}
 		public function removeRow(row:TableRowElement):Boolean{
@@ -265,6 +293,7 @@ package flashx.textLayout.elements
         }
 		
 		public function composeCells():void{
+			_composedRowIndex = 0;
 			// make sure the height that defines the row height did not change. If it did we might need to change the row height.
 			if(!hasCellDamage)
 				return;
@@ -272,10 +301,97 @@ package flashx.textLayout.elements
 			var cell:TableCellElement;
 			for each(cell in damaagedCells){
 				// recompose the cells while tracking row height if necessary
+				cell.compose();
+			}
+			// set row heights to minimum
+			for each (var row:TableRowElement in rows){
+				var minH:Number = row.computedFormat.minCellHeight;
+				var maxH:Number = row.computedFormat.maxCellHeight;
+				row.totalHeight = row.composedHeight = minH;
+				if(maxH > minH)
+					row.isMaxHeight = false;
+				else
+					row.isMaxHeight = true;
+				
+			}
+			for(var i:int=0;i<mxmlChildren;i++){
+				if( !(mxmlChildren[i] is TableCellElement) )
+					continue;
+				cell = mxmlChildren[i] as TableCellElement;
+				while(rows.length < cell.rowIndex+1){
+					addRow(defaultRowFormat);
+				}
+				row = getRowAt(cell.rowIndex);
+				if(!row)
+					throw new Error("this should not happen...");
+				if(row.isMaxHeight)
+					continue;
+				var cellHeight:Number = cell.getComposedHeight();
+				if(cell.rowSpan > 1)
+				{
+					// figure out the total height taking into account fixed height rows and the total span.
+					
+					// for now, we're taking the easy way out assuming the rows are not fixed...
+					row.totalHeight = Math.max(row.totalHeight,cellHeight);
+					
+				}
+				else
+				{
+					row.composedHeight = Math.max(row.composedHeight,cellHeight);
+					row.composedHeight = Math.min(row.composedHeight,row.computedFormat.maxCellHeight);
+					row.totalHeight = Math.max(row.composedHeight,row.totalHeight);
+				}
+				if(row.composedHeight == row.computedFormat.maxCellHeight)
+					row.isMaxHeight = true;
+			}
+			if(!_tableRowsComputed)
+			{
+				// create arrays or rows to make table composition simpler
+				// For now we're assuming all cells have the correct row and column indices.
+				// For this assumption to remain valid, the interaction manager will have to update all indices when inserting rows and columns.
+				// actually, it probably makes sense for TableElement to handle that when adding rows and columns.
+				// we need to think this through.
+				_bodyRows = new Vector.< Vector.<TableCellElement> >;
+				for(i=0;i<mxmlChildren;i++){
+					if( !(mxmlChildren[i] is TableCellElement) )
+						continue;
+					cell = mxmlChildren[i] as TableCellElement;
+					
+					var rowVec:Vector.<TableCellElement> = _bodyRows[cell.rowIndex] as Vector.<TableCellElement>;
+					if(!rowVec){
+						rowVec = new Vector.<TableCellElement>();
+						_bodyRows[cell.rowIndex] = rowVec;
+					}
+					if(rowVec[cell.colIndex])
+						throw new Error("Two cells cannot have the same coordinates");
+					rowVec[cell.colIndex] = cell;
+				}
+				if(headerRowCount > 0){
+					_headerRows = _bodyRows.splice(0,headerRowCount);
+				} else {
+					_headerRows = null;
+				}
+				if(footerRowCount > 0){
+					_footerRows = _bodyRows.splice(-footerRowCount);
+				} else {
+					_footerRows = null;
+				}
 			}
 		}
+		public function getHeaderRows():Vector.< Vector.<TableCellElement> >{
+			return _headerRows;
+		}
+		public function getFooterRows():Vector.< Vector.<TableCellElement> >{
+			return _footerRows;
+		}
+		public function getBodyRows():Vector.< Vector.<TableCellElement> >{
+			return _bodyRows;
+		}
+		public function getNextRow():Vector.<TableCellElement>{
+			return _bodyRows[_composedRowIndex++];
+		}
 		
-		public function getHeaderHight():Number{
+		public function getHeaderHeight():Number{
 			//TODO: compute the header height from the header cells
 			return 0;
 		}
@@ -326,6 +442,30 @@ package flashx.textLayout.elements
 		public function set hasCellDamage(value:Boolean):void
 		{
 			_hasCellDamage = value;
+		}
+
+		public function get headerRowCount():uint
+		{
+			return _headerRowCount;
+		}
+
+		public function set headerRowCount(value:uint):void
+		{
+			if(value != _headerRowCount)
+				_tableRowsComputed = false;
+			_headerRowCount = value;
+		}
+
+		public function get footerRowCount():uint
+		{
+			return _footerRowCount;
+		}
+
+		public function set footerRowCount(value:uint):void
+		{
+			if(value != _footerRowCount)
+				_tableRowsComputed = false;
+			_footerRowCount = value;
 		}
 
 		

@@ -161,7 +161,7 @@ package flashx.textLayout.elements
 			_enableIME = value;
 		}
 		
-		protected function get container():SimpleContainer{
+		public function get container():SimpleContainer{
 			if(!_container)
 				_container = new SimpleContainer(enableIME);
 			
@@ -192,7 +192,7 @@ package flashx.textLayout.elements
 		{
 			_controller.getContentBounds().height;
 		}
-
+		
 		
 	}
 }
