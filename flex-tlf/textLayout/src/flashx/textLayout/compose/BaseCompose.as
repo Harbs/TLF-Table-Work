@@ -525,6 +525,9 @@ package flashx.textLayout.compose
 		 */
 		private function composeTableElement(tableElement:TableElement, absStart:int):Boolean
 		{
+			//TODO: remove any old existing cells in the _parcelList.currentParcel.controller from the position of the table and on.
+			// need to figure out the accounting needed for that.
+			
 			// step 1 -- make sure all cells are composed
 			tableElement.composeCells();
 			
@@ -560,6 +563,8 @@ package flashx.textLayout.compose
 					//TODO: add in footer rows...
 					
 					_parcelList.next();
+					
+					//TODO: remove any old existing cells in the _parcelList.currentParcel.controller
 					
 					//TODO: add in header rows. Collect them on the next iteration if no real rows fit.
 					
