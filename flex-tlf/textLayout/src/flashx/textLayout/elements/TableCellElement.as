@@ -138,7 +138,7 @@ package flashx.textLayout.elements
 		
 		public function set textFlow(value:TextFlow):void
 		{
-			if(_textFlow)var a:DamageEvent
+			if(_textFlow)
 				_textFlow.removeEventListener(DamageEvent.DAMAGE,handleCellDamage);
 			_textFlow = value;
 				_textFlow.addEventListener(DamageEvent.DAMAGE,handleCellDamage);

@@ -491,6 +491,8 @@ package flashx.textLayout.elements
 			}
 			return _tableBlocks[_tableBlockIndex];
 		}
-		
+		override public function get textLength():int{
+			return 1;
+		}
 	}
 }
