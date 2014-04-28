@@ -187,12 +187,13 @@ package flashx.textLayout.elements
 		}
 
 		public function addColumn(format:ITextLayoutFormat=null):void{
-			addColumnAt(rows.length,format);
+			addColumnAt(columns.length,format);
 		}
 		public function addColumnAt(idx:int,format:ITextLayoutFormat=null):void{
 			if(idx < 0 || idx > columns.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
-			
+			if(!format)
+				format = defaultColumnFormat;
 			columns.splice(idx,0,new TableColElement(format));
 		}
 
@@ -321,6 +322,12 @@ package flashx.textLayout.elements
 					row.isMaxHeight = true;
 				
 			}
+			// set column positions...
+			var xPos:Number = 0;
+			for each (var col:TableColElement in columns){
+				col.x = xPos;
+				xPos += col.columnWidth;
+			}
 			for(var i:int=0;i<mxmlChildren.length;i++){
 				if( !(mxmlChildren[i] is TableCellElement) )
 					continue;
@@ -358,18 +365,20 @@ package flashx.textLayout.elements
 				// For this assumption to remain valid, the interaction manager will have to update all indices when inserting rows and columns.
 				// actually, it probably makes sense for TableElement to handle that when adding rows and columns.
 				// we need to think this through.
-				_bodyRows = new Vector.< Vector.<TableCellElement> >;
+				_bodyRows = new Vector.< Vector.<TableCellElement> >();
 				for(i=0;i<mxmlChildren.length;i++){
 					if( !(mxmlChildren[i] is TableCellElement) )
 						continue;
 					cell = mxmlChildren[i] as TableCellElement;
-					
+					while(cell.rowIndex >= _bodyRows.length)
+						_bodyRows.push(new Vector.<TableCellElement>());
+						
 					var rowVec:Vector.<TableCellElement> = _bodyRows[cell.rowIndex] as Vector.<TableCellElement>;
 					if(!rowVec){
 						rowVec = new Vector.<TableCellElement>();
 						_bodyRows[cell.rowIndex] = rowVec;
 					}
-					if(rowVec[cell.colIndex])
+					if(rowVec.length > cell.colIndex && rowVec[cell.colIndex])
 						throw new Error("Two cells cannot have the same coordinates");
 					rowVec[cell.colIndex] = cell;
 				}
@@ -395,6 +404,8 @@ package flashx.textLayout.elements
 			return _bodyRows;
 		}
 		public function getNextRow():Vector.<TableCellElement>{
+			if(_composedRowIndex >= _bodyRows.length)
+				return null;
 			return _bodyRows[_composedRowIndex++];
 		}
 		
@@ -411,6 +422,28 @@ package flashx.textLayout.elements
 		public function normalizeColumnWidths(suggestedWidth:Number = 600):void{
 			//TODO: before composition make sure all column widths are rational numbers
 			// We feed in a width to use if there's no width otherwise specified.
+			
+			// quick and dirty...
+			var setCount:* = computedFormat.columnCount;
+			if(!setCount){
+				// we need to figure this out...
+			} else if(setCount == FormatValue.AUTO){
+				// figure out...
+			} else {
+				var cCount:Number = computedFormat.columnCount;
+			}
+			while (cCount > columns.length){
+				addColumn();
+			}
+			if(computedFormat.tableWidth){
+				var w:Number = computedFormat.tableWidth;
+			} else {
+				w = suggestedWidth;
+			}
+			for each(var col:TableColElement in columns){
+				// simply stomp on the settings. (need to finesse this...)
+					col.columnWidth = w / numColumns;
+			}
 		}
         
 		private function getDamagedCells():Vector.<TableCellElement>{
@@ -480,6 +513,7 @@ package flashx.textLayout.elements
 			if(_tableBlocks.length == 0)
 				_tableBlocks.push(new TextFlowTableBlock(0));
 			_tableBlockIndex = 0;
+			_tableBlocks[0].parentTable = this;
 			return _tableBlocks[0];
 		}
 		public function getNextBlock():TextFlowTableBlock{
@@ -489,6 +523,7 @@ package flashx.textLayout.elements
 			while(_tableBlocks.length <= _tableBlockIndex){
 				_tableBlocks.push( new TextFlowTableBlock(_tableBlocks.length) );
 			}
+			_tableBlocks[_tableBlockIndex].parentTable = this;
 			return _tableBlocks[_tableBlockIndex];
 		}
 		override public function get textLength():int{

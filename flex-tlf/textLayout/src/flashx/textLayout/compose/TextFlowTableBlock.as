@@ -44,11 +44,12 @@ package flashx.textLayout.compose
 		}
 		public function clearCells():void{
 			_container.removeChildren();
-			_cells.length = 0;
+			getCells().length = 0;
 		}
 		public function addCell(cell:CellContainer):void{
-			if(_cells.indexOf(cell) < 0){
-				_cells.push(cell);
+			var cells:Array = getCells();
+			if(cells.indexOf(cell) < 0){
+				cells.push(cell);
 				_container.addChild(cell);
 			}
 		}
@@ -62,6 +63,14 @@ package flashx.textLayout.compose
 		{
 			return _container;
 		}
+		
+		public function updateCompositionShapes():void{
+			var cells:Array = getCells();
+			for each(var cell:CellContainer in cells){
+				cell.element.updateCompositionShapes();
+			}
+		}
+
 		public function set height(value:Number):void{
 			_container.height = value;
 		}

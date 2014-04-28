@@ -4,6 +4,7 @@
 			   xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="955" minHeight="600" creationComplete="onComplete()">
 	<fx:Script>
 		<![CDATA[
+			import flashx.textLayout.container.ContainerController;
 			import flashx.textLayout.elements.ParagraphElement;
 			import flashx.textLayout.elements.SpanElement;
 			import flashx.textLayout.elements.TableBodyElement;
@@ -19,42 +20,53 @@
 			import mx.events.FlexEvent;
 			[Bindable]private var textFlow:TextFlow;
 			private var table:TableElement;
+			private var controller:ContainerController;
 			
 			private function onComplete():void{
 				textFlow = new TextFlow();
 				table = new TableElement();
 				table.tableWidth = 600;
+				table.columnCount = 4;
 				//var body:TableBodyElement = new TableBodyElement();
 				//table.addChild(body);
 				for(var i:int=0;i<4;i++){
-					var row:TableRowElement = addTableRow(4);
-					table.addChild(row);var a:TableBodyElement
+					addTableRow(4);
+					//table.addChild(row);
 				}
 
 				var para:ParagraphElement = new ParagraphElement();
 				var span:SpanElement = new SpanElement();
 				span.text = "Let's try a table...";
 				para.addChild(span);
-				para.addChild(table);
 				textFlow.addChild(para);
+				textFlow.addChild(table);
+				controller = new ContainerController(holder,NaN,NaN);
+				textFlow.flowComposer.addController(controller);
+				textFlow.flowComposer.updateAllControllers();
 			}
-			private function addTableRow(numCells:int):TableRowElement{
-				var row:TableRowElement = new TableRowElement();
-				table.addChild(row);
+			private function addTableRow(numCells:int):void{
+				var rowIdx:int = table.numRows;
+				table.addRow();
+//				var row:TableRowElement = new TableRowElement();
+//				table.addChild(row);
 				for(var i:int=0;i<numCells;i++){
 					var cell:TableCellElement = new TableCellElement();
 					cell.colIndex = i;
+					cell.rowIndex = rowIdx;
 					var para:ParagraphElement = new ParagraphElement();
 					var span:SpanElement = new SpanElement();
 					span.text = "This is cell #" + i;
 					para.addChild(span);
-					cell.addChild(para);
+					var cellFlow:TextFlow = new TextFlow();
+					cellFlow.addChild(para);
+					cell.textFlow = cellFlow;
+					//cell.addChild(para);
 					table.addChild(cell);
 				}
-				return row;
 			}
 			
 		]]>
 	</fx:Script>
-	<s:RichEditableText textFlow="{textFlow}" width="100%" height="100%"/>
+	<s:SpriteVisualElement id="holder" width="100%" height="100%"/>
+<!--	<s:RichEditableText textFlow="{textFlow}" width="100%" height="100%"/> -->
 </s:Application>

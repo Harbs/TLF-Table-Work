@@ -26,6 +26,7 @@ package flashx.textLayout.elements
 	{
 		private var _imeMode:String;
 		private var _enableIME:Boolean;
+		public var element:TableCellElement;
 
 		public function CellContainer(imeEnabled:Boolean = true)
 		{

@@ -528,13 +528,19 @@ package flashx.textLayout.compose
 			//TODO: remove any old existing cells in the _parcelList.currentParcel.controller from the position of the table and on.
 			// need to figure out the accounting needed for that.
 			
+			// get a slug...
+			_parcelList.getLineSlug(_lineSlug, 0, 1, _textIndent, _curParaFormat.direction == Direction.LTR);
+			
+			// doesn't do anything yet.
+			tableElement.normalizeColumnWidths(_lineSlug.width);
+			
 			// step 1 -- make sure all cells are composed
 			tableElement.composeCells();
 			
 			// step 2 get header and footer heights
 			// I'm not sure if we need to calculate table padding/margin
 			//var baseTableHeight:Number = tableElement.getHeaderHeight() + tableElement.getFooterHeight();
-			_parcelList.getLineSlug(_lineSlug, 0, 1, _textIndent, _curParaFormat.direction == Direction.LTR);
+			//_parcelList.getLineSlug(_lineSlug, 0, 1, _textIndent, _curParaFormat.direction == Direction.LTR);
 			
 			var headerHeight:Number = tableElement.getHeaderHeight();
 			var footerHeight:Number = tableElement.getFooterHeight();
@@ -603,7 +609,9 @@ package flashx.textLayout.compose
 				// we have a parcel and a row. Let's add the cells.
 				for each(var cell:TableCellElement in curRow){
 					cell.container.y = totalRowHeight;
-					cell.container.x = curRowElem.x;
+					var col:TableColElement = tableElement.getColumnAt(cell.colIndex);
+					if(col)
+						cell.container.x =  col.x;
 					curTableBlock.addCell(cell.container);
 					// add the cells to _parcelList.currentParcel.controller
 					// need to figure out exactly how.

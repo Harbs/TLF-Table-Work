@@ -138,16 +138,19 @@ package flashx.textLayout.elements
 		
 		public function set textFlow(value:TextFlow):void
 		{
-			if(_textFlow)
+			if(_textFlow){
 				_textFlow.removeEventListener(DamageEvent.DAMAGE,handleCellDamage);
+				_textFlow.flowComposer.removeAllControllers();
+			}
 			_textFlow = value;
-				_textFlow.addEventListener(DamageEvent.DAMAGE,handleCellDamage);
-				
 			_textFlow.parentElement = this;
+			_textFlow.flowComposer.addController(_controller);
+			_textFlow.addEventListener(DamageEvent.DAMAGE,handleCellDamage);
 		}
 		
 		private function handleCellDamage(ev:DamageEvent):void{
-			getTable().hasCellDamage = true;
+			if(getTable())
+				getTable().hasCellDamage = true;
 			_damaged = true;
 		}
 
@@ -162,8 +165,10 @@ package flashx.textLayout.elements
 		}
 		
 		public function get container():CellContainer{
-			if(!_container)
+			if(!_container){
 				_container = new CellContainer(enableIME);
+				_container.element = this;
+			}
 			
 			return _container;
 		}
@@ -219,6 +224,9 @@ package flashx.textLayout.elements
 				_columnSpan = value;
 		}
 		
+		public function updateCompositionShapes():void{
+			_controller.updateCompositionShapes();
+		}
 		
 	}
 }

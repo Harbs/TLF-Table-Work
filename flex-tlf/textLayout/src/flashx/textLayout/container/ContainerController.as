@@ -3065,7 +3065,7 @@ package flashx.textLayout.container
 			if(_tableBlocksInView.length == 0)
 				return;
 			var blockIdx:int = 0;
-			var startLoc:int = (_tableBlocksInView[0] as TextFlowTableBlock).parentTable.getAbsoluteStart();
+			var startLoc:int = (_tableBlocksInView[0] as TableBlockContainer).userData.parentTable.getAbsoluteStart();
 			for(var i:int=0;i<targetArray.length;i++){
 				if( targetArray[i].userData.absoluteStart < startLoc )
 					continue;
@@ -3175,6 +3175,7 @@ package flashx.textLayout.container
 					{
 						// The shape is on both lists, but there are several intervening "old" shapes in between. We'll remove the old shapes that
 						// come before the new one we want to insert.
+						(newChild as TableBlockContainer).userData.updateCompositionShapes();
 						removeAndRecycleTextLines (oldIdx, newChildIdx);
 						oldIdx = newChildIdx;
 					}					
@@ -4190,6 +4191,7 @@ package flashx.textLayout.container
 			if ( index > _container.numChildren )
 				index = _container.numChildren;
 			_container.addChildAt(block, index);
+			block.userData.updateCompositionShapes();
 		}
 		
 		/**
