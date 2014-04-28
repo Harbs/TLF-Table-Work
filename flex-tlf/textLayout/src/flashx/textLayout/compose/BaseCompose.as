@@ -534,6 +534,7 @@ package flashx.textLayout.compose
 			// step 2 get header and footer heights
 			// I'm not sure if we need to calculate table padding/margin
 			//var baseTableHeight:Number = tableElement.getHeaderHeight() + tableElement.getFooterHeight();
+			_parcelList.getLineSlug(_lineSlug, 0, 1, _textIndent, _curParaFormat.direction == Direction.LTR);
 			
 			var headerHeight:Number = tableElement.getHeaderHeight();
 			var footerHeight:Number = tableElement.getFooterHeight();
@@ -543,12 +544,20 @@ package flashx.textLayout.compose
 			
 			// step 3 loop through the cells and assign them to containers and set the positions
 
+			var totalRowHeight:Number = 0;
+			var haveRealRows:Boolean = false;
 			//grab the headers and footers for use in each parcel
 			var headerRows:Vector.< Vector.<TableCellElement> > = tableElement.getHeaderRows();
 			var footerRows:Vector.< Vector.<TableCellElement> > = tableElement.getFooterRows();
 			
 			var curRow:Vector.<TableCellElement> = tableElement.getNextRow();
-			
+			var curTableBlock:TextFlowTableBlock = tableElement.getFirstBlock();
+			curTableBlock.clear();
+			curTableBlock.y = _parcelList.totalDepth;
+			curTableBlock.x = _lineSlug.leftMargin;
+			var lineOffset:Number = (_curParaFormat.direction == Direction.LTR) ? _lineSlug.leftMargin : _lineSlug.rightMargin;
+			curTableBlock.initialize(_curParaElement, _lineSlug.width, lineOffset-_parcelList.insideListItemMargin, tableElement.getAbsoluteStart());
+			var blockToAdd:Boolean = true;
 			while(curRow){
 				
 				// I'm ignoring headers and footers for now. We need to add them in later.
@@ -562,22 +571,40 @@ package flashx.textLayout.compose
 				){
 					//TODO: add in footer rows...
 					
-					_parcelList.next();
+					curTableBlock.height = totalRowHeight;
 					
+					if(!haveRealRows)
+						curTableBlock.clear();
+					_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);
+					blockToAdd = false;
+					
+					_parcelList.next();
+					_parcelList.getLineSlug(_lineSlug, 0, 1, _textIndent, _curParaFormat.direction == Direction.LTR);
+					curTableBlock = tableElement.getNextBlock();
+					blockToAdd = true;
+					curTableBlock.clear();
+					curTableBlock.y = _parcelList.totalDepth;
+					curTableBlock.x = _lineSlug.leftMargin;
+					curTableBlock.initialize(_curParaElement, _lineSlug.width, lineOffset-_parcelList.insideListItemMargin, tableElement.getAbsoluteStart());
+					totalRowHeight = 0;
 					//TODO: remove any old existing cells in the _parcelList.currentParcel.controller
 					
 					//TODO: add in header rows. Collect them on the next iteration if no real rows fit.
 					
-					if(_parcelList.currentParcel == null)
+					if(_parcelList.currentParcel == null){
+						blockToAdd = false;
 						break;
+					}
 				}
-				if(_parcelList.currentParcel == null)
+				if(_parcelList.currentParcel == null){
+					blockToAdd = false;
 					break;
-				
+				}
 				// we have a parcel and a row. Let's add the cells.
 				for each(var cell:TableCellElement in curRow){
-					cell.container.y = _parcelList.totalDepth;
+					cell.container.y = totalRowHeight;
 					cell.container.x = curRowElem.x;
+					curTableBlock.addCell(cell.container);
 					// add the cells to _parcelList.currentParcel.controller
 					// need to figure out exactly how.
 					
@@ -587,7 +614,10 @@ package flashx.textLayout.compose
 				_parcelList.addTotalDepth(rowHeight);
 				
 				curRow = tableElement.getNextRow();
+				totalRowHeight += rowHeight;
 			}
+			if(_parcelList.currentParcel && blockToAdd)
+				_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);
 
 			//reference ComposeState.composeNextLine() which creates the the TextLine.
 			// We don't need getLineSlug() because tables can extend beyond the container width
@@ -662,6 +692,8 @@ package flashx.textLayout.compose
 			BackgroundManager.collectBlock(_textFlow, tableElement, _parcelList);
 			return true;
 			*/
+			
+			return true;
 		}
 		
 
@@ -673,6 +705,10 @@ package flashx.textLayout.compose
 		 * In  : Number or percentage
 		 * Out : Set pixcel based width of each table column
 		 */
+		/*
+		
+		//Moving this logic to inside TableElement
+		
 		private function serializeTableColumnWidth(table:TableElement):void
 		{
             var curParcelWidth:Number = _parcelList.currentParcel.width;
@@ -728,7 +764,7 @@ package flashx.textLayout.compose
 				table.setColumnWidth(table.column - 1, orgWidth + logicalWidth - columnTotalWidth);
 			}
 		}
-		
+		*/
 		/**
 		 * Compose the flow into the text container. Starts at the root element,
 		 * and composes elements until either there are no more elements, or the

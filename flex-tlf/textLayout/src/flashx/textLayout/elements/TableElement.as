@@ -27,6 +27,7 @@ package flashx.textLayout.elements
 	import flash.text.engine.TextBlock;
 	import flash.text.engine.TextLine;
 	
+	import flashx.textLayout.compose.TextFlowTableBlock;
 	import flashx.textLayout.events.FlowElementEventDispatcher;
 	import flashx.textLayout.events.FlowElementMouseEventManager;
 	import flashx.textLayout.events.ModelChange;
@@ -78,6 +79,8 @@ package flashx.textLayout.elements
 		private var _bodyRows:Vector.< Vector.<TableCellElement> >;
 		private var _composedRowIndex:uint = 0;
 		
+		private var _tableBlocks:Vector.<TextFlowTableBlock>;
+		private var _tableBlockIndex:uint = 0;
 		
 		public function TableElement()
 		{
@@ -208,7 +211,11 @@ package flashx.textLayout.elements
 		}
 		public function getCellsForRow(index:int):Array{
 			var retVal:Array = [];
-			for each(var cell:TableCellElement in this.mxmlChildren
+			for each(var cell:TableCellElement in this.mxmlChildren){
+				if(cell.rowIndex == index)
+					retVal.push(cell);
+			}
+			return retVal;
 		}
 		public function insertColumn(column:TableColElement):Boolean{
 			return insertColumnAt(numColumns,column);
@@ -314,7 +321,7 @@ package flashx.textLayout.elements
 					row.isMaxHeight = true;
 				
 			}
-			for(var i:int=0;i<mxmlChildren;i++){
+			for(var i:int=0;i<mxmlChildren.length;i++){
 				if( !(mxmlChildren[i] is TableCellElement) )
 					continue;
 				cell = mxmlChildren[i] as TableCellElement;
@@ -352,7 +359,7 @@ package flashx.textLayout.elements
 				// actually, it probably makes sense for TableElement to handle that when adding rows and columns.
 				// we need to think this through.
 				_bodyRows = new Vector.< Vector.<TableCellElement> >;
-				for(i=0;i<mxmlChildren;i++){
+				for(i=0;i<mxmlChildren.length;i++){
 					if( !(mxmlChildren[i] is TableCellElement) )
 						continue;
 					cell = mxmlChildren[i] as TableCellElement;
@@ -372,7 +379,7 @@ package flashx.textLayout.elements
 					_headerRows = null;
 				}
 				if(footerRowCount > 0){
-					_footerRows = _bodyRows.splice(-footerRowCount);
+					_footerRows = _bodyRows.splice(-footerRowCount,Number.MAX_VALUE);
 				} else {
 					_footerRows = null;
 				}
@@ -467,7 +474,23 @@ package flashx.textLayout.elements
 				_tableRowsComputed = false;
 			_footerRowCount = value;
 		}
-
+		public function getFirstBlock():TextFlowTableBlock{
+			if(_tableBlocks == null)
+				_tableBlocks = new Vector.<TextFlowTableBlock>();
+			if(_tableBlocks.length == 0)
+				_tableBlocks.push(new TextFlowTableBlock(0));
+			_tableBlockIndex = 0;
+			return _tableBlocks[0];
+		}
+		public function getNextBlock():TextFlowTableBlock{
+			if(_tableBlocks == null)
+				_tableBlocks = new Vector.<TextFlowTableBlock>();
+			_tableBlockIndex++;
+			while(_tableBlocks.length <= _tableBlockIndex){
+				_tableBlocks.push( new TextFlowTableBlock(_tableBlocks.length) );
+			}
+			return _tableBlocks[_tableBlockIndex];
+		}
 		
 	}
 }

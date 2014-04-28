@@ -48,6 +48,7 @@ package flashx.textLayout.container
 	import flashx.textLayout.compose.FlowDamageType;
 	import flashx.textLayout.compose.IFlowComposer;
 	import flashx.textLayout.compose.TextFlowLine;
+	import flashx.textLayout.compose.TextFlowTableBlock;
 	import flashx.textLayout.compose.TextLineRecycler;
 	import flashx.textLayout.debug.Debugging;
 	import flashx.textLayout.debug.assert;
@@ -64,6 +65,7 @@ package flashx.textLayout.container
 	import flashx.textLayout.elements.InlineGraphicElement;
 	import flashx.textLayout.elements.LinkElement;
 	import flashx.textLayout.elements.ParagraphElement;
+	import flashx.textLayout.elements.TableBlockContainer;
 	import flashx.textLayout.elements.TextFlow;
 	import flashx.textLayout.events.FlowElementMouseEvent;
 	import flashx.textLayout.events.FlowElementMouseEventManager;
@@ -177,6 +179,7 @@ package flashx.textLayout.container
 		
 		private var _linesInView:Array;	// lines that were in view according to the previous compose(). Empty if the lines have already been posted to the display list.
 		private var _updateStart:int;
+		private var _tableBlocksInView:Array; // // table blocks that were in view according to the previous compose(). Empty if the lines have already been posted to the display list.
 		
 		private var _composedFloats:Array;  // floats that were composed into the controller -- array of FloatCompositionData
 		private var _floatsInContainer:Array;  // floats are currently in view -- array of DisplayObject
@@ -266,6 +269,7 @@ package flashx.textLayout.container
 			
 			_shapeChildren = [ ];
 			_linesInView = [ ];
+			_tableBlocksInView = [];
 			
 			setCompositionSize(compositionWidth, compositionHeight);
 			format = _containerControllerInitialFormat;
@@ -3057,6 +3061,21 @@ package flashx.textLayout.container
 		
 		private static var scratchRectangle:Rectangle = new Rectangle();
 		
+		private function intersperseTableBlocks(targetArray:Array):void{
+			if(_tableBlocksInView.length == 0)
+				return;
+			var blockIdx:int = 0;
+			var startLoc:int = (_tableBlocksInView[0] as TextFlowTableBlock).parentTable.getAbsoluteStart();
+			for(var i:int=0;i<targetArray.length;i++){
+				if( targetArray[i].userData.absoluteStart < startLoc )
+					continue;
+				targetArray.splice(i,0,_tableBlocksInView[blockIdx++]);
+				if(blockIdx == _tableBlocksInView.length)
+					break;
+			}
+			while(blockIdx < _tableBlocksInView.length)
+				targetArray.push(_tableBlocksInView[blockIdx++]);
+		}
 		/** Add DisplayObjects that were created by composition to the container. @private */
 		tlf_internal function updateCompositionShapes():void
 		{
@@ -3084,6 +3103,9 @@ package flashx.textLayout.container
 			fillShapeChildren();
 			var newShapeChildren:Array = _linesInView;
 			
+			// Add in table blocks
+			intersperseTableBlocks(newShapeChildren);
+			
 			var childIdx:int = getFirstTextLineChildIndex(); // index where the first text line must appear at in its container  
 			var newIdx:int = 0;		// offset into newShapeChildren
 			var shapeChildrenStartIdx:int = 0;	// starting offset into shapeChildren
@@ -3095,11 +3117,14 @@ package flashx.textLayout.container
 			// beginning as usual. This can happen if we're scrolled forward, and then edit the first visible line.
 			if (_updateStart > absoluteStart && newShapeChildren.length > 0)
 			{
-				var firstTextLine:TextLine = newShapeChildren[0];
-				var firstLine:TextFlowLine = TextFlowLine(firstTextLine.userData);
+				var firstLine:TextFlowLine = TextFlowLine(newShapeChildren[0].userData);
 				var prevLine:TextFlowLine = flowComposer.findLineAtPosition(firstLine.absoluteStart - 1);
-				var prevTextLine:TextLine = prevLine.peekTextLine(); 
-				shapeChildrenStartIdx = _shapeChildren.indexOf(prevTextLine);
+				if(prevLine is TextFlowTableBlock){
+					shapeChildrenStartIdx = _shapeChildren.indexOf((prevLine as TextFlowTableBlock).container);
+				} else {
+					var prevTextLine:TextLine = prevLine.peekTextLine(); 
+					shapeChildrenStartIdx = _shapeChildren.indexOf(prevTextLine);
+				}
 				if (shapeChildrenStartIdx >= 0)
 				{
 					shapeChildrenStartIdx++;
@@ -3112,7 +3137,7 @@ package flashx.textLayout.container
 			
 			while (newIdx != newShapeChildren.length)
 			{
-				var newChild:TextLine = newShapeChildren[newIdx];
+				var newChild:* = newShapeChildren[newIdx];
 				if (newChild == _shapeChildren[oldIdx])
 				{
 					// Same shape is in both lists, no change necessary, advance to next item in each list
@@ -3122,21 +3147,37 @@ package flashx.textLayout.container
 					oldIdx++;
 					continue;
 				}
-				
 				var newChildIdx:int = _shapeChildren.indexOf(newChild);
-				if (newChildIdx == -1)
-				{
-					// Shape is in the new list, but not in the old list, add it to the display list at the current location, and advance to next item
-					addTextLine(newChild, childIdx++);
-					CONFIG::debug { Debugging.traceFTECall(null,_container,"addTextLine",newChild); }
-					newIdx++;
-				}
-				else
-				{
+				if(newChild is TextLine){
+					if (newChildIdx == -1)
+					{
+						// Shape is in the new list, but not in the old list, add it to the display list at the current location, and advance to next item
+						addTextLine((newChild as TextLine), childIdx++);
+						CONFIG::debug { Debugging.traceFTECall(null,_container,"addTextLine",newChild); }
+						newIdx++;
+					}
+					else
+					{
 						// The shape is on both lists, but there are several intervening "old" shapes in between. We'll remove the old shapes that
-					// come before the new one we want to insert.
-					removeAndRecycleTextLines (oldIdx, newChildIdx);
-					oldIdx = newChildIdx;
+						// come before the new one we want to insert.
+						removeAndRecycleTextLines (oldIdx, newChildIdx);
+						oldIdx = newChildIdx;
+					}
+				} else {// it's a table block
+					if (newChildIdx == -1)
+					{
+						// Shape is in the new list, but not in the old list, add it to the display list at the current location, and advance to next item
+						addTableBlock((newChild as TableBlockContainer), childIdx++);
+						CONFIG::debug { Debugging.traceFTECall(null,_container,"addTextLine",newChild); }
+						newIdx++;
+					}
+					else
+					{
+						// The shape is on both lists, but there are several intervening "old" shapes in between. We'll remove the old shapes that
+						// come before the new one we want to insert.
+						removeAndRecycleTextLines (oldIdx, newChildIdx);
+						oldIdx = newChildIdx;
+					}					
 				}
 			}
 			
@@ -3988,6 +4029,12 @@ package flashx.textLayout.container
 			var textBlock:TextBlock;
 			for (var index:int = beginIndex; index < endIndex; index++)
 			{
+				// we don't recycle table blocks
+				if( !(_shapeChildren[index] is TextLine) ){
+					removeTableBlock(_shapeChildren[index]);
+					child = null;
+					continue;
+				}
 				child = _shapeChildren[index];					
 				removeTextLine(child);
 				CONFIG::debug { Debugging.traceFTECall(null,_container,"removeTextLine",child); }
@@ -4012,6 +4059,10 @@ package flashx.textLayout.container
 			{
 				while (beginIndex < endIndex)
 				{
+					if( !(_shapeChildren[beginIndex] is TextLine) ){
+						beginIndex++;
+						continue;
+					}
 					child = _shapeChildren[beginIndex++];
 										
 					// Recycle if its not displayed and not connected to the textblock
@@ -4118,6 +4169,53 @@ package flashx.textLayout.container
 			if (_container.contains(textLine))
 				_container.removeChild(textLine);
 		}
+		
+		/**
+		 * Adds a <code>TableBlockContainer</code> object as a descendant of <code>container</code>.
+		 * The default implementation of this method, which may be overriden, adds the object
+		 * as a direct child of <code>container</code> at the specified index.
+		 * 
+		 * @param textLine the <code>TableBlockContainer</code> object to add
+		 * @param index insertion index of the text line in its parent 
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 * 
+		 * @see #container
+		 * 
+		 */	
+		protected function addTableBlock(block:TableBlockContainer, index:int):void
+		{ 
+			if ( index > _container.numChildren )
+				index = _container.numChildren;
+			_container.addChildAt(block, index);
+		}
+		
+		/**
+		 * Removes a <code>TableBlockContainer</code> object from its parent. 
+		 * The default implementation of this method, which may be overriden, removes the object
+		 * from <code>container</code> if it is a direct child of the latter.
+		 * 
+		 * This method may be called even if the object is not a descendant of <code>container</code>.
+		 * Any implementation of this method must ensure that no action is taken in this case.
+		 * 
+		 * @param textLine the <code>TableBlockContainer</code> object to remove 
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 * 
+		 * @see #container
+		 * 
+		 */	
+
+		protected function removeTableBlock(block:TableBlockContainer):void
+		{
+			if (_container.contains(block))
+				_container.removeChild(block);
+		}
+
 		
 		/**
 		 * Adds a <code>flash.display.Shape</code> object on which background shapes (such as background color) are drawn.
@@ -4780,7 +4878,16 @@ package flashx.textLayout.container
 		{
 			_linesInView.push(textLine);			
 		}
-		
+
+		/** @private */
+		tlf_internal function addComposedTableBlock(block:TableBlockContainer):void
+		{
+			var idx:int = _tableBlocksInView.indexOf(block);
+			if(idx >= 0)
+				_tableBlocksInView.splice(idx,1);
+			_tableBlocksInView.push(block);
+		}
+
 		/** @private Return the array. Client code may add lines to the array. */
 		tlf_internal function get composedLines():Array
 		{
@@ -4801,6 +4908,9 @@ package flashx.textLayout.container
 				index++;
 			}
 			_linesInView.length = index;
+			
+			//TODO: clear composed table blocks
+			
 			_updateStart = Math.min(_updateStart, pos);
 		}
 		

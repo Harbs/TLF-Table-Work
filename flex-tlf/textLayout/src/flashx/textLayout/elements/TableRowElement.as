@@ -18,6 +18,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 package flashx.textLayout.elements
 {
+	import flashx.textLayout.formats.ITextLayoutFormat;
 	import flashx.textLayout.tlf_internal;
 	
 	use namespace tlf_internal;
@@ -49,9 +50,11 @@ package flashx.textLayout.elements
 		public var totalHeight:Number = 0;// used to compute if a row will fit in parcel. Need a separate value for cells that span rows.
 		public var isMaxHeight:Boolean = false;
 		
-		public function TableRowElement()
+		public function TableRowElement(format:ITextLayoutFormat=null)
 		{
 			super();
+			if(format)
+				this.format = format;
 		}
 
 		

@@ -18,6 +18,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 package flashx.textLayout.elements
 {
+	import flashx.textLayout.formats.ITextLayoutFormat;
 	import flashx.textLayout.tlf_internal;
 	
 	use namespace tlf_internal;
@@ -36,6 +37,14 @@ package flashx.textLayout.elements
 	{		
 		//public var height:Number;
 		public var x:Number;
+		
+		public function TableColElement(format:ITextLayoutFormat=null)
+		{
+			super();
+			if(format)
+				this.format = format;
+		}
+
 		
 		/** @private */
 		override protected function get abstract():Boolean

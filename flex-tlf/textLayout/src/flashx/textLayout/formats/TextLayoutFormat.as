@@ -1049,22 +1049,6 @@ package flashx.textLayout.formats
 			return _tableColumnWidthProperty;
 		}
 		/** @private */
-		static private var _rowSpanProperty:Property;
-		static public function get rowSpanProperty():Property
-		{
-			if (!_rowSpanProperty)
-				_rowSpanProperty = Property.NewIntOrEnumProperty( "rowSpan",1,false,Vector.<String([Category.TABLECELL]),1,8000);
-			return _rowSpanProperty;
-		}
-		/** @private */
-		static private var _columnSpanProperty:Property;
-		static public function get columnSpanProperty():Property
-		{
-			if (!_columnSpanProperty)
-				_columnSpanProperty = Property.NewIntOrEnumProperty( "columnSpan",1,false,Vector.<String([Category.TABLECELL]),1,8000);
-			return _columnSpanProperty;
-		}
-		/** @private */
 		static private var _minCellHeightProperty:Property;
 		static public function get minCellHeightProperty():Property
 		{
@@ -1204,8 +1188,6 @@ package flashx.textLayout.formats
 			, borderRightPriority:borderRightPriorityProperty
 			, borderTopPriority:borderTopPriorityProperty
 			, borderBottomPriority:borderBottomPriorityProperty
-			, rowSpan:rowSpanProperty
-			, columnSpan:columnSpanProperty
 			, minCellHeight:minCellHeightProperty
 			, maxCellHeight:maxCellHeightProperty
 		}
@@ -3045,7 +3027,7 @@ package flashx.textLayout.formats
 		 * @playerversion AIR 1.5
 		 * @langversion 3.0
 		 */
-		function get borderLeftPriority():*
+		public function get borderLeftPriority():*
 		{ return _styles.borderLeftPriority; }
 		public function set borderLeftPriority(value:*):void
 		{ setStyleByProperty(TextLayoutFormat.borderLeftPriorityProperty,value); }
@@ -3062,7 +3044,7 @@ package flashx.textLayout.formats
 		 * @playerversion AIR 1.5
 		 * @langversion 3.0
 		 */
-		function get borderRightPriority():*
+		public function get borderRightPriority():*
 		{ return _styles.borderRightPriority; }
 		public function set borderRightPriority(value:*):void
 		{ setStyleByProperty(TextLayoutFormat.borderRightPriorityProperty,value); }
@@ -3079,7 +3061,7 @@ package flashx.textLayout.formats
 		 * @playerversion AIR 1.5
 		 * @langversion 3.0
 		 */
-		function get borderTopPriority():*
+		public function get borderTopPriority():*
 		{ return _styles.borderTopPriority; }
 		public function set borderTopPriority(value:*):void
 		{ setStyleByProperty(TextLayoutFormat.borderTopPriorityProperty,value); }
@@ -3096,7 +3078,7 @@ package flashx.textLayout.formats
 		 * @playerversion AIR 1.5
 		 * @langversion 3.0
 		 */
-		function get borderBottomPriority():*
+		public function get borderBottomPriority():*
 		{ return _styles.borderBottomPriority; }
 		public function set borderBottomPriority(value:*):void
 		{ setStyleByProperty(TextLayoutFormat.borderBottomPriorityProperty,value); }
@@ -3244,38 +3226,6 @@ package flashx.textLayout.formats
 		{ setStyleByProperty(TextLayoutFormat.tableColumnWidthProperty,value); }
 		
 		/**
-		 * Number of rows a cell spans
-		 * <p>Legal values as a integer are from 1 an up.</p>
-		 * <p>Default value is undefined indicating not set.</p>
-		 * 
-		 * @throws RangeError when set value is not within range for this property
-		 * 
-		 * @playerversion Flash 10
-		 * @playerversion AIR 1.5
-		 * @langversion 3.0
-		 */
-		public function get rowSpan():*
-		{ return _styles.rowSpan; }
-		public function set rowSpan(value:*):void
-		{ setStyleByProperty(TextLayoutFormat.rowSpanProperty,value); }
-		
-		/**
-		 * Number of columns a cell spans
-		 * <p>Legal values as a integer are from 1 an up.</p>
-		 * <p>Default value is undefined indicating not set.</p>
-		 * 
-		 * @throws RangeError when set value is not within range for this property
-		 * 
-		 * @playerversion Flash 10
-		 * @playerversion AIR 1.5
-		 * @langversion 3.0
-		 */
-		function get columnSpan():*
-		{ return _styles.columnSpan; }
-		public function set columnSpan(value:*):void
-		{ setStyleByProperty(TextLayoutFormat.columnSpanProperty,value); }
-		
-		/**
 		 * Minimum height of a table cell. If there is no maximum, the cell will grow in height to fit the content. Minimum and maximum of the same values will give the cell a fixed height.
 		 * <p>Legal values as a number are from 2 to 10000.</p>
 		 * <p>Legal values include FormatValue.INHERIT.</p>
@@ -3288,7 +3238,7 @@ package flashx.textLayout.formats
 		 * @playerversion AIR 1.5
 		 * @langversion 3.0
 		 */
-		function get minCellHeight():*
+		public function get minCellHeight():*
 		{ return _styles.minCellHeight; }
 		public function set minCellHeight(value:*):void
 		{ setStyleByProperty(TextLayoutFormat.minCellHeightProperty,value); }
@@ -3306,7 +3256,7 @@ package flashx.textLayout.formats
 		 * @playerversion AIR 1.5
 		 * @langversion 3.0
 		 */
-		function get maxCellHeight():*
+		public function get maxCellHeight():*
 		{ return _styles.maxCellHeight; }
 		public function set maxCellHeight(value:*):void
 		{ setStyleByProperty(TextLayoutFormat.maxCellHeightProperty,value); }
@@ -3459,10 +3409,6 @@ package flashx.textLayout.formats
 				stylesObject.borderLeftPriority = TextLayoutFormat.borderLeftPriorityProperty.defaultValue;
 			if( stylesObject.borderRightPriority != undefined &&  stylesObject.borderRightPriority != TextLayoutFormat.borderRightPriorityProperty.defaultValue)
 				stylesObject.borderRightPriority = TextLayoutFormat.borderRightPriorityProperty.defaultValue;
-			if (stylesObject.rowSpan != undefined && stylesObject.rowSpan != TextLayoutFormat.rowSpanProperty.defaultValue)
-				stylesObject.rowSpan = TextLayoutFormat.rowSpanProperty.defaultValue;
-			if (stylesObject.columnSpan != undefined && stylesObject.columnSpan != TextLayoutFormat.columnSpanProperty.defaultValue)
-				stylesObject.columnSpan = TextLayoutFormat.columnSpanProperty.defaultValue;
 			if (stylesObject.minCellHeight != undefined && stylesObject.minCellHeight != TextLayoutFormat.minCellHeightProperty.defaultValue)
 				stylesObject.minCellHeight = TextLayoutFormat.minCellHeightProperty.defaultValue;
 			if (stylesObject.maxCellHeight != undefined && stylesObject.maxCellHeight != TextLayoutFormat.maxCellHeightProperty.defaultValue)

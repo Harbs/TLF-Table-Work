@@ -852,7 +852,7 @@ package flashx.textLayout.edit
 						if ( inPrevLine && testIndex != lastLineIndexInColumn )
 						{
 							var rtPara:ParagraphElement = rtline.paragraph;
-							var rtCell:TableCellElement = rtPara.getTableCellElement();
+							var rtCell:TableCellElement = rtPara.getParentCellElement();
 							//get the last element of the cell
 							var lastElement:FlowElement = rtCell.getLastLeaf();
 							var rtLastTbLine:TextFlowLine = lastElement.getParagraph().getTextBlock().lastLine.userData;

@@ -92,7 +92,7 @@ package flashx.textLayout.compose
 	 * @langversion 3.0
 	 */
 	
-	public final class TextFlowLine implements IVerticalJustificationLine 
+	public class TextFlowLine implements IVerticalJustificationLine 
 	{
 		
 		/** @private - the selection block cache */

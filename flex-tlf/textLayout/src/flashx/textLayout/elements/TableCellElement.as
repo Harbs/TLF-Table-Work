@@ -25,7 +25,6 @@ package flashx.textLayout.elements
 	import flash.geom.Point;
 	
 	import flashx.textLayout.container.ContainerController;
-	import flashx.textLayout.container.SimpleContainer;
 	import flashx.textLayout.edit.EditManager;
 	import flashx.textLayout.edit.IEditManager;
 	import flashx.textLayout.edit.ISelectionManager;
@@ -51,12 +50,13 @@ package flashx.textLayout.elements
 		private var _width:Number;
 		private var _height:Number;
 		private var _parcelIndex:int;
-		private var _container:SimpleContainer;
+		private var _container:CellContainer;
 		private var _enableIME:Boolean = true;
 		private var _damaged:Boolean = true;
 		private var _controller:ContainerController;
 
-		
+		private var _rowSpan:uint = 1;
+		private var _columnSpan:uint = 1;
 		private var _rowIndex:int = -1;
 		private var _colIndex:int = -1;
 		
@@ -161,9 +161,9 @@ package flashx.textLayout.elements
 			_enableIME = value;
 		}
 		
-		public function get container():SimpleContainer{
+		public function get container():CellContainer{
 			if(!_container)
-				_container = new SimpleContainer(enableIME);
+				_container = new CellContainer(enableIME);
 			
 			return _container;
 		}
@@ -175,7 +175,9 @@ package flashx.textLayout.elements
 
 		public function set width(value:Number):void
 		{
-			_width = _controller.compositionWidth = value;
+			_width = value;
+			_controller.setCompositionSize(value,_controller.compositionHeight);
+//			_controller.compositionWidth 
 			_damaged = true;
 		}
 
@@ -186,11 +188,35 @@ package flashx.textLayout.elements
 
 		public function set height(value:Number):void
 		{
-			_height = _controller.compositionHeight = value;
+			_height = value;
+			_controller.setCompositionSize(_controller.compositionWidth,value);
+			_damaged = true;
 		}
 		public function getComposedHeight():Number
 		{
-			_controller.getContentBounds().height;
+			return _controller.getContentBounds().height;
+		}
+
+		public function get rowSpan():uint
+		{
+			return _rowSpan;
+		}
+
+		public function set rowSpan(value:uint):void
+		{
+			if(value >= 1)
+				_rowSpan = value;
+		}
+
+		public function get columnSpan():uint
+		{
+			return _columnSpan;
+		}
+
+		public function set columnSpan(value:uint):void
+		{
+			if(value >= 1)
+				_columnSpan = value;
 		}
 		
 		
