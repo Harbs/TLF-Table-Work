@@ -5,6 +5,8 @@
 	<fx:Script>
 		<![CDATA[
 			import flashx.textLayout.container.ContainerController;
+			import flashx.textLayout.edit.EditManager;
+			import flashx.textLayout.edit.SelectionManager;
 			import flashx.textLayout.elements.ParagraphElement;
 			import flashx.textLayout.elements.SpanElement;
 			import flashx.textLayout.elements.TableBodyElement;
@@ -16,16 +18,20 @@
 			import flashx.textLayout.elements.TextFlow;
 			import flashx.textLayout.formats.TableFrame;
 			import flashx.textLayout.formats.TableRules;
+			import flashx.undo.UndoManager;
 			
 			import mx.events.FlexEvent;
 			[Bindable]private var textFlow:TextFlow;
 			private var table:TableElement;
 			private var controller:ContainerController;
+			var undoManager:UndoManager;
 			
 			private function onComplete():void{
 				textFlow = new TextFlow();
+				undoManager = new UndoManager();
+				textFlow.interactionManager = new EditManager(undoManager);
 				table = new TableElement();
-				table.tableWidth = 600;
+				//table.tableWidth = 600;
 				table.columnCount = 4;
 				//var body:TableBodyElement = new TableBodyElement();
 				//table.addChild(body);
@@ -58,6 +64,7 @@
 					span.text = "This is cell #" + i;
 					para.addChild(span);
 					var cellFlow:TextFlow = new TextFlow();
+					cellFlow.interactionManager = new EditManager(undoManager);
 					cellFlow.addChild(para);
 					cell.textFlow = cellFlow;
 					//cell.addChild(para);

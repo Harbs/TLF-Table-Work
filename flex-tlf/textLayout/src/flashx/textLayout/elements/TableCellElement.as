@@ -85,6 +85,8 @@ package flashx.textLayout.elements
 		}
 		
 		public function compose():Boolean{
+			if(getTable() && getTable().getColumnAt(colIndex))
+				width = getTable().getColumnAt(colIndex).columnWidth;
 			_damaged = false;
 			if(_textFlow && _textFlow.flowComposer)
 				return _textFlow.flowComposer.compose();
@@ -180,10 +182,12 @@ package flashx.textLayout.elements
 
 		public function set width(value:Number):void
 		{
+			if(_width != value)
+				_damaged = true;
 			_width = value;
 			_controller.setCompositionSize(value,_controller.compositionHeight);
 //			_controller.compositionWidth 
-			_damaged = true;
+			
 		}
 
 		public function get height():Number
@@ -193,9 +197,11 @@ package flashx.textLayout.elements
 
 		public function set height(value:Number):void
 		{
+			if(_height != value)
+				_damaged = true;
+				
 			_height = value;
 			_controller.setCompositionSize(_controller.compositionWidth,value);
-			_damaged = true;
 		}
 		public function getComposedHeight():Number
 		{

@@ -435,11 +435,24 @@ package flashx.textLayout.elements
 			while (cCount > columns.length){
 				addColumn();
 			}
-			if(computedFormat.tableWidth){
-				var w:Number = computedFormat.tableWidth;
-			} else {
-				w = suggestedWidth;
+			var w:Number;
+			switch(typeof(computedFormat.tableWidth)){
+				case "number":
+					w = suggestedWidth;
+					break;
+				case "string":
+					if(computedFormat.tableWidth.indexOf("%") > 0){
+						w = suggestedWidth / (parseFloat(computedFormat.tableWidth)/100);
+						break;
+					}
+				default:
+					w = suggestedWidth;
+					break;
 			}
+			if(isNaN(w))
+				w = 600;
+			if(w > 20000)
+				w = 600;
 			for each(var col:TableColElement in columns){
 				// simply stomp on the settings. (need to finesse this...)
 					col.columnWidth = w / numColumns;
