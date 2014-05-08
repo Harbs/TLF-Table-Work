@@ -45,7 +45,6 @@ package flashx.textLayout.elements
 	
 	use namespace tlf_internal;
 	
-	[ExcludeClass]
 	/** @private Manages bounds calculation and rendering of backgroundColor character format. */
 	public class BackgroundManager
 	{

@@ -1753,7 +1753,7 @@ package flashx.textLayout.compose
 		
 		/** @private 
 		 * 
-		 * 
+		 * ? Get a list of rects of the characters in the given textline? Used to show selection? JF 
 		 */
 		private function makeSelectionBlocks(textLine:TextLine, begIdx:int, endIdx:int, paraAbsStart:int, blockProgression:String, direction:String, heightAndAdj:Array):Array
 		{
@@ -1918,7 +1918,7 @@ package flashx.textLayout.compose
 		
 		/** @private 
 		 * 
-		 * 
+		 * ? Get the bounds of the supplied range of characters in the given textline? Used to show selection? JF 
 		 */
 		private function makeBlock(textLine:TextLine, begTextIndex:int, begAtomIndex:int, endAtomIndex:int, startMetrics:Rectangle, blockProgression:String, direction:String, heightAndAdj:Array):Rectangle
 		{

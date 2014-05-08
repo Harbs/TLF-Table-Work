@@ -51,7 +51,6 @@ package flashx.textLayout.compose
 	
 	use namespace tlf_internal;
 
-	[ExcludeClass]
 	/** Keeps track of internal state during composition. 
 	 * 
 	 * This is the simpler version, used when there are no floats, no wraps, no columns.
@@ -111,7 +110,7 @@ package flashx.textLayout.compose
 			vjBeginLineIndex = 0;
 			vjDisableThisParcel = false;
 			
-			return super.composeTextFlow(textFlow, composeToPosition, controllerEndIndex);
+ 			return super.composeTextFlow(textFlow, composeToPosition, controllerEndIndex);
 		}
 		
 		protected override function initializeForComposer(composer:IFlowComposer,composeToPosition:int,controllerStartIndex:int, controllerEndIndex:int):void

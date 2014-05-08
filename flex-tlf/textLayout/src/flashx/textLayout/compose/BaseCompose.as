@@ -76,7 +76,6 @@ package flashx.textLayout.compose
 	use namespace tlf_internal;
 	
 	
-	[ExcludeClass]
 	/** @private Common composer base class */
 	public class BaseCompose
 	{

@@ -35,7 +35,6 @@ package flashx.textLayout.compose
 	
 	use namespace tlf_internal;
 			
-	[ExcludeClass]
 	/** @private
 	 * Used for composing text containers, keeps track of the areas that text in the 
 	 * flow is composed into.

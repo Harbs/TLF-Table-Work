@@ -1,0 +1,603 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			 xmlns:s="library://ns.adobe.com/flex/spark" 
+			 xmlns:mx="library://ns.adobe.com/flex/mx" 
+			 
+			 minWidth="955" minHeight="600" 
+			 applicationComplete="importApplicationCompleteHandler(event)">
+	
+	
+	
+	<fx:Declarations>
+		<fx:XML id="simpleTextMarkup">
+			<flow:TextFlow version="3.0.0" xmlns:flow='http://ns.adobe.com/textLayout/2008' fontSize='11' 
+						   paddingTop='8' paddingLeft='8' paddingRight='8'>
+				<flow:p > <flow:img paddingRight="8" source="http://static0.therichestimages.com/wp-content/uploads/2014/03/mario-kart-8-trailer.jpg" width="100" height="100" float="right"></flow:img>
+					Bacon ipsum. Permanent link to this comic: http://xkcd.com/876/ Image URL (for hotlinking/embedding): http://imgs.xkcd.com/comics/trapped.png
+					Something else Something else Something else Something else Something else Something else Something else 
+					
+				</flow:p>
+			</flow:TextFlow>
+		</fx:XML>
+		
+		<fx:XML id="testTextFlow">
+			<flow:TextFlow xmlns:flow="http://ns.adobe.com/textLayout/2008"
+						   fontSize="11" paddingLeft="8" paddingRight="8" paddingTop="8"
+						   paragraphSpaceBefore="6" textIndent="10" version="3.0.0">
+				<flow:p clearFloats="start" paragraphSpaceBefore="inherit">
+					<flow:img width="600" height="300" float="right"
+							  source="http://imgs.xkcd.com/comics/trapped.png"/>
+					<flow:span>Bacon ipsum. Permanent link to this comic: http://xkcd.com/876/ Image URL (for hotlinking/embedding): http://imgs.xkcd.com/comics/trapped.png</flow:span>
+					<flow:TextFlow xmlns:flow="http://ns.adobe.com/textLayout/2008"
+								   fontSize="15" version="3.0.0">  
+						<flow:p paragraphSpaceBefore="inherit">Here is an embedded text flow.</flow:p>
+					</flow:TextFlow>
+				</flow:p>
+			</flow:TextFlow>
+		</fx:XML>
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import flash.text.engine.TextLine;
+			import flash.utils.ByteArray;
+			
+			import mx.core.IVisualElement;
+			import mx.events.FlexEvent;
+			
+			import spark.components.Alert;
+			import spark.core.SpriteVisualElement;
+			
+			import flashx.textLayout.tlf_internal;
+			import flashx.textLayout.compose.ComposeState;
+			import flashx.textLayout.compose.IFlowComposer;
+			import flashx.textLayout.compose.ParcelList;
+			import flashx.textLayout.compose.StandardFlowComposer;
+			import flashx.textLayout.compose.TextFlowLine;
+			import flashx.textLayout.container.ColumnState;
+			import flashx.textLayout.container.ContainerController;
+			import flashx.textLayout.conversion.ITextImporter;
+			import flashx.textLayout.conversion.TextConverter;
+			import flashx.textLayout.edit.EditManager;
+			import flashx.textLayout.edit.ISelectionManager;
+			import flashx.textLayout.edit.SelectionFormat;
+			import flashx.textLayout.edit.SelectionManager;
+			import flashx.textLayout.elements.FlowLeafElement;
+			import flashx.textLayout.elements.InlineGraphicElement;
+			import flashx.textLayout.elements.ParagraphElement;
+			import flashx.textLayout.elements.SpanElement;
+			import flashx.textLayout.elements.TableCellElement;
+			import flashx.textLayout.elements.TableElement;
+			import flashx.textLayout.elements.TextFlow;
+			import flashx.textLayout.events.FlowElementMouseEvent;
+			import flashx.textLayout.events.ModelChange;
+			import flashx.textLayout.events.StatusChangeEvent;
+			import flashx.undo.UndoManager;
+			
+			public var textFlow:TextFlow;
+			
+			use namespace tlf_internal;
+			
+			// embed table test
+			[Embed(source="data/tableExample.xml",mimeType="application/octet-stream")]
+			private var TableExample:Class;
+
+			
+			
+			protected function importApplicationCompleteHandler(event:FlexEvent):void {
+				var container:SpriteVisualElement;
+				var controller:ContainerController;
+				var errors:Vector.<String>;
+				var importer:ITextImporter = TextConverter.getImporter(TextConverter.TEXT_LAYOUT_FORMAT);
+				var tableByte:ByteArray = new TableExample();
+				var tableData:String = tableByte.readMultiByte(tableByte.length,"utf-8");
+				
+				importer.throwOnError = false;
+				
+				//textFlow = importer.importToFlow(tableData);
+				textFlow = importer.importToFlow(simpleTextMarkup);
+				//textFlow = getTextFlowContent();
+				errors = importer.errors;
+				
+				if (!errors && textFlow) {
+					textFlow.addEventListener(StatusChangeEvent.INLINE_GRAPHIC_STATUS_CHANGE, graphicStatusChanged, false, 0, true);
+					textFlow.addEventListener(ModelChange.ELEMENT_MODIFIED, elementModified, false, 0, true);
+					container = new SpriteVisualElement();
+					controller = new ContainerController(container, group.width, group.height);
+					// Add controller to text flow; add container to stage and display text
+					textFlow.flowComposer.addController(controller);
+					//textFlow.interactionManager = new SelectionManager();
+					textFlow.interactionManager = new EditManager(new UndoManager);
+					group.addElement(container as IVisualElement);
+					textFlow.flowComposer.updateAllControllers();
+				}
+				else {
+					Alert.show(errors.join("."), "Parsing Error");
+				}
+				
+			}
+			
+			/******************************************************
+			 * Table
+			 *****************************************************/
+			
+			public function addTable():TableElement {
+				var table:TableElement = new TableElement();
+				var cell:TableCellElement = new TableCellElement();
+				
+				cell.textFlow = getTextFlowContent();
+				cell.colIndex = 0;
+				cell.rowIndex = 0;
+				
+				table.columnCount = 1;
+				table.addRow();
+				table.addChild(cell);
+				
+				var p:ParagraphElement = getParagraph();
+				
+				if (!p) {
+					p = new ParagraphElement();
+					var span:SpanElement = new SpanElement();
+					span.text = "Paragraph before table";
+					textFlow.addChild(p);
+				}
+				
+				//p.addChild(table);
+				textFlow.addChild(table);
+				
+				return table;
+			}
+			
+			public function addRow():void {
+				var items:Array = textFlow.getElementsByTypeName("table");
+				var table:TableElement = items.length ? items[0] : null;
+				
+				if (!table) {
+					addTable();
+				}
+				
+				var rowIdx:int = table.numRows;
+				var cell:TableCellElement = new TableCellElement();
+				var cellFlow:TextFlow = new TextFlow();
+				var para:ParagraphElement = new ParagraphElement();
+				var span:SpanElement = new SpanElement();
+				
+				cell.colIndex = 0;
+				cell.rowIndex = rowIdx;
+				span.text = "Row " + rowIdx + "; Col " + cell.colIndex;
+				para.addChild(span);
+				cellFlow.interactionManager = new SelectionManager();
+				cellFlow.addChild(para);
+				cell.textFlow = cellFlow;
+				
+				table.addChild(table);
+			}
+			
+			public function addColumn():void {
+				var items:Array = textFlow.getElementsByTypeName("table");
+				var table:TableElement = items.length ? items[0] : null;
+				
+				if (!table) {
+					addTable();
+				}
+				
+				var rowIdx:int = table.numRows;
+				var cell:TableCellElement = new TableCellElement();
+				var cellFlow:TextFlow = new TextFlow();
+				var para:ParagraphElement = new ParagraphElement();
+				var span:SpanElement = new SpanElement();
+				
+				cell.colIndex = 0;
+				cell.rowIndex = rowIdx;
+				span.text = "Row " + rowIdx + "; Col " + cell.colIndex;
+				para.addChild(span);
+				cellFlow.interactionManager = new SelectionManager();
+				cellFlow.addChild(para);
+				cell.textFlow = cellFlow;
+				
+				table.addChild(table);
+			}
+			
+			public function removeTable():TableElement {
+				var items:Array = textFlow.getElementsByTypeName("table");
+				var table:TableElement = items.length ? items[0] : null;
+				
+				if (table) {
+					return textFlow.removeChild(table) as TableElement;
+				}
+				
+				updateAllControllers();
+				return null;
+			}
+			
+			public function removeRow():TableElement {
+				var items:Array = textFlow.getElementsByTypeName("table");
+				var table:TableElement = items.length ? items[0] : null;
+				
+				if (table) {
+					return textFlow.removeChild(table) as TableElement;
+				}
+				
+				return null;
+			}
+			
+			public function removeColumn():TableElement {
+				var items:Array = textFlow.getElementsByTypeName("table");
+				var table:TableElement = items.length ? items[0] : null;
+				
+				if (table) {
+					return textFlow.removeChild(table) as TableElement;
+				}
+				
+				return null;
+			}
+			
+			public function selectCell():TableElement {
+				var items:Array = textFlow.getElementsByTypeName("table");
+				var table:TableElement = items.length ? items[0] : null;
+				
+				if (table) {
+					return textFlow.removeChild(table) as TableElement;
+				}
+				
+				return null;
+			}
+			
+			public function selectCells():TableElement {
+				var items:Array = textFlow.getElementsByTypeName("table");
+				var table:TableElement = items.length ? items[0] : null;
+				
+				if (table) {
+					return textFlow.removeChild(table) as TableElement;
+				}
+				
+				return null;
+			}
+			
+			public function selectColumn():TableElement {
+				var items:Array = textFlow.getElementsByTypeName("table");
+				var table:TableElement = items.length ? items[0] : null;
+				
+				if (table) {
+					return textFlow.removeChild(table) as TableElement;
+				}
+				
+				return null;
+			}
+			
+			public function selectRow():TableElement {
+				var items:Array = textFlow.getElementsByTypeName("table");
+				var table:TableElement = items.length ? items[0] : null;
+				
+				if (table) {
+					return textFlow.removeChild(table) as TableElement;
+				}
+				
+				return null;
+			}
+			
+			public function joinCells():TableElement {
+				var items:Array = textFlow.getElementsByTypeName("table");
+				var table:TableElement = items.length ? items[0] : null;
+				
+				if (table) {
+					return textFlow.removeChild(table) as TableElement;
+				}
+				
+				return null;
+			}
+			
+			
+			/******************************************************
+			 * Bounds
+			 *****************************************************/
+			
+			public function showTextLineBounds():void
+			{
+				var i:int;
+				var j:int;
+				var b1:Rectangle;
+				var b2:Rectangle;
+				var fc:IFlowComposer = textFlow.flowComposer;
+				var controller:ContainerController = textFlow.flowComposer.getControllerAt(0);
+				var color:uint = 0x00dd00;
+				var method:int = 0;
+				var clearedOnce:Boolean;
+				
+				for (i = 0; i < fc.numLines; i++) {
+					var _tfl:TextFlowLine = fc.getLineAt(i);
+					var _tl:TextLine = _tfl.getTextLine();
+					b1 = _tfl.getBounds();
+					b2 = _tl.getBounds(_tfl.controller.container);
+					
+					if (method==1) {
+						var g:Sprite = new Sprite;
+						g.graphics.lineStyle(1, color, 0.6);
+						g.graphics.drawRect(0, Math.max(-b1.height,-_tfl.height), b1.width, b1.height);
+						removeAllChildren(_tl);
+						_tl.addChild(g);
+					}
+					else {
+						var graphics:Graphics = _tfl.controller.container.graphics;
+						if (!clearedOnce && graphics.readGraphicsData().length!=0) {
+							graphics.clear();
+							clearedOnce = true;
+						}
+						graphics.beginFill(color);
+						graphics.drawRect(b1.x, b1.y, b1.width, b1.height);
+						graphics.endFill();
+					}
+				}
+			}
+			
+			public function showAtomBounds():void
+			{
+				var i:int;
+				var j:int;
+				var b1:Rectangle;
+				var fc:IFlowComposer = textFlow.flowComposer;
+				var color:uint = 0x00dd00;
+				
+				for (i = 0; i < fc.numLines; i++)
+				{
+					var _tfl:TextFlowLine = fc.getLineAt(i);
+					var _tl:TextLine = _tfl.getTextLine();
+					
+					for (j = 0; j < _tl.atomCount; j++)
+					{
+						var textBlockBeginIndex:int = _tl.getAtomTextBlockBeginIndex(j);
+						var textFlowPosition:int = _tfl.paragraph.getAbsoluteStart()+_tl.getAtomTextBlockBeginIndex(j);
+						b1 = _tl.getAtomBounds(j);
+						var g:Sprite = new Sprite;
+						g.graphics.lineStyle(1, color,0.6)
+						g.graphics.drawRect(b1.x, b1.y , b1.width, b1.height);
+						_tl.addChild(g);
+						
+						var leafElement:FlowLeafElement = textFlow.findLeaf(textFlowPosition);
+						var leafRelativePosition:int = textFlowPosition-leafElement.getAbsoluteStart();
+						var leafCharacter:String = leafElement.text.substr(leafRelativePosition,1);
+						//trace(i,j,textBlockBeginIndex,textFlowPosition,b1);
+					}
+				}
+			}
+			
+			public function showParagraphBounds():Rectangle {
+				var bounds:Rectangle = new Rectangle();
+				var paragraph:ParagraphElement = getParagraph();
+				var container:ContainerController = paragraph.getEnclosingController(0);
+				var sprite:Sprite = container.container;
+				var pos:int = paragraph.getAbsoluteStart();
+				var endPos:int = pos + paragraph.textLength;
+				var color:int = 0x00FF00;
+				
+				while (pos < endPos) {
+					var line:TextFlowLine = paragraph.getTextFlow().flowComposer.findLineAtPosition(pos);
+					//bounds = bounds.union(line.getTextLine().getBounds(this));
+					bounds = bounds.union(line.getTextLine().getBounds(sprite));
+					pos += line.textLength;
+				}
+				
+				sprite.graphics.clear();
+				sprite.graphics.beginFill(color);
+				sprite.graphics.drawRect(bounds.left, bounds.top, bounds.width, bounds.height);
+				sprite.graphics.endFill();
+				sprite.graphics.lineStyle(1, 0x0);
+				sprite.graphics.moveTo(bounds.left - 1, bounds.top - 1);
+				sprite.graphics.lineTo(bounds.right + 1, bounds.top - 1);
+				sprite.graphics.lineTo(bounds.right + 1, bounds.bottom);
+				sprite.graphics.lineTo(bounds.left - 1, bounds.bottom);
+				sprite.graphics.lineTo(bounds.left - 1, bounds.top - 1);
+				
+				return bounds;
+			}
+			
+			public function showParcelBounds():void {
+				var flowComposer:StandardFlowComposer = textFlow.flowComposer as StandardFlowComposer;
+				var container:ContainerController = flowComposer.getControllerAt(flowComposer.numControllers-1);
+				var columnState:ColumnState = container.columnState;
+				var composeState:ComposeState = flowComposer.getComposeState();
+				var parcelList:ParcelList = composeState.parcelList;
+				var backgroundManager:Object = textFlow.getBackgroundManager();
+				var blocks:Array = textFlow.getBackgroundManager()?textFlow.backgroundManager.getShapeRectArray():[];
+				var selectionSprite:Sprite = container.getSelectionSprite(true) as Sprite;
+				var backgroundSprite:Shape = container.getBackgroundShape() as Shape;
+				
+				var bounds:Rectangle = container.getContentBounds();
+				var g:Graphics = backgroundSprite.graphics;
+				g.clear();
+				g.beginFill(0x0000FF);
+				g.drawRect(bounds.left, bounds.top, bounds.width, bounds.height);
+				g.endFill();
+				g.lineStyle(1, 0x0);
+				g.moveTo(bounds.left - 1, bounds.top - 1);
+				g.lineTo(bounds.right + 1, bounds.top - 1);
+				g.lineTo(bounds.right + 1, bounds.bottom);
+				g.lineTo(bounds.left - 1, bounds.bottom);
+				g.lineTo(bounds.left - 1, bounds.top - 1);
+				
+			}
+			
+			/******************************************************
+			 * Selection
+			 *****************************************************/
+			
+			public function highlightOneCharacter():void {
+				var selObj:Shape = new Shape();
+				
+				var flowComposer:IFlowComposer = textFlow.flowComposer;
+				var line:TextFlowLine = flowComposer.getLineAt(1);
+				var selFormat:SelectionFormat = textFlow.interactionManager ? textFlow.interactionManager.currentSelectionFormat : null;
+				//if (!selFormat) {
+				selFormat = new SelectionFormat(0xFF0000, 1, "difference", 0xFF0000, 1, "difference");
+				//}
+				var selectionAbsoluteStart:int = 0;
+				var selectionAbsoluteEnd:int = 1;
+				var controller:ContainerController = flowComposer.getControllerAt(0);
+				var container:Sprite = controller.container;
+				
+				controller.addSelectionShapes(selFormat, 0, 10);
+				//line.hiliteBlockSelection(selObj, selFormat, textFlow.flowComposer.getControllerAt(0).container as DisplayObject, selectionAbsoluteStart, selectionAbsoluteEnd, null, null);
+				
+			}
+			
+			public function selectRange():void {
+				var flowComposer:IFlowComposer = textFlow.flowComposer;
+				textFlow.interactionManager = new SelectionManager;
+				var interactionManager:ISelectionManager = textFlow.interactionManager;
+				interactionManager.selectRange(10, 22); // this is not working? 
+			}
+			
+			/******************************************************
+			 * Misc
+			 *****************************************************/
+			
+			protected function updateAllControllers():void {
+				textFlow.flowComposer.updateAllControllers();
+			}
+			
+			protected function graphicStatusChanged(event:StatusChangeEvent):void {
+				var img:InlineGraphicElement = event.element as InlineGraphicElement;
+				updateAllControllers();
+				
+				if (event.status == "ready" || event.status == "sizePending") {
+					
+					var mirror:IEventDispatcher = event.element.getEventMirror();
+					mirror.addEventListener(FlowElementMouseEvent.MOUSE_DOWN,traceEvent);
+					mirror.addEventListener(FlowElementMouseEvent.MOUSE_UP,traceEvent);
+					mirror.addEventListener(FlowElementMouseEvent.MOUSE_MOVE,traceEvent);
+					mirror.addEventListener(FlowElementMouseEvent.ROLL_OVER,traceEvent);
+					mirror.addEventListener(FlowElementMouseEvent.ROLL_OUT,traceEvent);
+					mirror.addEventListener(FlowElementMouseEvent.CLICK,traceEvent);
+					
+					textFlow.flowComposer.updateAllControllers();
+				}
+			}
+			
+			protected function elementModified(event:Event):void
+			{
+				//trace("event: " + event.type);
+			}
+			
+			
+			public function traceEvent(event:FlowElementMouseEvent):void
+			{
+				//trace(event.flowElement.defaultTypeName+ " " + getTimer() + " " + event.toString() + event.originalEvent.toString());
+				
+				// attempt to add a cursor over an image / table
+				if (event.type==FlowElementMouseEvent.ROLL_OVER || 
+					event.type==FlowElementMouseEvent.MOUSE_MOVE) {
+					Mouse.cursor = MouseCursor.HAND;
+				}
+				else if (event.type==FlowElementMouseEvent.ROLL_OUT) {
+					Mouse.cursor = MouseCursor.AUTO;
+				}
+			}
+			
+			public function getTextFlowContent(text:String = null, selectable:Boolean = false, editable:Boolean = false):TextFlow {
+				var textFlowContent:TextFlow = new TextFlow();
+				var paragraph:ParagraphElement = new ParagraphElement();
+				var span:SpanElement = new SpanElement();
+				
+				if (text) {
+					span.text = text;
+				}
+				else {
+					span.text = "This is cell";
+				}
+				
+				paragraph.addChild(span);
+				
+				if (editable) {
+					textFlowContent.interactionManager = new EditManager(new UndoManager);
+				}
+				else if (selectable) {
+					textFlowContent.interactionManager = new SelectionManager();
+				}
+				
+				textFlowContent.addChild(paragraph);
+				
+				return textFlowContent;
+			}
+			
+			public function getParagraph():ParagraphElement {
+				var paragraph:ParagraphElement;
+				
+				if (textFlow.interactionManager) {
+					var cursor:int = Math.max(0, textFlow.interactionManager.anchorPosition);
+					paragraph = textFlow.findAbsoluteParagraph(cursor);
+				}
+				
+				if (!paragraph) {
+					var items:Array = textFlow.getElementsByTypeName("p");
+					paragraph = items.length ? items[0] : null;
+				}
+				
+				return paragraph;
+			}
+			
+			public function removeAllChildren(sprite:DisplayObjectContainer):void {
+				
+				sprite.removeChildren();
+				if (sprite.numChildren) {
+				}
+			}
+			
+			public function removeShapes():void
+			{
+				
+				var bounds:Rectangle = new Rectangle();
+				var paragraph:ParagraphElement = getParagraph();
+				var container:ContainerController = paragraph.getEnclosingController(0);
+				var sprite:Sprite = container.container;
+				
+				var i:int;
+				var j:int;
+				var b1:Rectangle;
+				var fc:IFlowComposer = textFlow.flowComposer;
+				var color:uint = 0x00dd00;
+				
+				for (i = 0; i < fc.numLines; i++)
+				{
+					var _tfl:TextFlowLine = fc.getLineAt(i);
+					var _tl:TextLine = _tfl.getTextLine();
+					removeAllChildren(_tl);
+				}
+				
+				if (sprite && sprite.graphics.readGraphicsData().length!=0) {
+					sprite.graphics.clear();
+				}
+			}
+		]]>
+	</fx:Script>
+	
+	<s:VGroup>
+		<s:HGroup>
+			<s:Button label="Update all controllers" click="updateAllControllers(event)"/>
+			<s:Button label="Highlight One Character" click="selectRange()"/>
+			<s:Button label="Show paragraph bounds" click="showParagraphBounds()"/>
+			<s:Button label="Show parcel bounds" click="showParcelBounds()"/>
+			<s:Button label="Show bounds of text lines" click="showTextLineBounds()"/>
+			<s:Button label="Show bounds of atoms" click="showAtomBounds()"/>
+			<s:Button label="Remove Shapes" click="removeShapes()"/>
+		</s:HGroup>
+		<s:HGroup>
+			<s:Button label="Add Table" click="addTable()"/>
+			<s:Button label="Add Row" click="addRow()"/>
+			<s:Button label="Add Column" click="addColumn()"/>
+			<s:Button label="Remove Row" click="removeRow()"/>
+			<s:Button label="Remove Column" click="removeColumn()"/>
+			<s:Button label="Remove Table" click="removeTable()"/>
+			<s:Button label="Select Table" click="selectRange()"/>
+			<s:Button label="Select Row" click="selectRow()"/>
+			<s:Button label="Select Column" click="selectColumn()"/>
+			<s:Button label="Select Cell" click="selectCell()"/>
+			<s:Button label="Select Cells" click="selectCells()"/>
+			<s:Button label="Join Cells" click="joinCells()"/>
+		</s:HGroup>
+	</s:VGroup>
+	
+	<!--<s:Label text="Hello There" />
+	<s:Label text="Hello There"/>-->
+	<s:BorderContainer id="group" left="30" top="50" width="700" height="90%"/>
+	
+</s:Application>
