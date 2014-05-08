@@ -145,6 +145,8 @@
 				//p.addChild(table);
 				textFlow.addChild(table);
 				
+				updateAllControllers();
+				
 				return table;
 			}
 			
@@ -402,10 +404,11 @@
 				var selectionSprite:Sprite = container.getSelectionSprite(true) as Sprite;
 				var backgroundSprite:Shape = container.getBackgroundShape() as Shape;
 				
+				return;
 				var bounds:Rectangle = container.getContentBounds();
 				var g:Graphics = backgroundSprite.graphics;
 				g.clear();
-				g.beginFill(0x0000FF);
+				g.beginFill(0x00ff00);
 				g.drawRect(bounds.left, bounds.top, bounds.width, bounds.height);
 				g.endFill();
 				g.lineStyle(1, 0x0);
@@ -572,7 +575,7 @@
 	
 	<s:VGroup>
 		<s:HGroup>
-			<s:Button label="Update all controllers" click="updateAllControllers(event)"/>
+			<s:Button label="Update all controllers" click="updateAllControllers()"/>
 			<s:Button label="Highlight One Character" click="selectRange()"/>
 			<s:Button label="Show paragraph bounds" click="showParagraphBounds()"/>
 			<s:Button label="Show parcel bounds" click="showParcelBounds()"/>
