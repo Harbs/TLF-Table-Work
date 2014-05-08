@@ -67,7 +67,9 @@
 			import flashx.textLayout.elements.ParagraphElement;
 			import flashx.textLayout.elements.SpanElement;
 			import flashx.textLayout.elements.TableCellElement;
+			import flashx.textLayout.elements.TableColElement;
 			import flashx.textLayout.elements.TableElement;
+			import flashx.textLayout.elements.TableRowElement;
 			import flashx.textLayout.elements.TextFlow;
 			import flashx.textLayout.events.FlowElementMouseEvent;
 			import flashx.textLayout.events.ModelChange;
@@ -150,7 +152,7 @@
 				return table;
 			}
 			
-			public function addRow():void {
+			public function addRow():TableRowElement {
 				var items:Array = textFlow.getElementsByTypeName("table");
 				var table:TableElement = items.length ? items[0] : null;
 				
@@ -158,24 +160,28 @@
 					addTable();
 				}
 				
-				var rowIdx:int = table.numRows;
+				var rowIndex:int = table.numRows;
 				var cell:TableCellElement = new TableCellElement();
 				var cellFlow:TextFlow = new TextFlow();
 				var para:ParagraphElement = new ParagraphElement();
 				var span:SpanElement = new SpanElement();
 				
 				cell.colIndex = 0;
-				cell.rowIndex = rowIdx;
-				span.text = "Row " + rowIdx + "; Col " + cell.colIndex;
+				cell.rowIndex = rowIndex;
+				span.text = "Row " + rowIndex + "; Col " + cell.colIndex;
 				para.addChild(span);
 				cellFlow.interactionManager = new SelectionManager();
 				cellFlow.addChild(para);
 				cell.textFlow = cellFlow;
 				
-				table.addChild(table);
+				table.addChild(cell);
+				
+				updateAllControllers();
+				
+				return table.getRowAt(rowIndex);
 			}
 			
-			public function addColumn():void {
+			public function addColumn():TableColElement {
 				var items:Array = textFlow.getElementsByTypeName("table");
 				var table:TableElement = items.length ? items[0] : null;
 				
@@ -183,7 +189,7 @@
 					addTable();
 				}
 				
-				var rowIdx:int = table.numRows;
+				/*var rowIdx:int = table.numRows;
 				var cell:TableCellElement = new TableCellElement();
 				var cellFlow:TextFlow = new TextFlow();
 				var para:ParagraphElement = new ParagraphElement();
@@ -197,7 +203,28 @@
 				cellFlow.addChild(para);
 				cell.textFlow = cellFlow;
 				
-				table.addChild(table);
+				table.addChild(cell);*/
+				
+				var columnIndex:int = table.numColumns;
+				/*var cell:TableCellElement = new TableCellElement();
+				var cellFlow:TextFlow = new TextFlow();
+				var para:ParagraphElement = new ParagraphElement();
+				var span:SpanElement = new SpanElement();
+				
+				cell.colIndex = 0;
+				cell.rowIndex = rowIndex;
+				span.text = "Row " + rowIndex + "; Col " + cell.colIndex;
+				para.addChild(span);
+				cellFlow.interactionManager = new SelectionManager();
+				cellFlow.addChild(para);
+				cell.textFlow = cellFlow;*/
+				
+				table.addColumn();
+				//table.addChild(cell);
+				
+				updateAllControllers();
+				
+				return table.getColumnAt(columnIndex);
 			}
 			
 			public function removeTable():TableElement {
@@ -570,6 +597,22 @@
 					sprite.graphics.clear();
 				}
 			}
+			
+			public function clearTextFlow():void {
+				//textFlow.setTextLength(0);
+				//textFlow.deleteContainerText(0, textFlow.textLength);
+				
+				if (textFlow.numChildren) {
+					textFlow.replaceChildren(0, textFlow.numChildren);
+				}
+				
+				updateAllControllers();
+				
+				if (textFlow.interactionManager) {
+					textFlow.interactionManager.selectAll();
+					textFlow.interactionManager.setFocus();
+				}
+			}
 		]]>
 	</fx:Script>
 	
@@ -582,6 +625,7 @@
 			<s:Button label="Show bounds of text lines" click="showTextLineBounds()"/>
 			<s:Button label="Show bounds of atoms" click="showAtomBounds()"/>
 			<s:Button label="Remove Shapes" click="removeShapes()"/>
+			<s:Button label="Clear TextFlow" click="clearTextFlow()"/>
 		</s:HGroup>
 		<s:HGroup>
 			<s:Button label="Add Table" click="addTable()"/>
