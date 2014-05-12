@@ -27,12 +27,14 @@ package flashx.textLayout.elements
 	import flash.text.engine.TextBlock;
 	import flash.text.engine.TextLine;
 	
+	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.compose.TextFlowTableBlock;
 	import flashx.textLayout.events.FlowElementEventDispatcher;
 	import flashx.textLayout.events.FlowElementMouseEventManager;
 	import flashx.textLayout.events.ModelChange;
-	import flashx.textLayout.formats.*;
-	import flashx.textLayout.tlf_internal;
+	import flashx.textLayout.formats.FormatValue;
+	import flashx.textLayout.formats.ITextLayoutFormat;
+	import flashx.textLayout.formats.TextLayoutFormat;
 	
 	use namespace tlf_internal;
 	
@@ -232,6 +234,7 @@ package flashx.textLayout.elements
 		public function insertRow(row:TableRowElement):Boolean{
 			return insertRowAt(numRows,row);
 		}
+		
 		public function insertRowAt(idx:int,row:TableRowElement):Boolean{
 			if(idx < 0 || idx > rows.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
@@ -242,34 +245,39 @@ package flashx.textLayout.elements
 
 			return true;
 		}
-		public function removeRow(row:TableRowElement):Boolean{
+		
+		public function removeRow(row:TableRowElement):TableRowElement {
 			var i:int = rows.indexOf(row);
 			if(i < 0)
-				return false;
-			rows.splice(i,1);
-			return true;
-		}
-		public function removeRowAt(idx:int):Boolean{
-			if(idx < 0 || idx > rows.length - 1)
-				return false;
-			
-			rows.splice(idx,1);
-			return true;
+				return null;
+			return rows.splice(i,1)[0] as TableRowElement;
 		}
 		
-		public function removeColumn(column:TableColElement):Boolean{
+		public function removeRowAt(idx:int):TableRowElement {
+			if(idx < 0 || idx > rows.length - 1)
+				return null;
+			
+			
+			var row:TableRowElement = TableRowElement(rows.splice(idx,1)[0]);
+			
+			hasCellDamage = true;
+			
+			return row;
+			
+		}
+		
+		public function removeColumn(column:TableColElement):TableColElement {
 			var i:int = columns.indexOf(column);
 			if(i < 0)
-				return false;
-			columns.splice(i,1);
-			return true;
+				return null;
+			return columns.splice(i,1)[0] as TableColElement;
 		}
-		public function removeColumnAt(idx:int):Boolean{
+		
+		public function removeColumnAt(idx:int):TableColElement {
 			if(idx < 0 || idx > columns.length - 1)
-				return false;
+				return null;
 			
-			columns.splice(idx,1);
-			return true;
+			return columns.splice(idx,1)[0] as TableColElement;
 		}
 		
 		public function setColumnWidth(columnIndex:int, value:*):Boolean

@@ -54,6 +54,7 @@
 			import flashx.textLayout.compose.ParcelList;
 			import flashx.textLayout.compose.StandardFlowComposer;
 			import flashx.textLayout.compose.TextFlowLine;
+			import flashx.textLayout.compose.TextFlowTableBlock;
 			import flashx.textLayout.container.ColumnState;
 			import flashx.textLayout.container.ContainerController;
 			import flashx.textLayout.conversion.ITextImporter;
@@ -111,23 +112,25 @@
 					//textFlow.interactionManager = new SelectionManager();
 					textFlow.interactionManager = new EditManager(new UndoManager);
 					group.addElement(container as IVisualElement);
-					textFlow.flowComposer.updateAllControllers();
+					 
+					updateAllControllers();
 				}
 				else {
 					Alert.show(errors.join("."), "Parsing Error");
 				}
 				
+				clearTextFlow();
 			}
 			
 			/******************************************************
 			 * Table
 			 *****************************************************/
 			
-			public function addTable():TableElement {
+			public function addTable(selectable:Boolean = false, editable:Boolean = false):TableElement {
 				var table:TableElement = new TableElement();
 				var cell:TableCellElement = new TableCellElement();
 				
-				cell.textFlow = getTextFlowContent();
+				cell.textFlow = getTextFlowContent(null, selectable, editable);
 				cell.colIndex = 0;
 				cell.rowIndex = 0;
 				
@@ -157,7 +160,7 @@
 				var table:TableElement = items.length ? items[0] : null;
 				
 				if (!table) {
-					addTable();
+					table = addTable();
 				}
 				
 				var rowIndex:int = table.numRows;
@@ -182,11 +185,10 @@
 			}
 			
 			public function addColumn():TableColElement {
-				var items:Array = textFlow.getElementsByTypeName("table");
-				var table:TableElement = items.length ? items[0] : null;
+				var table:TableElement = getTable();
 				
 				if (!table) {
-					addTable();
+					table = addTable();
 				}
 				
 				/*var rowIdx:int = table.numRows;
@@ -239,15 +241,18 @@
 				return null;
 			}
 			
-			public function removeRow():TableElement {
+			public function removeRow():TableRowElement {
 				var items:Array = textFlow.getElementsByTypeName("table");
 				var table:TableElement = items.length ? items[0] : null;
+				var rowElement:TableRowElement;
 				
 				if (table) {
-					return textFlow.removeChild(table) as TableElement;
+					rowElement = table.removeRowAt(table.numRows - 1);
 				}
 				
-				return null;
+				updateAllControllers();
+				
+				return rowElement;
 			}
 			
 			public function removeColumn():TableElement {
@@ -257,6 +262,8 @@
 				if (table) {
 					return textFlow.removeChild(table) as TableElement;
 				}
+				
+				updateAllControllers();
 				
 				return null;
 			}
@@ -420,6 +427,45 @@
 				return bounds;
 			}
 			
+			public function showTableBounds():Rectangle {
+				var bounds:Rectangle = new Rectangle();
+				var lineBounds:Rectangle = new Rectangle();
+				var lineBounds2:Rectangle = new Rectangle();
+				var table:TableElement = getTable();
+				var container:ContainerController = table.getEnclosingController(0);
+				var sprite:Sprite = container.container;
+				var pos:int = table.getAbsoluteStart();
+				var endPos:int = pos + table.textLength;
+				var color:int = 0x00FF00;
+				
+				while (pos < endPos) {
+					//var line:TextFlowTableBlock = table.getTextFlow().flowComposer.findLineAtPosition(pos) as TextFlowTableBlock;
+					var line:TextFlowLine = table.getTextFlow().flowComposer.findLineAtPosition(pos);
+					//bounds = bounds.union(line.getTextLine().getBounds(this));
+					lineBounds = new Rectangle(line.x, line.y, line.targetWidth, line.height);
+					lineBounds2 = line.getTextLine().getBounds(sprite);
+					bounds = bounds.union(lineBounds2);
+					pos += line.textLength;
+				}
+				
+				bounds.y = table.totalRowDepth;
+				bounds.width = table.tableWidth;
+				bounds.height = table.height;
+				
+				sprite.graphics.clear();
+				sprite.graphics.beginFill(color);
+				sprite.graphics.drawRect(bounds.left, bounds.top, bounds.width, bounds.height);
+				sprite.graphics.endFill();
+				sprite.graphics.lineStyle(1, 0x0);
+				sprite.graphics.moveTo(bounds.left - 1, bounds.top - 1);
+				sprite.graphics.lineTo(bounds.right + 1, bounds.top - 1);
+				sprite.graphics.lineTo(bounds.right + 1, bounds.bottom);
+				sprite.graphics.lineTo(bounds.left - 1, bounds.bottom);
+				sprite.graphics.lineTo(bounds.left - 1, bounds.top - 1);
+				
+				return bounds;
+			}
+			
 			public function showParcelBounds():void {
 				var flowComposer:StandardFlowComposer = textFlow.flowComposer as StandardFlowComposer;
 				var container:ContainerController = flowComposer.getControllerAt(flowComposer.numControllers-1);
@@ -535,6 +581,8 @@
 					span.text = "This is cell";
 				}
 				
+				paragraph.backgroundAlpha = 0.2;
+				paragraph.backgroundColor = 0xFF0000;
 				paragraph.addChild(span);
 				
 				if (editable) {
@@ -563,6 +611,22 @@
 				}
 				
 				return paragraph;
+			}
+			
+			public function getTable():TableElement {
+				var table:TableElement;
+				
+				if (textFlow.interactionManager) {
+					var cursor:int = Math.max(0, textFlow.interactionManager.anchorPosition);
+					//table = textFlow.findAbsoluteParagraph(cursor);
+				}
+				
+				if (!table) {
+					var items:Array = textFlow.getElementsByTypeName("table");
+					table = items.length ? items[0] : null;
+				}
+				
+				return table;
 			}
 			
 			public function removeAllChildren(sprite:DisplayObjectContainer):void {
@@ -621,6 +685,7 @@
 			<s:Button label="Update all controllers" click="updateAllControllers()"/>
 			<s:Button label="Highlight One Character" click="selectRange()"/>
 			<s:Button label="Show paragraph bounds" click="showParagraphBounds()"/>
+			<s:Button label="Show table bounds" click="showTableBounds()"/>
 			<s:Button label="Show parcel bounds" click="showParcelBounds()"/>
 			<s:Button label="Show bounds of text lines" click="showTextLineBounds()"/>
 			<s:Button label="Show bounds of atoms" click="showAtomBounds()"/>
@@ -629,6 +694,8 @@
 		</s:HGroup>
 		<s:HGroup>
 			<s:Button label="Add Table" click="addTable()"/>
+			<s:Button label="Add Selectable Table" click="addTable(true)"/>
+			<s:Button label="Add Editable Table" click="addTable(false, true)"/>
 			<s:Button label="Add Row" click="addRow()"/>
 			<s:Button label="Add Column" click="addColumn()"/>
 			<s:Button label="Remove Row" click="removeRow()"/>
