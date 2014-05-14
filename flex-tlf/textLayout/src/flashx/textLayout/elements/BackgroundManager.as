@@ -460,8 +460,9 @@ package flashx.textLayout.elements
 					//draw background
 					if(style.backgroundColor != BackgroundColor.TRANSPARENT)
 					{
-						g.lineStyle(0, style.backgroundColor, style.backgroundAlpha, true);
-						g.beginFill(style.backgroundColor);
+						// The value 0 indicates hairline thickness; 
+						g.lineStyle(NaN, style.backgroundColor, style.backgroundAlpha, true);
+						g.beginFill(style.backgroundColor, style.backgroundAlpha);
 						g.drawRect(rec.x, rec.y, rec.width, rec.height);
 						g.endFill();
 					}
@@ -576,8 +577,9 @@ package flashx.textLayout.elements
 							//draw background
 							if(style.backgroundColor != BackgroundColor.TRANSPARENT)
 							{
-								g.lineStyle(0, style.backgroundColor, style.backgroundAlpha, true);
-								g.beginFill(style.backgroundColor);
+								// The value 0 indicates hairline thickness; NaN removes line
+								g.lineStyle(NaN, style.backgroundColor, style.backgroundAlpha, true);
+								g.beginFill(style.backgroundColor, style.backgroundAlpha);
 								g.drawRect(rec.x, rec.y, rec.width, rec.height);
 								g.endFill();
 							}
