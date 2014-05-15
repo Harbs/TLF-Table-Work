@@ -6,7 +6,14 @@
 			 minWidth="955" minHeight="600" 
 			 applicationComplete="importApplicationCompleteHandler(event)">
 	
-	
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		
+		.header {
+			backgroundColor: #D6D6D6;
+		}
+	</fx:Style>
 	
 	<fx:Declarations>
 		<fx:XML id="simpleTextMarkup">
@@ -47,6 +54,7 @@
 			
 			import spark.components.Alert;
 			import spark.core.SpriteVisualElement;
+			import spark.events.TextOperationEvent;
 			
 			import flashx.textLayout.tlf_internal;
 			import flashx.textLayout.compose.ComposeState;
@@ -54,9 +62,9 @@
 			import flashx.textLayout.compose.ParcelList;
 			import flashx.textLayout.compose.StandardFlowComposer;
 			import flashx.textLayout.compose.TextFlowLine;
-			import flashx.textLayout.compose.TextFlowTableBlock;
 			import flashx.textLayout.container.ColumnState;
 			import flashx.textLayout.container.ContainerController;
+			import flashx.textLayout.conversion.ITextExporter;
 			import flashx.textLayout.conversion.ITextImporter;
 			import flashx.textLayout.conversion.TextConverter;
 			import flashx.textLayout.edit.EditManager;
@@ -72,12 +80,17 @@
 			import flashx.textLayout.elements.TableElement;
 			import flashx.textLayout.elements.TableRowElement;
 			import flashx.textLayout.elements.TextFlow;
+			import flashx.textLayout.events.CompositionCompleteEvent;
 			import flashx.textLayout.events.FlowElementMouseEvent;
 			import flashx.textLayout.events.ModelChange;
+			import flashx.textLayout.events.SelectionEvent;
 			import flashx.textLayout.events.StatusChangeEvent;
+			import flashx.textLayout.formats.WhiteSpaceCollapse;
 			import flashx.undo.UndoManager;
 			
 			public var textFlow:TextFlow;
+			public var container:SpriteVisualElement;
+			public var controller:ContainerController;
 			
 			use namespace tlf_internal;
 			
@@ -86,38 +99,12 @@
 			private var TableExample:Class;
 
 			
-			
 			protected function importApplicationCompleteHandler(event:FlexEvent):void {
-				var container:SpriteVisualElement;
-				var controller:ContainerController;
-				var errors:Vector.<String>;
-				var importer:ITextImporter = TextConverter.getImporter(TextConverter.TEXT_LAYOUT_FORMAT);
-				var tableByte:ByteArray = new TableExample();
-				var tableData:String = tableByte.readMultiByte(tableByte.length,"utf-8");
-				
-				importer.throwOnError = false;
-				
+				//var tableByte:ByteArray = new TableExample();
+				//var tableData:String = tableByte.readMultiByte(tableByte.length,"utf-8");
 				//textFlow = importer.importToFlow(tableData);
-				textFlow = importer.importToFlow(simpleTextMarkup);
-				//textFlow = getTextFlowContent();
-				errors = importer.errors;
+				importToFlow(simpleTextMarkup);
 				
-				if (!errors && textFlow) {
-					textFlow.addEventListener(StatusChangeEvent.INLINE_GRAPHIC_STATUS_CHANGE, graphicStatusChanged, false, 0, true);
-					textFlow.addEventListener(ModelChange.ELEMENT_MODIFIED, elementModified, false, 0, true);
-					container = new SpriteVisualElement();
-					controller = new ContainerController(container, group.width, group.height);
-					// Add controller to text flow; add container to stage and display text
-					textFlow.flowComposer.addController(controller);
-					//textFlow.interactionManager = new SelectionManager();
-					textFlow.interactionManager = new EditManager(new UndoManager);
-					group.addElement(container as IVisualElement);
-					 
-					updateAllControllers();
-				}
-				else {
-					Alert.show(errors.join("."), "Parsing Error");
-				}
 				
 				clearTextFlow();
 			}
@@ -126,7 +113,7 @@
 			 * Table
 			 *****************************************************/
 			
-			public function addTable(selectable:Boolean = false, editable:Boolean = false):TableElement {
+			public function addTable(rows:int = 1, columns:int = 1, selectable:Boolean = false, editable:Boolean = false):TableElement {
 				var table:TableElement = new TableElement();
 				var cell:TableCellElement = new TableCellElement();
 				
@@ -134,50 +121,62 @@
 				cell.colIndex = 0;
 				cell.rowIndex = 0;
 				
-				table.columnCount = 1;
+				table.columnCount = columns;
 				table.addRow();
 				table.addChild(cell);
+				textFlow.addChild(table);
 				
-				var p:ParagraphElement = getParagraph();
+				/*var p:ParagraphElement = getParagraph();
 				
 				if (!p) {
 					p = new ParagraphElement();
 					var span:SpanElement = new SpanElement();
 					span.text = "Paragraph before table";
 					textFlow.addChild(p);
-				}
+				}*/
 				
-				//p.addChild(table);
+				/* this should work
+				table.columnCount = columns;
 				textFlow.addChild(table);
 				
+				for (var i:int = 0; i < rows; i++) {
+					addRow();
+				}*/
+				
 				updateAllControllers();
+				//p.addChild(table);
+				
 				
 				return table;
 			}
 			
 			public function addRow():TableRowElement {
-				var items:Array = textFlow.getElementsByTypeName("table");
-				var table:TableElement = items.length ? items[0] : null;
+				var table:TableElement = getTable();
 				
 				if (!table) {
 					table = addTable();
 				}
 				
-				var rowIndex:int = table.numRows;
-				var cell:TableCellElement = new TableCellElement();
-				var cellFlow:TextFlow = new TextFlow();
-				var para:ParagraphElement = new ParagraphElement();
-				var span:SpanElement = new SpanElement();
+				table.addRow();
 				
-				cell.colIndex = 0;
-				cell.rowIndex = rowIndex;
-				span.text = "Row " + rowIndex + "; Col " + cell.colIndex;
-				para.addChild(span);
-				cellFlow.interactionManager = new SelectionManager();
-				cellFlow.addChild(para);
-				cell.textFlow = cellFlow;
+				var rowIndex:int = table.numRows - 1;
+				var columnCount:int = table.numColumns;
+				var cell:TableCellElement;
+				var cellTextFlow:TextFlow;
+				var para:ParagraphElement;
+				var span:SpanElement;
+				var selectable:Boolean = textFlow.interactionManager is SelectionManager;
+				var editable:Boolean = textFlow.interactionManager is EditManager;
 				
-				table.addChild(cell);
+				for(var i:int=0;i<columnCount;i++){
+					cell = new TableCellElement();
+					
+					cell.colIndex = i;
+					cell.rowIndex = rowIndex;
+					cell.textFlow = getTextFlowContent("R " + rowIndex + " C " + cell.colIndex, selectable, editable);
+					
+					table.addChild(cell);
+				}
 				
 				updateAllControllers();
 				
@@ -230,8 +229,7 @@
 			}
 			
 			public function removeTable():TableElement {
-				var items:Array = textFlow.getElementsByTypeName("table");
-				var table:TableElement = items.length ? items[0] : null;
+				var table:TableElement = getTable();
 				
 				if (table) {
 					return textFlow.removeChild(table) as TableElement;
@@ -242,8 +240,7 @@
 			}
 			
 			public function removeRow():TableRowElement {
-				var items:Array = textFlow.getElementsByTypeName("table");
-				var table:TableElement = items.length ? items[0] : null;
+				var table:TableElement = getTable();
 				var rowElement:TableRowElement;
 				
 				if (table) {
@@ -255,12 +252,11 @@
 				return rowElement;
 			}
 			
-			public function removeColumn():TableElement {
-				var items:Array = textFlow.getElementsByTypeName("table");
-				var table:TableElement = items.length ? items[0] : null;
+			public function removeColumn():TableColElement {
+				var table:TableElement = getTable();
 				
 				if (table) {
-					return textFlow.removeChild(table) as TableElement;
+					return table.removeColumnAt(table.numColumns - 1) as TableColElement;
 				}
 				
 				updateAllControllers();
@@ -269,55 +265,50 @@
 			}
 			
 			public function selectCell():TableElement {
-				var items:Array = textFlow.getElementsByTypeName("table");
-				var table:TableElement = items.length ? items[0] : null;
+				var table:TableElement = getTable();
 				
 				if (table) {
-					return textFlow.removeChild(table) as TableElement;
+					
 				}
 				
 				return null;
 			}
 			
 			public function selectCells():TableElement {
-				var items:Array = textFlow.getElementsByTypeName("table");
-				var table:TableElement = items.length ? items[0] : null;
+				var table:TableElement = getTable();
 				
 				if (table) {
-					return textFlow.removeChild(table) as TableElement;
+					
 				}
 				
 				return null;
 			}
 			
 			public function selectColumn():TableElement {
-				var items:Array = textFlow.getElementsByTypeName("table");
-				var table:TableElement = items.length ? items[0] : null;
+				var table:TableElement = getTable();
 				
 				if (table) {
-					return textFlow.removeChild(table) as TableElement;
+					
 				}
 				
 				return null;
 			}
 			
 			public function selectRow():TableElement {
-				var items:Array = textFlow.getElementsByTypeName("table");
-				var table:TableElement = items.length ? items[0] : null;
+				var table:TableElement = getTable();
 				
 				if (table) {
-					return textFlow.removeChild(table) as TableElement;
+					
 				}
 				
 				return null;
 			}
 			
 			public function joinCells():TableElement {
-				var items:Array = textFlow.getElementsByTypeName("table");
-				var table:TableElement = items.length ? items[0] : null;
+				var table:TableElement = getTable();
 				
 				if (table) {
-					return textFlow.removeChild(table) as TableElement;
+					
 				}
 				
 				return null;
@@ -428,11 +419,14 @@
 			}
 			
 			public function showTableBounds():Rectangle {
+				var table:TableElement = getTable();
+				
+				if (!table) return null;
+				
 				var bounds:Rectangle = new Rectangle();
 				var lineBounds:Rectangle = new Rectangle();
 				var lineBounds2:Rectangle = new Rectangle();
-				var table:TableElement = getTable();
-				var container:ContainerController = table.getEnclosingController(0);
+				var container:ContainerController = table ? table.getEnclosingController(0) :null;
 				var sprite:Sprite = container.container;
 				var pos:int = table.getAbsoluteStart();
 				var endPos:int = pos + table.textLength;
@@ -527,11 +521,14 @@
 			 * Misc
 			 *****************************************************/
 			
-			protected function updateAllControllers():void {
+			public function updateAllControllers():void {
 				textFlow.flowComposer.updateAllControllers();
+				
+				if (updatingTextFlow) return;
+				exportTextFlow(textFlow);
 			}
 			
-			protected function graphicStatusChanged(event:StatusChangeEvent):void {
+			public function graphicStatusChanged(event:StatusChangeEvent):void {
 				var img:InlineGraphicElement = event.element as InlineGraphicElement;
 				updateAllControllers();
 				
@@ -549,11 +546,10 @@
 				}
 			}
 			
-			protected function elementModified(event:Event):void
+			public function elementModified(event:Event):void
 			{
 				//trace("event: " + event.type);
 			}
-			
 			
 			public function traceEvent(event:FlowElementMouseEvent):void
 			{
@@ -569,6 +565,26 @@
 				}
 			}
 			
+			public function addParagraph(text:String = null):void {
+				var paragraph:ParagraphElement = new ParagraphElement();
+				var span:SpanElement = new SpanElement();
+				
+				if (text) {
+					span.text = text;
+				}
+				else {
+					span.text = "This is a paragraph\nSecond line.";
+				}
+				
+				paragraph.backgroundAlpha = 0.2;
+				paragraph.backgroundColor = 0x0000FF;
+				
+				paragraph.addChild(span);
+				
+				textFlow.addChild(paragraph);
+				
+				updateAllControllers();
+			}
 			public function getTextFlowContent(text:String = null, selectable:Boolean = false, editable:Boolean = false):TextFlow {
 				var textFlowContent:TextFlow = new TextFlow();
 				var paragraph:ParagraphElement = new ParagraphElement();
@@ -636,11 +652,10 @@
 				}
 			}
 			
-			public function removeShapes():void
-			{
-				
-				var bounds:Rectangle = new Rectangle();
+			public function removeShapes():void {
 				var paragraph:ParagraphElement = getParagraph();
+				if (!paragraph) return;
+				var bounds:Rectangle = new Rectangle();
 				var container:ContainerController = paragraph.getEnclosingController(0);
 				var sprite:Sprite = container.container;
 				
@@ -670,6 +685,8 @@
 					textFlow.replaceChildren(0, textFlow.numChildren);
 				}
 				
+				removeShapes();
+				
 				updateAllControllers();
 				
 				if (textFlow.interactionManager) {
@@ -677,41 +694,182 @@
 					textFlow.interactionManager.setFocus();
 				}
 			}
+			
+			public var updatingTextFlow:Boolean;
+			
+			protected function textFlowMarkup_changeHandler(event:TextOperationEvent):void {
+				
+				updatingTextFlow = true;
+				importToFlow(textFlowMarkup.text);
+				updatingTextFlow = false;
+			}
+			
+			public function importToFlow(value:String):TextFlow {
+				var errors:Vector.<String>;
+				var importer:ITextImporter;
+				var newTextFlow:TextFlow;
+				
+				importer = TextConverter.getImporter(TextConverter.TEXT_LAYOUT_FORMAT);
+				importer.throwOnError = false;
+				
+				
+				newTextFlow = importer.importToFlow(value);
+				errors = importer.errors;
+				
+				if (!errors && newTextFlow) {
+					setupTextFlow(newTextFlow);
+				}
+				if (errors && errors.length) {
+					textFlowMarkupErrors.text = errors.join("\n");
+				}
+				else {
+					textFlowMarkupErrors.text = "";
+				}
+				
+				return newTextFlow;
+			}
+			
+			/**
+			 * Adds listeners to the text flow and adds it to the stage
+			 **/
+			public function setupTextFlow(newTextFlow:TextFlow):void {
+				if (!newTextFlow) return;
+				
+				if (textFlow) {
+					textFlow.removeEventListener(CompositionCompleteEvent.COMPOSITION_COMPLETE, compositionComplete);
+					textFlow.removeEventListener(ModelChange.ELEMENT_MODIFIED, graphicStatusChanged);
+					textFlow.removeEventListener(StatusChangeEvent.INLINE_GRAPHIC_STATUS_CHANGE, graphicStatusChanged);
+					textFlow.removeEventListener(SelectionEvent.SELECTION_CHANGE, selectionChange);
+				}
+				
+				textFlow = newTextFlow;
+				
+				textFlow.addEventListener(CompositionCompleteEvent.COMPOSITION_COMPLETE, compositionComplete, false, 0, true);
+				textFlow.addEventListener(ModelChange.ELEMENT_MODIFIED, elementModified, false, 0, true);
+				textFlow.addEventListener(StatusChangeEvent.INLINE_GRAPHIC_STATUS_CHANGE, graphicStatusChanged, false, 0, true);
+				textFlow.addEventListener(SelectionEvent.SELECTION_CHANGE, selectionChange, false, 0, true);
+				
+				if (!container) {
+					container = new SpriteVisualElement();
+				}
+				
+				if (!controller) {
+					controller = new ContainerController(container, group.width, group.height);
+				}
+				
+				// Add controller to text flow; add container to stage and display text
+				textFlow.flowComposer.addController(controller);
+				
+				//textFlow.interactionManager = new SelectionManager();
+				textFlow.interactionManager = new EditManager(new UndoManager);
+				
+				group.addElement(container as IVisualElement);
+				
+				updateAllControllers();
+			}
+			
+			/**
+			 * Composition complete
+			 **/
+			protected function compositionComplete(event:CompositionCompleteEvent):void
+			{
+				if (updatingTextFlow) return;
+				exportTextFlow(textFlow);
+			}
+			
+			/**
+			 * Selection change
+			 **/
+			protected function selectionChange(event:SelectionEvent):void
+			{
+				
+			}
+			
+			public function notImplemented():void
+			{
+				Alert.show("Not implemented", "Message");
+			}
+			
+			public function exportTextFlow(textFlow:TextFlow):void
+			{
+				var exporter:ITextExporter = TextConverter.getExporter(TextConverter.TEXT_LAYOUT_FORMAT);
+				exporter.throwOnError = false;
+				textFlow.whiteSpaceCollapse = WhiteSpaceCollapse.COLLAPSE;
+				textFlow.setStyle("whiteSpaceCollapse", WhiteSpaceCollapse.COLLAPSE);
+				
+				var object:Object = exporter.export(textFlow, TextConverter.TEXT_LAYOUT_FORMAT);
+				textFlowMarkup.text = object is XML ? XML(object).toXMLString() : null;
+				textFlowMarkupErrors.text = exporter.errors ? exporter.errors.join("\n") : null;				
+				
+			}
+			
 		]]>
 	</fx:Script>
 	
-	<s:VGroup>
-		<s:HGroup>
-			<s:Button label="Update all controllers" click="updateAllControllers()"/>
-			<s:Button label="Highlight One Character" click="selectRange()"/>
-			<s:Button label="Show paragraph bounds" click="showParagraphBounds()"/>
-			<s:Button label="Show table bounds" click="showTableBounds()"/>
-			<s:Button label="Show parcel bounds" click="showParcelBounds()"/>
-			<s:Button label="Show bounds of text lines" click="showTextLineBounds()"/>
-			<s:Button label="Show bounds of atoms" click="showAtomBounds()"/>
-			<s:Button label="Remove Shapes" click="removeShapes()"/>
-			<s:Button label="Clear TextFlow" click="clearTextFlow()"/>
+	<!--<s:VGroup height="100%" width="100%">-->
+		<s:HGroup width="100%" minHeight="400" top="50" left="10" right="10">
+			<s:VGroup width="100%" height="100%">
+				<s:HGroup width="100%" gap="1" >
+					<s:Label text="TextFlow" width="100%" styleName="header"/>
+					<s:Label text="clear" click="clearTextFlow()" styleName="header"/>					
+				</s:HGroup>  
+				<s:BorderContainer id="group" width="100%" height="100%" minHeight="250"/>
+				<s:Label text="TextFlow Markup" width="100%" styleName="header"/>
+				<s:TextArea id="textFlowMarkup" width="100%" height="100%" 
+							focusThickness="0" change="textFlowMarkup_changeHandler(event)"/>
+				<s:Label text="TextFlow Markup Errors" width="100%" styleName="header"
+							/>
+				<s:TextArea id="textFlowMarkupErrors" width="100%" height="30%" color="red"
+							/>
+			</s:VGroup>
+			<s:VGroup width="100%" height="100%">
+				<s:Label text="Add Elements" width="100%" styleName="header"/>
+				<s:HGroup>
+					<mx:LinkButton label="Table" click="addTable(3, 3)"/>
+					<mx:LinkButton label="Selectable Table" click="addTable(3, 3, true)"/>
+					<mx:LinkButton label="Editable Table" click="addTable(3, 3, false, true)"/>
+					<mx:LinkButton label="Row" click="addRow()"/>
+					<mx:LinkButton label="Column" click="addColumn()"/>
+					<mx:LinkButton label="Paragraph" click="addParagraph()"/>
+					<mx:LinkButton label="Span" click="notImplemented()"/>
+				</s:HGroup>
+				<s:Label text="Remove Elements" width="100%" styleName="header"/>
+				<s:HGroup>
+					<mx:LinkButton label="Table" click="removeTable()"/>
+					<mx:LinkButton label="Row" click="removeRow()"/>
+					<mx:LinkButton label="Column" click="removeColumn()"/>
+					<mx:LinkButton label="Paragraph" />
+					<mx:LinkButton label="Span" />
+					<mx:LinkButton label="Shapes" click="removeShapes()"/>
+					<mx:LinkButton label="All" click="clearTextFlow()"/>
+				</s:HGroup>
+				<s:Label text="Select Elements" width="100%" styleName="header"/>
+				<s:HGroup>
+					<mx:LinkButton label="Table" click="selectRange()"/>
+					<mx:LinkButton label="Row" click="selectRow()"/>
+					<mx:LinkButton label="Column" click="selectColumn()"/>
+					<mx:LinkButton label="Cell" click="selectCell()"/>
+					<mx:LinkButton label="Cells" click="selectCells()"/>
+				</s:HGroup>
+				<s:Label text="Show Boundaries" width="100%" styleName="header"/>
+				<s:HGroup>
+					<mx:LinkButton label="Paragraph" click="showParagraphBounds()"/>
+					<mx:LinkButton label="Table" click="showTableBounds()"/>
+					<mx:LinkButton label="Parcels" click="showParcelBounds()"/>
+					<mx:LinkButton label="TextLines" click="showTextLineBounds()"/>
+					<mx:LinkButton label="Atoms" click="showAtomBounds()"/>
+				</s:HGroup>
+				<s:Label text="Misc" width="100%" styleName="header"/>
+				<s:HGroup>
+					<mx:LinkButton label="Join Cells" click="joinCells()"/>
+					<mx:LinkButton label="Select Range" click="selectRange()"/>
+					<mx:LinkButton label="Update all controllers" click="updateAllControllers()"/>
+				</s:HGroup>
+			</s:VGroup>
 		</s:HGroup>
-		<s:HGroup>
-			<s:Button label="Add Table" click="addTable()"/>
-			<s:Button label="Add Selectable Table" click="addTable(true)"/>
-			<s:Button label="Add Editable Table" click="addTable(false, true)"/>
-			<s:Button label="Add Row" click="addRow()"/>
-			<s:Button label="Add Column" click="addColumn()"/>
-			<s:Button label="Remove Row" click="removeRow()"/>
-			<s:Button label="Remove Column" click="removeColumn()"/>
-			<s:Button label="Remove Table" click="removeTable()"/>
-			<s:Button label="Select Table" click="selectRange()"/>
-			<s:Button label="Select Row" click="selectRow()"/>
-			<s:Button label="Select Column" click="selectColumn()"/>
-			<s:Button label="Select Cell" click="selectCell()"/>
-			<s:Button label="Select Cells" click="selectCells()"/>
-			<s:Button label="Join Cells" click="joinCells()"/>
-		</s:HGroup>
-	</s:VGroup>
+	<!--</s:VGroup>-->
 	
-	<!--<s:Label text="Hello There" />
+	<!--
 	<s:Label text="Hello There"/>-->
-	<s:BorderContainer id="group" left="30" top="50" width="700" height="90%"/>
 	
 </s:Application>
