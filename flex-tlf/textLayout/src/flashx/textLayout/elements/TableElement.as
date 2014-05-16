@@ -336,36 +336,41 @@ package flashx.textLayout.elements
 				col.x = xPos;
 				xPos += col.columnWidth;
 			}
-			for(var i:int=0;i<mxmlChildren.length;i++){
-				if( !(mxmlChildren[i] is TableCellElement) )
-					continue;
-				cell = mxmlChildren[i] as TableCellElement;
-				while(rows.length < cell.rowIndex+1){
-					addRow(defaultRowFormat);
+			
+			if (mxmlChildren) {
+				for(var i:int=0;i<mxmlChildren.length;i++){
+					if( !(mxmlChildren[i] is TableCellElement) )
+						continue;
+					cell = mxmlChildren[i] as TableCellElement;
+					while(rows.length < cell.rowIndex+1){
+						addRow(defaultRowFormat);
+					}
+					row = getRowAt(cell.rowIndex);
+					if(!row)
+						throw new Error("this should not happen...");
+					if(row.isMaxHeight)
+						continue;
+					var cellHeight:Number = cell.getComposedHeight();
+					if(cell.rowSpan > 1)
+					{
+						// figure out the total height taking into account fixed height rows and the total span.
+						
+						// for now, we're taking the easy way out assuming the rows are not fixed...
+						row.totalHeight = Math.max(row.totalHeight,cellHeight);
+						
+					}
+					else
+					{
+						row.composedHeight = Math.max(row.composedHeight,cellHeight);
+						row.composedHeight = Math.min(row.composedHeight,row.computedFormat.maxCellHeight);
+						row.totalHeight = Math.max(row.composedHeight,row.totalHeight);
+					}
+					if(row.composedHeight == row.computedFormat.maxCellHeight)
+						row.isMaxHeight = true;
 				}
-				row = getRowAt(cell.rowIndex);
-				if(!row)
-					throw new Error("this should not happen...");
-				if(row.isMaxHeight)
-					continue;
-				var cellHeight:Number = cell.getComposedHeight();
-				if(cell.rowSpan > 1)
-				{
-					// figure out the total height taking into account fixed height rows and the total span.
-					
-					// for now, we're taking the easy way out assuming the rows are not fixed...
-					row.totalHeight = Math.max(row.totalHeight,cellHeight);
-					
-				}
-				else
-				{
-					row.composedHeight = Math.max(row.composedHeight,cellHeight);
-					row.composedHeight = Math.min(row.composedHeight,row.computedFormat.maxCellHeight);
-					row.totalHeight = Math.max(row.composedHeight,row.totalHeight);
-				}
-				if(row.composedHeight == row.computedFormat.maxCellHeight)
-					row.isMaxHeight = true;
 			}
+			
+			
 			if(!_tableRowsComputed)
 			{
 				// create arrays or rows to make table composition simpler
@@ -374,6 +379,7 @@ package flashx.textLayout.elements
 				// actually, it probably makes sense for TableElement to handle that when adding rows and columns.
 				// we need to think this through.
 				_bodyRows = new Vector.< Vector.<TableCellElement> >();
+				
 				for(i=0;i<mxmlChildren.length;i++){
 					if( !(mxmlChildren[i] is TableCellElement) )
 						continue;
@@ -390,11 +396,13 @@ package flashx.textLayout.elements
 						throw new Error("Two cells cannot have the same coordinates");
 					rowVec[cell.colIndex] = cell;
 				}
+				
 				if(headerRowCount > 0){
 					_headerRows = _bodyRows.splice(0,headerRowCount);
 				} else {
 					_headerRows = null;
 				}
+				
 				if(footerRowCount > 0){
 					_footerRows = _bodyRows.splice(-footerRowCount,Number.MAX_VALUE);
 				} else {
@@ -402,15 +410,19 @@ package flashx.textLayout.elements
 				}
 			}
 		}
+		
 		public function getHeaderRows():Vector.< Vector.<TableCellElement> >{
 			return _headerRows;
 		}
+		
 		public function getFooterRows():Vector.< Vector.<TableCellElement> >{
 			return _footerRows;
 		}
+		
 		public function getBodyRows():Vector.< Vector.<TableCellElement> >{
 			return _bodyRows;
 		}
+		
 		public function getNextRow():Vector.<TableCellElement>{
 			if(_composedRowIndex >= _bodyRows.length)
 				return null;

@@ -855,7 +855,7 @@ package flashx.textLayout.edit
 							var rtCell:TableCellElement = rtPara.getParentCellElement();
 							//get the last element of the cell
 							var lastElement:FlowElement = rtCell.getLastLeaf();
-							var rtLastTbLine:TextFlowLine = lastElement.getParagraph().getTextBlock().lastLine.userData;
+							var rtLastTbLine:TextFlowLine = lastElement ? lastElement.getParagraph().getTextBlock().lastLine.userData : null;
 							if( rtline == rtLastTbLine )
 							{
 								//temproray codes, need to be updated when the column apis are ready

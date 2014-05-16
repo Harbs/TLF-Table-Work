@@ -12,13 +12,16 @@
 		
 		.header {
 			backgroundColor: #D6D6D6;
+			paddingTop: 4;
+			paddingBottom: 2;
+			paddingLeft: 2;
 		}
 	</fx:Style>
 	
 	<fx:Declarations>
 		<fx:XML id="simpleTextMarkup">
 			<flow:TextFlow version="3.0.0" xmlns:flow='http://ns.adobe.com/textLayout/2008' fontSize='11' 
-						   paddingTop='8' paddingLeft='8' paddingRight='8'>
+						   paddingTop='8' paddingLeft='8' paddingRight='8' whiteSpaceCollapse="collapse">
 				<flow:p > <flow:img paddingRight="8" source="http://static0.therichestimages.com/wp-content/uploads/2014/03/mario-kart-8-trailer.jpg" width="100" height="100" float="right"></flow:img>
 					Bacon ipsum. Permanent link to this comic: http://xkcd.com/876/ Image URL (for hotlinking/embedding): http://imgs.xkcd.com/comics/trapped.png
 					Something else Something else Something else Something else Something else Something else Something else 
@@ -71,6 +74,7 @@
 			import flashx.textLayout.edit.ISelectionManager;
 			import flashx.textLayout.edit.SelectionFormat;
 			import flashx.textLayout.edit.SelectionManager;
+			import flashx.textLayout.elements.Configuration;
 			import flashx.textLayout.elements.FlowLeafElement;
 			import flashx.textLayout.elements.InlineGraphicElement;
 			import flashx.textLayout.elements.ParagraphElement;
@@ -115,16 +119,28 @@
 			
 			public function addTable(rows:int = 1, columns:int = 1, selectable:Boolean = false, editable:Boolean = false):TableElement {
 				var table:TableElement = new TableElement();
-				var cell:TableCellElement = new TableCellElement();
+				var cell:TableCellElement;
+				var method:Boolean;
 				
-				cell.textFlow = getTextFlowContent(null, selectable, editable);
-				cell.colIndex = 0;
-				cell.rowIndex = 0;
-				
-				table.columnCount = columns;
-				table.addRow();
-				table.addChild(cell);
-				textFlow.addChild(table);
+				if (method) {
+					cell = new TableCellElement();
+					cell.textFlow = getTextFlowContent(null, selectable, editable);
+					cell.colIndex = 0;
+					cell.rowIndex = 0;
+					
+					table.numColumns = columns;
+					table.addRow();
+					table.addChild(cell);
+					textFlow.addChild(table);
+				}
+				else {
+					table.numColumns = columns;
+					textFlow.addChild(table);
+					
+					for (var i:int = 0; i < rows; i++) {
+						addRow();
+					}
+				}
 				
 				/*var p:ParagraphElement = getParagraph();
 				
@@ -712,7 +728,7 @@
 				importer = TextConverter.getImporter(TextConverter.TEXT_LAYOUT_FORMAT);
 				importer.throwOnError = false;
 				
-				
+				//importer.configuration = new Configuration();
 				newTextFlow = importer.importToFlow(value);
 				errors = importer.errors;
 				
@@ -794,8 +810,9 @@
 			{
 				var exporter:ITextExporter = TextConverter.getExporter(TextConverter.TEXT_LAYOUT_FORMAT);
 				exporter.throwOnError = false;
-				textFlow.whiteSpaceCollapse = WhiteSpaceCollapse.COLLAPSE;
-				textFlow.setStyle("whiteSpaceCollapse", WhiteSpaceCollapse.COLLAPSE);
+				//textFlow.whiteSpaceCollapse = WhiteSpaceCollapse.COLLAPSE;
+				//textFlow.setStyle("whiteSpaceCollapse", WhiteSpaceCollapse.COLLAPSE);
+				//textFlow.flowComposer.updateAllControllers();
 				
 				var object:Object = exporter.export(textFlow, TextConverter.TEXT_LAYOUT_FORMAT);
 				textFlowMarkup.text = object is XML ? XML(object).toXMLString() : null;
@@ -811,7 +828,9 @@
 			<s:VGroup width="100%" height="100%">
 				<s:HGroup width="100%" gap="1" >
 					<s:Label text="TextFlow" width="100%" styleName="header"/>
-					<s:Label text="clear" click="clearTextFlow()" styleName="header"/>					
+					<s:Label text="clear" click="clearTextFlow()" styleName="header" 
+							 useHandCursor="true" buttonMode="true"
+							 />					
 				</s:HGroup>  
 				<s:BorderContainer id="group" width="100%" height="100%" minHeight="250"/>
 				<s:Label text="TextFlow Markup" width="100%" styleName="header"/>
@@ -828,6 +847,8 @@
 					<mx:LinkButton label="Table" click="addTable(3, 3)"/>
 					<mx:LinkButton label="Selectable Table" click="addTable(3, 3, true)"/>
 					<mx:LinkButton label="Editable Table" click="addTable(3, 3, false, true)"/>
+				</s:HGroup>
+				<s:HGroup>
 					<mx:LinkButton label="Row" click="addRow()"/>
 					<mx:LinkButton label="Column" click="addColumn()"/>
 					<mx:LinkButton label="Paragraph" click="addParagraph()"/>
