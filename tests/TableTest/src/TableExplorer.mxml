@@ -15,42 +15,35 @@
 			paddingTop: 4;
 			paddingBottom: 2;
 			paddingLeft: 2;
+			paddingRight: 2;
 		}
 	</fx:Style>
 	
 	<fx:Declarations>
 		<fx:XML id="simpleTextMarkup">
-			<flow:TextFlow version="3.0.0" xmlns:flow='http://ns.adobe.com/textLayout/2008' fontSize='11' 
-						   paddingTop='8' paddingLeft='8' paddingRight='8' whiteSpaceCollapse="collapse">
-				<flow:p > <flow:img paddingRight="8" source="http://static0.therichestimages.com/wp-content/uploads/2014/03/mario-kart-8-trailer.jpg" width="100" height="100" float="right"></flow:img>
-					Bacon ipsum. Permanent link to this comic: http://xkcd.com/876/ Image URL (for hotlinking/embedding): http://imgs.xkcd.com/comics/trapped.png
-					Something else Something else Something else Something else Something else Something else Something else 
-					
-				</flow:p>
-			</flow:TextFlow>
+			<TextFlow fontSize="11" paddingLeft="8" paddingRight="8" paddingTop="8" whiteSpaceCollapse="collapse" version="3.0.0" xmlns="http://ns.adobe.com/textLayout/2008">
+				<p>
+					<span>A un Angleso it va semblar un simplificat Angles, quam un skeptic Cambridge amico dit me que Occidental es.Li Europan lingues es membres del sam familie. Lor separat existentie es un myth. Por scientie, musica, sport etc, litot Europa usa li sam vocabular. Li lingues differe solmen in li grammatica, li pronunciation e li plu commun vocabules. Omnicos directe al desirabilite de un nov lingua franca: On refusa continuar payar custosi traductores. At solmen va esser necessi far uniform grammatica, pronunciation e plu sommun paroles. </span>
+				</p>
+			</TextFlow>
 		</fx:XML>
 		
-		<fx:XML id="testTextFlow">
-			<flow:TextFlow xmlns:flow="http://ns.adobe.com/textLayout/2008"
-						   fontSize="11" paddingLeft="8" paddingRight="8" paddingTop="8"
-						   paragraphSpaceBefore="6" textIndent="10" version="3.0.0">
-				<flow:p clearFloats="start" paragraphSpaceBefore="inherit">
-					<flow:img width="600" height="300" float="right"
-							  source="http://imgs.xkcd.com/comics/trapped.png"/>
-					<flow:span>Bacon ipsum. Permanent link to this comic: http://xkcd.com/876/ Image URL (for hotlinking/embedding): http://imgs.xkcd.com/comics/trapped.png</flow:span>
-					<flow:TextFlow xmlns:flow="http://ns.adobe.com/textLayout/2008"
-								   fontSize="15" version="3.0.0">  
-						<flow:p paragraphSpaceBefore="inherit">Here is an embedded text flow.</flow:p>
-					</flow:TextFlow>
-				</flow:p>
-			</flow:TextFlow>
+		<fx:XML id="complexTextFlow">
+			<TextFlow fontSize="11" paddingLeft="8" paddingRight="8" paddingTop="8" whiteSpaceCollapse="collapse" version="3.0.0" xmlns="http://ns.adobe.com/textLayout/2008">
+				<p>
+					<img paddingRight="8" source="http://lh4.googleusercontent.com/-v0soe-ievYE/AAAAAAAAAAI/AAAAAAACTE4/HdLawjGMFsE/s120-c/photo.jpg" float="right"/>
+					<span>A un Angleso it va semblar un simplificat Angles, quam un skeptic Cambridge amico dit me que Occidental es.Li Europan lingues es membres del sam familie. Lor separat existentie es un myth. Por scientie, musica, sport etc, litot Europa usa li sam vocabular. Li lingues differe solmen in li grammatica, li pronunciation e li plu commun vocabules. Omnicos directe al desirabilite de un nov lingua franca: On refusa continuar payar custosi traductores. At solmen va esser necessi far uniform grammatica, pronunciation e plu sommun paroles. </span>
+				</p>
+			</TextFlow>
 		</fx:XML>
 	</fx:Declarations>
 	
 	<fx:Script>
 		<![CDATA[
 			import flash.text.engine.TextLine;
-			import flash.utils.ByteArray;
+			import flash.utils.ByteArray;ByteArray
+			
+			import flashx.textLayout.formats.TextLayoutFormat;TextLayoutFormat
 			
 			import mx.core.IVisualElement;
 			import mx.events.FlexEvent;
@@ -74,7 +67,7 @@
 			import flashx.textLayout.edit.ISelectionManager;
 			import flashx.textLayout.edit.SelectionFormat;
 			import flashx.textLayout.edit.SelectionManager;
-			import flashx.textLayout.elements.Configuration;
+			import flashx.textLayout.elements.Configuration;Configuration
 			import flashx.textLayout.elements.FlowLeafElement;
 			import flashx.textLayout.elements.InlineGraphicElement;
 			import flashx.textLayout.elements.ParagraphElement;
@@ -89,14 +82,15 @@
 			import flashx.textLayout.events.ModelChange;
 			import flashx.textLayout.events.SelectionEvent;
 			import flashx.textLayout.events.StatusChangeEvent;
-			import flashx.textLayout.formats.WhiteSpaceCollapse;
+			import flashx.textLayout.formats.WhiteSpaceCollapse;WhiteSpaceCollapse
 			import flashx.undo.UndoManager;
+			
+			use namespace tlf_internal;
 			
 			public var textFlow:TextFlow;
 			public var container:SpriteVisualElement;
 			public var controller:ContainerController;
-			
-			use namespace tlf_internal;
+			public var tableData:String;
 			
 			// embed table test
 			[Embed(source="data/tableExample.xml",mimeType="application/octet-stream")]
@@ -104,8 +98,9 @@
 
 			
 			protected function importApplicationCompleteHandler(event:FlexEvent):void {
-				//var tableByte:ByteArray = new TableExample();
-				//var tableData:String = tableByte.readMultiByte(tableByte.length,"utf-8");
+				var tableByte:ByteArray = new TableExample();
+				tableData = tableByte.readMultiByte(tableByte.length,"utf-8");
+				
 				//textFlow = importer.importToFlow(tableData);
 				importToFlow(simpleTextMarkup);
 				
@@ -117,12 +112,15 @@
 			 * Table
 			 *****************************************************/
 			
+			/**
+			 * Adds a table to the text flow
+			 **/
 			public function addTable(rows:int = 1, columns:int = 1, selectable:Boolean = false, editable:Boolean = false):TableElement {
 				var table:TableElement = new TableElement();
 				var cell:TableCellElement;
-				var method:Boolean;
+				var option:Boolean;
 				
-				if (method) {
+				if (option) {
 					cell = new TableCellElement();
 					cell.textFlow = getTextFlowContent(null, selectable, editable);
 					cell.colIndex = 0;
@@ -142,30 +140,14 @@
 					}
 				}
 				
-				/*var p:ParagraphElement = getParagraph();
-				
-				if (!p) {
-					p = new ParagraphElement();
-					var span:SpanElement = new SpanElement();
-					span.text = "Paragraph before table";
-					textFlow.addChild(p);
-				}*/
-				
-				/* this should work
-				table.columnCount = columns;
-				textFlow.addChild(table);
-				
-				for (var i:int = 0; i < rows; i++) {
-					addRow();
-				}*/
-				
 				updateAllControllers();
-				//p.addChild(table);
-				
 				
 				return table;
 			}
 			
+			/**
+			 * Adds a row to the table
+			 **/
 			public function addRow():TableRowElement {
 				var table:TableElement = getTable();
 				
@@ -199,62 +181,41 @@
 				return table.getRowAt(rowIndex);
 			}
 			
+			/**
+			 * Adds a column to the table
+			 **/
 			public function addColumn():TableColElement {
 				var table:TableElement = getTable();
+				var columnIndex:int = table.numColumns;
 				
 				if (!table) {
 					table = addTable();
 				}
 				
-				/*var rowIdx:int = table.numRows;
-				var cell:TableCellElement = new TableCellElement();
-				var cellFlow:TextFlow = new TextFlow();
-				var para:ParagraphElement = new ParagraphElement();
-				var span:SpanElement = new SpanElement();
-				
-				cell.colIndex = 0;
-				cell.rowIndex = rowIdx;
-				span.text = "Row " + rowIdx + "; Col " + cell.colIndex;
-				para.addChild(span);
-				cellFlow.interactionManager = new SelectionManager();
-				cellFlow.addChild(para);
-				cell.textFlow = cellFlow;
-				
-				table.addChild(cell);*/
-				
-				var columnIndex:int = table.numColumns;
-				/*var cell:TableCellElement = new TableCellElement();
-				var cellFlow:TextFlow = new TextFlow();
-				var para:ParagraphElement = new ParagraphElement();
-				var span:SpanElement = new SpanElement();
-				
-				cell.colIndex = 0;
-				cell.rowIndex = rowIndex;
-				span.text = "Row " + rowIndex + "; Col " + cell.colIndex;
-				para.addChild(span);
-				cellFlow.interactionManager = new SelectionManager();
-				cellFlow.addChild(para);
-				cell.textFlow = cellFlow;*/
-				
 				table.addColumn();
-				//table.addChild(cell);
 				
 				updateAllControllers();
 				
 				return table.getColumnAt(columnIndex);
 			}
 			
+			/**
+			 * Remove the selected table or last table in the text flow
+			 **/
 			public function removeTable():TableElement {
 				var table:TableElement = getTable();
 				
 				if (table) {
-					return textFlow.removeChild(table) as TableElement;
+					textFlow.removeChild(table);
 				}
 				
 				updateAllControllers();
-				return null;
+				return table;
 			}
 			
+			/**
+			 * Removes the selected row or the last row in the table
+			 **/
 			public function removeRow():TableRowElement {
 				var table:TableElement = getTable();
 				var rowElement:TableRowElement;
@@ -268,18 +229,25 @@
 				return rowElement;
 			}
 			
+			/**
+			 * Removes the selected column or last column in the table
+			 **/
 			public function removeColumn():TableColElement {
 				var table:TableElement = getTable();
+				var columnElement:TableColElement;
 				
 				if (table) {
-					return table.removeColumnAt(table.numColumns - 1) as TableColElement;
+					columnElement = table.removeColumnAt(table.numColumns - 1) as TableColElement;
 				}
 				
 				updateAllControllers();
 				
-				return null;
+				return columnElement;
 			}
 			
+			/**
+			 * Selects the cell the cursor is in or the first cell in the table
+			 **/
 			public function selectCell():TableElement {
 				var table:TableElement = getTable();
 				
@@ -290,7 +258,10 @@
 				return null;
 			}
 			
-			public function selectCells():TableElement {
+			/**
+			 * Selects the specified cells
+			 **/
+			public function selectCells(cells:Array = null):TableElement {
 				var table:TableElement = getTable();
 				
 				if (table) {
@@ -300,6 +271,9 @@
 				return null;
 			}
 			
+			/**
+			 * Selects a column in the table
+			 **/
 			public function selectColumn():TableElement {
 				var table:TableElement = getTable();
 				
@@ -310,7 +284,10 @@
 				return null;
 			}
 			
-			public function selectRow():TableElement {
+			/**
+			 * Selects a row in the table
+			 **/
+			public function selectRow(rowIndex:int = 0):TableElement {
 				var table:TableElement = getTable();
 				
 				if (table) {
@@ -320,6 +297,9 @@
 				return null;
 			}
 			
+			/**
+			 * Joins contiguous separate cells into one cell
+			 **/
 			public function joinCells():TableElement {
 				var table:TableElement = getTable();
 				
@@ -335,6 +315,15 @@
 			 * Bounds
 			 *****************************************************/
 			
+			/**
+			 * So the text line bounds. 
+			 * There are a few types of fills and they all seem to differ. 
+			 * There is: 
+			 * - background color fill style created by the BackgroundManager. see addParagraph()
+			 * - selection fill. select some text
+			 * - this fill method based on what I found online
+			 * - Label background fill. I don't think it uses BackgroundManager. 
+			 **/
 			public function showTextLineBounds():void
 			{
 				var i:int;
@@ -357,7 +346,7 @@
 						var g:Sprite = new Sprite;
 						g.graphics.lineStyle(1, color, 0.6);
 						g.graphics.drawRect(0, Math.max(-b1.height,-_tfl.height), b1.width, b1.height);
-						removeAllChildren(_tl);
+						_tl.removeChildren();
 						_tl.addChild(g);
 					}
 					else {
@@ -373,6 +362,9 @@
 				}
 			}
 			
+			/**
+			 * Shows the bounds of the atoms. This is from the TLF forums. 
+			 **/
 			public function showAtomBounds():void
 			{
 				var i:int;
@@ -404,6 +396,9 @@
 				}
 			}
 			
+			/**
+			 * Show paragraph bounds. Example is from one of the AS3 examples in TLF-SDK directory 
+			 **/
 			public function showParagraphBounds():Rectangle {
 				var bounds:Rectangle = new Rectangle();
 				var paragraph:ParagraphElement = getParagraph();
@@ -434,11 +429,15 @@
 				return bounds;
 			}
 			
+			/**
+			 * Show the bounds of the table. This is not working code. 
+			 **/
 			public function showTableBounds():Rectangle {
 				var table:TableElement = getTable();
 				
 				if (!table) return null;
 				
+				// this does not work at this time
 				var bounds:Rectangle = new Rectangle();
 				var lineBounds:Rectangle = new Rectangle();
 				var lineBounds2:Rectangle = new Rectangle();
@@ -476,6 +475,10 @@
 				return bounds;
 			}
 			
+			/**
+			 * Attempt to show all parcels or regions available to a text flow or table.
+			 * This is not working code.
+			 **/
 			public function showParcelBounds():void {
 				var flowComposer:StandardFlowComposer = textFlow.flowComposer as StandardFlowComposer;
 				var container:ContainerController = flowComposer.getControllerAt(flowComposer.numControllers-1);
@@ -537,13 +540,18 @@
 			 * Misc
 			 *****************************************************/
 			
+			/**
+			 * Updates all controllers. Call after the text flow is modified in any way.
+			 **/
 			public function updateAllControllers():void {
 				textFlow.flowComposer.updateAllControllers();
 				
-				if (updatingTextFlow) return;
 				exportTextFlow(textFlow);
 			}
 			
+			/**
+			 * Handles graphic status change events
+			 **/
 			public function graphicStatusChanged(event:StatusChangeEvent):void {
 				var img:InlineGraphicElement = event.element as InlineGraphicElement;
 				updateAllControllers();
@@ -558,15 +566,21 @@
 					mirror.addEventListener(FlowElementMouseEvent.ROLL_OUT,traceEvent);
 					mirror.addEventListener(FlowElementMouseEvent.CLICK,traceEvent);
 					
-					textFlow.flowComposer.updateAllControllers();
+					updateAllControllers();
 				}
 			}
 			
+			/**
+			 * Handler for model change events
+			 **/
 			public function elementModified(event:Event):void
 			{
 				//trace("event: " + event.type);
 			}
 			
+			/**
+			 * Used to check mouse events
+			 **/
 			public function traceEvent(event:FlowElementMouseEvent):void
 			{
 				//trace(event.flowElement.defaultTypeName+ " " + getTimer() + " " + event.toString() + event.originalEvent.toString());
@@ -581,6 +595,9 @@
 				}
 			}
 			
+			/**
+			 * Adds a paragraph to the text flow
+			 **/
 			public function addParagraph(text:String = null):void {
 				var paragraph:ParagraphElement = new ParagraphElement();
 				var span:SpanElement = new SpanElement();
@@ -589,7 +606,7 @@
 					span.text = text;
 				}
 				else {
-					span.text = "This is a paragraph\nSecond line.";
+					span.text = "This is a paragraph \nSecond line.";
 				}
 				
 				paragraph.backgroundAlpha = 0.2;
@@ -601,6 +618,10 @@
 				
 				updateAllControllers();
 			}
+			
+			/**
+			 * Creates a text flow from the text value passed in. Used for table cell text flows.
+			 **/
 			public function getTextFlowContent(text:String = null, selectable:Boolean = false, editable:Boolean = false):TextFlow {
 				var textFlowContent:TextFlow = new TextFlow();
 				var paragraph:ParagraphElement = new ParagraphElement();
@@ -629,6 +650,9 @@
 				return textFlowContent;
 			}
 			
+			/**
+			 * Gets the paragraph the cursor is in or the first available paragraph 
+			 **/
 			public function getParagraph():ParagraphElement {
 				var paragraph:ParagraphElement;
 				
@@ -645,6 +669,9 @@
 				return paragraph;
 			}
 			
+			/**
+			 * Gets the first table available or null if none are available
+			 **/
 			public function getTable():TableElement {
 				var table:TableElement;
 				
@@ -661,13 +688,9 @@
 				return table;
 			}
 			
-			public function removeAllChildren(sprite:DisplayObjectContainer):void {
-				
-				sprite.removeChildren();
-				if (sprite.numChildren) {
-				}
-			}
-			
+			/**
+			 * Removes the shapes added by show boundary methods
+			 **/
 			public function removeShapes():void {
 				var paragraph:ParagraphElement = getParagraph();
 				if (!paragraph) return;
@@ -685,7 +708,7 @@
 				{
 					var _tfl:TextFlowLine = fc.getLineAt(i);
 					var _tl:TextLine = _tfl.getTextLine();
-					removeAllChildren(_tl);
+					_tl.removeChildren();
 				}
 				
 				if (sprite && sprite.graphics.readGraphicsData().length!=0) {
@@ -693,6 +716,9 @@
 				}
 			}
 			
+			/**
+			 * Removes all the children in the text flow
+			 **/
 			public function clearTextFlow():void {
 				//textFlow.setTextLength(0);
 				//textFlow.deleteContainerText(0, textFlow.textLength);
@@ -711,15 +737,27 @@
 				}
 			}
 			
+			/**
+			 * Flag indicating if currently importing text
+			 * If the text flow has inline graphics that have not loaded yet it can cause
+			 * another composition complete event causing a reexport.
+			 **/
 			public var updatingTextFlow:Boolean;
-			
+
+			/**
+			 * Imports the text flow markup into new text flow content when changed.
+			 * If the text flow has inline graphics that have not loaded yet it can cause
+			 * another composition complete event causing a reexport. 
+			 **/
 			protected function textFlowMarkup_changeHandler(event:TextOperationEvent):void {
-				
 				updatingTextFlow = true;
 				importToFlow(textFlowMarkup.text);
 				updatingTextFlow = false;
 			}
 			
+			/**
+			 * Imports the text into a new text flow
+			 **/
 			public function importToFlow(value:String):TextFlow {
 				var errors:Vector.<String>;
 				var importer:ITextImporter;
@@ -732,25 +770,25 @@
 				newTextFlow = importer.importToFlow(value);
 				errors = importer.errors;
 				
-				if (!errors && newTextFlow) {
+				// if text flow is not null add it and ignore errors
+				//if (!errors && newTextFlow) {
+				if (newTextFlow) { 
 					setupTextFlow(newTextFlow);
 				}
-				if (errors && errors.length) {
-					textFlowMarkupErrors.text = errors.join("\n");
-				}
-				else {
-					textFlowMarkupErrors.text = "";
-				}
+				
+				updateErrorsText(importer.errors);
 				
 				return newTextFlow;
 			}
 			
 			/**
-			 * Adds listeners to the text flow and adds it to the stage
+			 * Adds listeners to the text flow and adds it to the container
 			 **/
 			public function setupTextFlow(newTextFlow:TextFlow):void {
 				if (!newTextFlow) return;
 				
+				// remove listeners from previous text flow
+				// we may need to do other things to clear out the old textflow
 				if (textFlow) {
 					textFlow.removeEventListener(CompositionCompleteEvent.COMPOSITION_COMPLETE, compositionComplete);
 					textFlow.removeEventListener(ModelChange.ELEMENT_MODIFIED, graphicStatusChanged);
@@ -769,6 +807,8 @@
 					container = new SpriteVisualElement();
 				}
 				
+				container.removeChildren();
+				
 				if (!controller) {
 					controller = new ContainerController(container, group.width, group.height);
 				}
@@ -785,11 +825,10 @@
 			}
 			
 			/**
-			 * Composition complete
+			 * When TextFlow has finished composition we export the markup
 			 **/
 			protected function compositionComplete(event:CompositionCompleteEvent):void
 			{
-				if (updatingTextFlow) return;
 				exportTextFlow(textFlow);
 			}
 			
@@ -798,99 +837,130 @@
 			 **/
 			protected function selectionChange(event:SelectionEvent):void
 			{
-				
+				// not used yet
 			}
 			
+			/**
+			 * 
+			 **/
 			public function notImplemented():void
 			{
 				Alert.show("Not implemented", "Message");
 			}
 			
-			public function exportTextFlow(textFlow:TextFlow):void
-			{
+			/**
+			 * Exports the text flow markup and reports any errors.
+			 * Changes can be overwritten when using inline graphics
+			 **/
+			public function exportTextFlow(textFlow:TextFlow):void {
+				
+				// do not export if importing or user is typing into the text flow markup text area
+				if (updatingTextFlow ||
+					textFlowMarkup.focusManager.getFocus()==textFlowMarkup) {
+					return;
+				}
+				
+				
 				var exporter:ITextExporter = TextConverter.getExporter(TextConverter.TEXT_LAYOUT_FORMAT);
 				exporter.throwOnError = false;
+				
+				// we need to set white space to collapse to allow space bar to work in the text area
+				// if we set the attribute manually it works
+				// unfortunately I can't get it to export with collapse
 				//textFlow.whiteSpaceCollapse = WhiteSpaceCollapse.COLLAPSE;
 				//textFlow.setStyle("whiteSpaceCollapse", WhiteSpaceCollapse.COLLAPSE);
 				//textFlow.flowComposer.updateAllControllers();
+				/*
+				var format:TextLayoutFormat = new TextLayoutFormat();
+				format.whiteSpaceCollapse = WhiteSpaceCollapse.COLLAPSE;
+				var config:Configuration = new Configuration();
+				config.textFlowInitialFormat = format;*/
 				
-				var object:Object = exporter.export(textFlow, TextConverter.TEXT_LAYOUT_FORMAT);
+				var object:Object = exporter.export(textFlow, TextConverter.TEXT_LAYOUT_FORMAT);				
 				textFlowMarkup.text = object is XML ? XML(object).toXMLString() : null;
-				textFlowMarkupErrors.text = exporter.errors ? exporter.errors.join("\n") : null;				
 				
+				updateErrorsText(exporter.errors);
 			}
 			
+			/**
+			 * Adds errors during export or import to the errors text box
+			 **/
+			public function updateErrorsText(errors:Vector.<String>):void {
+				textFlowMarkupErrors.text = errors ? errors.join("\n") : null;
+			}
 		]]>
 	</fx:Script>
-	
-	<!--<s:VGroup height="100%" width="100%">-->
-		<s:HGroup width="100%" minHeight="400" top="50" left="10" right="10">
-			<s:VGroup width="100%" height="100%">
-				<s:HGroup width="100%" gap="1" >
-					<s:Label text="TextFlow" width="100%" styleName="header"/>
-					<s:Label text="clear" click="clearTextFlow()" styleName="header" 
-							 useHandCursor="true" buttonMode="true"
-							 />					
-				</s:HGroup>  
-				<s:BorderContainer id="group" width="100%" height="100%" minHeight="250"/>
-				<s:Label text="TextFlow Markup" width="100%" styleName="header"/>
-				<s:TextArea id="textFlowMarkup" width="100%" height="100%" 
-							focusThickness="0" change="textFlowMarkup_changeHandler(event)"/>
-				<s:Label text="TextFlow Markup Errors" width="100%" styleName="header"
-							/>
-				<s:TextArea id="textFlowMarkupErrors" width="100%" height="30%" color="red"
-							/>
-			</s:VGroup>
-			<s:VGroup width="100%" height="100%">
-				<s:Label text="Add Elements" width="100%" styleName="header"/>
-				<s:HGroup>
-					<mx:LinkButton label="Table" click="addTable(3, 3)"/>
-					<mx:LinkButton label="Selectable Table" click="addTable(3, 3, true)"/>
-					<mx:LinkButton label="Editable Table" click="addTable(3, 3, false, true)"/>
-				</s:HGroup>
-				<s:HGroup>
-					<mx:LinkButton label="Row" click="addRow()"/>
-					<mx:LinkButton label="Column" click="addColumn()"/>
-					<mx:LinkButton label="Paragraph" click="addParagraph()"/>
-					<mx:LinkButton label="Span" click="notImplemented()"/>
-				</s:HGroup>
-				<s:Label text="Remove Elements" width="100%" styleName="header"/>
-				<s:HGroup>
-					<mx:LinkButton label="Table" click="removeTable()"/>
-					<mx:LinkButton label="Row" click="removeRow()"/>
-					<mx:LinkButton label="Column" click="removeColumn()"/>
-					<mx:LinkButton label="Paragraph" />
-					<mx:LinkButton label="Span" />
-					<mx:LinkButton label="Shapes" click="removeShapes()"/>
-					<mx:LinkButton label="All" click="clearTextFlow()"/>
-				</s:HGroup>
-				<s:Label text="Select Elements" width="100%" styleName="header"/>
-				<s:HGroup>
-					<mx:LinkButton label="Table" click="selectRange()"/>
-					<mx:LinkButton label="Row" click="selectRow()"/>
-					<mx:LinkButton label="Column" click="selectColumn()"/>
-					<mx:LinkButton label="Cell" click="selectCell()"/>
-					<mx:LinkButton label="Cells" click="selectCells()"/>
-				</s:HGroup>
-				<s:Label text="Show Boundaries" width="100%" styleName="header"/>
-				<s:HGroup>
-					<mx:LinkButton label="Paragraph" click="showParagraphBounds()"/>
-					<mx:LinkButton label="Table" click="showTableBounds()"/>
-					<mx:LinkButton label="Parcels" click="showParcelBounds()"/>
-					<mx:LinkButton label="TextLines" click="showTextLineBounds()"/>
-					<mx:LinkButton label="Atoms" click="showAtomBounds()"/>
-				</s:HGroup>
-				<s:Label text="Misc" width="100%" styleName="header"/>
-				<s:HGroup>
-					<mx:LinkButton label="Join Cells" click="joinCells()"/>
-					<mx:LinkButton label="Select Range" click="selectRange()"/>
-					<mx:LinkButton label="Update all controllers" click="updateAllControllers()"/>
-				</s:HGroup>
-			</s:VGroup>
-		</s:HGroup>
-	<!--</s:VGroup>-->
-	
-	<!--
-	<s:Label text="Hello There"/>-->
+
+	<s:HGroup width="100%" minHeight="400" top="50" left="10" right="10">
+		<s:VGroup width="100%" height="100%">
+			<s:HGroup width="100%" gap="1" >
+				<s:Label text="TextFlow" width="100%" styleName="header"/>
+				<s:Label text="clear" click="clearTextFlow()" 
+						 styleName="header" 
+						 useHandCursor="true" buttonMode="true"
+						 />					
+			</s:HGroup>  
+			<s:BorderContainer id="group" width="100%" height="100%" minHeight="250"/>
+			<s:Label text="TextFlow Markup" width="100%" styleName="header"/>
+			<s:TextArea id="textFlowMarkup" width="100%" height="100%" 
+						focusThickness="0" change="textFlowMarkup_changeHandler(event)"/>
+			<s:Label text="TextFlow Markup Errors" width="100%" styleName="header"
+						/>
+			<s:TextArea id="textFlowMarkupErrors" width="100%" height="30%" color="red"
+						/>
+		</s:VGroup>
+		<s:VGroup width="100%" height="100%">
+			<s:Label text="Add Elements" width="100%" styleName="header"/>
+			<s:HGroup>
+				<mx:LinkButton label="Table" click="addTable(3, 3)"/>
+				<mx:LinkButton label="Selectable Table" click="addTable(3, 3, true)"/>
+				<mx:LinkButton label="Editable Table" click="addTable(3, 3, false, true)"/>
+			</s:HGroup>
+			<s:HGroup>
+				<mx:LinkButton label="Row" click="addRow()"/>
+				<mx:LinkButton label="Column" click="addColumn()"/>
+				<mx:LinkButton label="Paragraph" click="addParagraph()"/>
+				<mx:LinkButton label="Span" click="notImplemented()"/>
+			</s:HGroup>
+			<s:Label text="Remove Elements" width="100%" styleName="header"/>
+			<s:HGroup>
+				<mx:LinkButton label="Table" click="removeTable()"/>
+				<mx:LinkButton label="Row" click="removeRow()"/>
+				<mx:LinkButton label="Column" click="removeColumn()"/>
+				<mx:LinkButton label="Paragraph" />
+				<mx:LinkButton label="Span" />
+				<mx:LinkButton label="Shapes" click="removeShapes()"/>
+				<mx:LinkButton label="All" click="clearTextFlow()"/>
+			</s:HGroup>
+			<s:Label text="Select Elements" width="100%" styleName="header"/>
+			<s:HGroup>
+				<mx:LinkButton label="Table" click="selectRange()"/>
+				<mx:LinkButton label="Row" click="selectRow()"/>
+				<mx:LinkButton label="Column" click="selectColumn()"/>
+				<mx:LinkButton label="Cell" click="selectCell()"/>
+				<mx:LinkButton label="Cells" click="selectCells()"/>
+			</s:HGroup>
+			<s:Label text="Show Boundaries" width="100%" styleName="header"/>
+			<s:HGroup>
+				<mx:LinkButton label="Paragraph" click="showParagraphBounds()"/>
+				<mx:LinkButton label="Table" click="showTableBounds()"/>
+				<mx:LinkButton label="Parcels" click="showParcelBounds()"/>
+				<mx:LinkButton label="TextLines" click="showTextLineBounds()"/>
+				<mx:LinkButton label="Atoms" click="showAtomBounds()"/>
+			</s:HGroup>
+			<s:Label text="Import" width="100%" styleName="header"/>
+			<s:HGroup>
+				<mx:LinkButton label="Table" click="importToFlow(tableData)"/>
+				<mx:LinkButton label="Simple TextFlow" click="importToFlow(simpleTextMarkup)"/>
+				<mx:LinkButton label="Complex TextFlow" click="importToFlow(complexTextFlow)"/>
+			</s:HGroup>
+			<s:Label text="Misc" width="100%" styleName="header"/>
+			<s:HGroup>
+				<mx:LinkButton label="Join Cells" click="joinCells()"/>
+				<mx:LinkButton label="Select Range" click="selectRange()"/>
+				<mx:LinkButton label="Update all controllers" click="updateAllControllers()"/>
+			</s:HGroup>
+		</s:VGroup>
+	</s:HGroup>
 	
 </s:Application>
