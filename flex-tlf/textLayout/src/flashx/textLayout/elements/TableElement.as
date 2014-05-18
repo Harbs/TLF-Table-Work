@@ -209,10 +209,10 @@ package flashx.textLayout.elements
 			}
 			return retVal;
 		}
-		public function insertColumn(column:TableColElement):Boolean{
-			return insertColumnAt(numColumns,column);
+		public function insertColumn(column:TableColElement,cells:Array = null):Boolean{
+			return insertColumnAt(numColumns,column,cells);
 		}
-		public function insertColumnAt(idx:int,column:TableColElement):Boolean{
+		public function insertColumnAt(idx:int,column:TableColElement,cells:Array = null):Boolean{
 			if(idx < 0 || idx > columns.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
 			
@@ -220,11 +220,11 @@ package flashx.textLayout.elements
 			return true;
 		}
 		
-		public function insertRow(row:TableRowElement):Boolean{
-			return insertRowAt(numRows,row);
+		public function insertRow(row:TableRowElement,cells:Array = null):Boolean{
+			return insertRowAt(numRows,row,cells);
 		}
 		
-		public function insertRowAt(idx:int,row:TableRowElement):Boolean{
+		public function insertRowAt(idx:int,row:TableRowElement,cells:Array = null):Boolean{
 			if(idx < 0 || idx > rows.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
 			
@@ -254,30 +254,29 @@ package flashx.textLayout.elements
 			if(idx < 0 || idx > rows.length - 1)
 				return null;
 			
-			
 			var row:TableRowElement = TableRowElement(rows.splice(idx,1)[0]);
-			
+			normalizeCells();
 			hasCellDamage = true;
-			
 			return row;
 			
 		}
 		
 		public function removeRowWithContentAt(idx:int):Array
 		{
-			removeRowAt(idx);
-			if(!mxmlChildren)
-				return [];
+
 			var removedCells:Array = [];
-			for (var i:int = mxmlChildren.length-1;i>=0;i--){
-				var child:* = mxmlChildren[i];
-				if(!(child is TableCellElement))
-					continue;
-				var cell:TableCellElement = child as TableCellElement;
-				if(cell.rowIndex == idx){
-					removedCells.unshift(removeChild(cell));
+			if(mxmlChildren){
+				for (var i:int = mxmlChildren.length-1;i>=0;i--){
+					var child:* = mxmlChildren[i];
+					if(!(child is TableCellElement))
+						continue;
+					var cell:TableCellElement = child as TableCellElement;
+					if(cell.rowIndex == idx){
+						removedCells.unshift(removeChild(cell));
+					}
 				}
 			}
+			removeRowAt(idx);
 			return removedCells;
 		}
 		
@@ -300,32 +299,61 @@ package flashx.textLayout.elements
 			if(idx < 0 || idx > columns.length - 1)
 				return null;
 			
-			return columns.splice(idx,1)[0] as TableColElement;
+			var col:TableColElement = columns.splice(idx,1)[0];
+			normalizeCells();
+			hasCellDamage = true;
+			return col;
 		}
 		
 		public function removeColumnWithContentAt(idx:int):Array
 		{
-			removeColumnAt(idx);
-			if(!mxmlChildren)
-				return [];
+			
 			var removedCells:Array = [];
-			for (var i:int = mxmlChildren.length-1;i>=0;i--){
-				var child:* = mxmlChildren[i];
-				if(!(child is TableCellElement))
-					continue;
-				var cell:TableCellElement = child as TableCellElement;
-				if(cell.colIndex == idx){
-					removedCells.unshift(removeChild(cell));
+			if(mxmlChildren){
+				for (var i:int = mxmlChildren.length-1;i>=0;i--){
+					var child:* = mxmlChildren[i];
+					if(!(child is TableCellElement))
+						continue;
+					var cell:TableCellElement = child as TableCellElement;
+					if(cell.colIndex == idx){
+						removedCells.unshift(removeChild(cell));
+					}
 				}
 			}
+			removeColumnAt(idx);
+
 			return removedCells;
 		}
-		
+		private function getBlockedCoords():Vector.<CellCoords>{
+			var coords:Vector.<CellCoords> = new Vector.<CellCoords>();
+			if(mxmlChildren)
+			{
+				for each(var child:* in mxmlChildren){
+					var cell:TableCellElement = child as TableCellElement;
+					if(cell.columnSpan == 1 && cell.rowSpan == 1)
+						continue;
+					var curRow:int = cell.rowIndex;
+					var curColumn:int = cell.colIndex;
+					var endRow = curRow + cell.rowSpan - 1;
+					var endColumn = curColumn + cell.columnSpan -1;
+					for(var rowIdx:int = curRow;rowIdx <= endRow;rowIdx++){
+						for(var colIdx:int = curColumn;colIdx <=endColumn;colIdx++){
+							if(rowIdx == curRow && colIdx == curColumn){
+								continue;
+							}
+							coords.push( new CellCoords(colIdx,rowIdx) );
+						}
+					}
+
+				}
+			}
+			return coords;
+		}
 		public function normalizeCells():void
 		{
 			this.numColumns;this.numRows;
 			var i:int;
-			var blockedCoords:Array = [];
+			var blockedCoords:Vector.<CellCoords> = new Vector.<CellCoords>();
 			if(!mxmlChildren)
 				return;
 			var curRow:int = 0;
@@ -345,10 +373,7 @@ package flashx.textLayout.elements
 						if(rowIdx == curRow && colIdx == curColumn){
 							continue;
 						}
-						blockedCoords.push({
-							column:colIdx,
-							row:rowIdx
-						});
+						blockedCoords.push(new CellCoords(colIdx,rowIdx) );
 					}
 				}
 				
@@ -656,5 +681,15 @@ package flashx.textLayout.elements
 		override public function get textLength():int{
 			return 1;
 		}
+	}
+}
+class CellCoords
+{
+	public var column:int;
+	public var row:int;
+	public function CellCoords(colIdx:int,rowIdx:int)
+	{
+		column = colIdx;
+		row = rowIdx;
 	}
 }
