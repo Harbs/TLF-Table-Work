@@ -24,7 +24,7 @@
 			[Bindable]private var textFlow:TextFlow;
 			private var table:TableElement;
 			private var controller:ContainerController;
-			var undoManager:UndoManager;
+			private var undoManager:UndoManager;
 			
 			private function onComplete():void{
 				textFlow = new TextFlow();

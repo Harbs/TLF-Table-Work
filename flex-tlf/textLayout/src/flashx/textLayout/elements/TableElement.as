@@ -18,23 +18,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 package flashx.textLayout.elements
 {
-	import flash.display.Graphics;
-	import flash.events.Event;
-	import flash.events.EventDispatcher;
-	import flash.events.IEventDispatcher;
-	import flash.events.MouseEvent;
-	import flash.geom.Point;
-	import flash.text.engine.TextBlock;
-	import flash.text.engine.TextLine;
-	
-	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.compose.TextFlowTableBlock;
-	import flashx.textLayout.events.FlowElementEventDispatcher;
-	import flashx.textLayout.events.FlowElementMouseEventManager;
 	import flashx.textLayout.events.ModelChange;
 	import flashx.textLayout.formats.FormatValue;
 	import flashx.textLayout.formats.ITextLayoutFormat;
 	import flashx.textLayout.formats.TextLayoutFormat;
+	import flashx.textLayout.tlf_internal;
 	
 	use namespace tlf_internal;
 	
@@ -250,7 +239,15 @@ package flashx.textLayout.elements
 			var i:int = rows.indexOf(row);
 			if(i < 0)
 				return null;
-			return rows.splice(i,1)[0] as TableRowElement;
+			return removeRowAt(i);
+		}
+		
+		public function removeRowWithContent(row:TableRowElement):Array
+		{
+			var i:int = rows.indexOf(row);
+			if(i < 0)
+				return null;
+			return removeRowWithContentAt(i);
 		}
 		
 		public function removeRowAt(idx:int):TableRowElement {
@@ -266,18 +263,115 @@ package flashx.textLayout.elements
 			
 		}
 		
+		public function removeRowWithContentAt(idx:int):Array
+		{
+			removeRowAt(idx);
+			if(!mxmlChildren)
+				return [];
+			var removedCells:Array = [];
+			for (var i:int = mxmlChildren.length-1;i>=0;i--){
+				var child:* = mxmlChildren[i];
+				if(!(child is TableCellElement))
+					continue;
+				var cell:TableCellElement = child as TableCellElement;
+				if(cell.rowIndex == idx){
+					removedCells.unshift(removeChild(cell));
+				}
+			}
+			return removedCells;
+		}
+		
 		public function removeColumn(column:TableColElement):TableColElement {
 			var i:int = columns.indexOf(column);
 			if(i < 0)
 				return null;
-			return columns.splice(i,1)[0] as TableColElement;
+			return removeColumnAt(i);
 		}
+		public function removeColumnWithContent(column:TableColElement):Array
+		{
+			var i:int = columns.indexOf(column);
+			if(i < 0)
+				return null;
+			return removeColumnWithContentAt(i);
+		}
+
 		
 		public function removeColumnAt(idx:int):TableColElement {
 			if(idx < 0 || idx > columns.length - 1)
 				return null;
 			
 			return columns.splice(idx,1)[0] as TableColElement;
+		}
+		
+		public function removeColumnWithContentAt(idx:int):Array
+		{
+			removeColumnAt(idx);
+			if(!mxmlChildren)
+				return [];
+			var removedCells:Array = [];
+			for (var i:int = mxmlChildren.length-1;i>=0;i--){
+				var child:* = mxmlChildren[i];
+				if(!(child is TableCellElement))
+					continue;
+				var cell:TableCellElement = child as TableCellElement;
+				if(cell.colIndex == idx){
+					removedCells.unshift(removeChild(cell));
+				}
+			}
+			return removedCells;
+		}
+		
+		public function normalizeCells():void
+		{
+			this.numColumns;this.numRows;
+			var i:int;
+			var blockedCoords:Array = [];
+			if(!mxmlChildren)
+				return;
+			var curRow:int = 0;
+			var curColumn:int = 0;
+			for each(var child:* in mxmlChildren){
+				if(!(child is TableCellElement))
+					continue;
+				var cell:TableCellElement = child as TableCellElement;
+				cell.rowIndex = curRow;
+				cell.colIndex = curColumn;
+				
+				// add blocked coords if the cell spans rows or columns
+				var endRow = curRow + cell.rowSpan - 1;
+				var endColumn = curColumn + cell.columnSpan -1;
+				for(var rowIdx:int = curRow;rowIdx <= endRow;rowIdx++){
+					for(var colIdx:int = curColumn;colIdx <=endColumn;colIdx++){
+						if(rowIdx == curRow && colIdx == curColumn){
+							continue;
+						}
+						blockedCoords.push({
+							column:colIdx,
+							row:rowIdx
+						});
+					}
+				}
+				
+				// advance coordinates while checking blocked ones from spans
+				do{
+					curColumn++;
+					if(curColumn >= numColumns){
+						curColumn = 0;
+						curRow++;
+					}
+					var advanced:Boolean = true;
+					for(i=0;i<blockedCoords.length;i++){
+						if(blockedCoords[i].column == curColumn && blockedCoords[i].row == curRow){
+							advanced = false;
+							blockedCoords.splice(i,1);
+						}
+					}
+					if(advanced)
+						break;
+					
+				}while(1);
+					
+			}
 		}
 		
 		public function setColumnWidth(columnIndex:int, value:*):Boolean
