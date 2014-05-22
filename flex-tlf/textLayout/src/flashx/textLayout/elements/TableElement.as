@@ -209,29 +209,66 @@ package flashx.textLayout.elements
 			}
 			return retVal;
 		}
-		public function insertColumn(column:TableColElement,cells:Array = null):Boolean{
+		public function insertColumn(column:TableColElement=null,cells:Array = null):Boolean{
 			return insertColumnAt(numColumns,column,cells);
 		}
-		public function insertColumnAt(idx:int,column:TableColElement,cells:Array = null):Boolean{
+		public function insertColumnAt(idx:int,column:TableColElement=null,cells:Array = null):Boolean{
 			if(idx < 0 || idx > columns.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
-			
+			if(!column)
+				column = new TableColElement(defaultColumnFormat);
 			columns.splice(idx,0,column);
+			
+			var blockedCoords:Vector.<CellCoords> = getBlockedCoords(-1,idx);
+			var cellIdx:int = getCellIndex(0,idx);
+			var rowIdx:int = 0;
+			while(cells.length < numRows){
+				cells.push(new TableCellElement());
+			}
+			for each(var cell:TableCellElement in cells){
+				while(blockedCoords.length && blockedCoords[0].row == rowIdx){
+					rowIdx++;
+					blockedCoords.shift();
+				}
+				cellIdx = getCellIndex(rowIdx,idx);
+				if(rowIdx < numRows){
+					addChildAt(cellIdx,cell);
+				}
+			}
+
+
 			return true;
 		}
 		
-		public function insertRow(row:TableRowElement,cells:Array = null):Boolean{
+		public function insertRow(row:TableRowElement=null,cells:Array = null):Boolean{
 			return insertRowAt(numRows,row,cells);
 		}
 		
-		public function insertRowAt(idx:int,row:TableRowElement,cells:Array = null):Boolean{
+		public function insertRowAt(idx:int,row:TableRowElement=null,cells:Array = null):Boolean{
 			if(idx < 0 || idx > rows.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
-			
+			if(!row)
+				row = new TableRowElement(defaultRowFormat);
 			rows.splice(idx,0,row);
 			row.composedHeight = row.computedFormat.minCellHeight;
 			row.isMaxHeight = row.computedFormat.minCellHeight == row.computedFormat.maxCellHeight;
 
+			var blockedCoords:Vector.<CellCoords> = getBlockedCoords(idx);
+			var cellIdx:int = getCellIndex(idx,0);
+			var colIdx:int = 0;
+			while(cells.length < numColumns){
+				cells.push(new TableCellElement());
+			}
+			for each(var cell:TableCellElement in cells){
+				while(blockedCoords.length && blockedCoords[0].column == colIdx){
+					colIdx++;
+					blockedCoords.shift();
+				}
+				if(colIdx < numColumns){
+					addChildAt(cellIdx,cell);
+					cellIdx++;
+				}
+			}
 			return true;
 		}
 		
@@ -324,7 +361,7 @@ package flashx.textLayout.elements
 
 			return removedCells;
 		}
-		private function getBlockedCoords():Vector.<CellCoords>{
+		private function getBlockedCoords(inRow:int = -1, inColumn:int = -1):Vector.<CellCoords>{
 			var coords:Vector.<CellCoords> = new Vector.<CellCoords>();
 			if(mxmlChildren)
 			{
@@ -333,9 +370,13 @@ package flashx.textLayout.elements
 					if(cell.columnSpan == 1 && cell.rowSpan == 1)
 						continue;
 					var curRow:int = cell.rowIndex;
+					if(inRow >= 0 && curRow != inRow)
+						continue;
+					if(inColumn >= 0 && inColumn != curColumn)
+						continue;
 					var curColumn:int = cell.colIndex;
-					var endRow = curRow + cell.rowSpan - 1;
-					var endColumn = curColumn + cell.columnSpan -1;
+					var endRow:int = curRow + cell.rowSpan - 1;
+					var endColumn:int = curColumn + cell.columnSpan -1;
 					for(var rowIdx:int = curRow;rowIdx <= endRow;rowIdx++){
 						for(var colIdx:int = curColumn;colIdx <=endColumn;colIdx++){
 							if(rowIdx == curRow && colIdx == curColumn){
@@ -366,8 +407,8 @@ package flashx.textLayout.elements
 				cell.colIndex = curColumn;
 				
 				// add blocked coords if the cell spans rows or columns
-				var endRow = curRow + cell.rowSpan - 1;
-				var endColumn = curColumn + cell.columnSpan -1;
+				var endRow:int = curRow + cell.rowSpan - 1;
+				var endColumn:int = curColumn + cell.columnSpan -1;
 				for(var rowIdx:int = curRow;rowIdx <= endRow;rowIdx++){
 					for(var colIdx:int = curColumn;colIdx <=endColumn;colIdx++){
 						if(rowIdx == curRow && colIdx == curColumn){
@@ -680,6 +721,20 @@ package flashx.textLayout.elements
 		}
 		override public function get textLength():int{
 			return 1;
+		}
+		private function getCellIndex(rowIdx:int,columnIdx:int):int{
+			if(rowIdx == 0 && columnIdx == 0)
+				return 0;
+			for (var i:int=0;i<mxmlChildren.length;i++){
+				var item:* = mxmlChildren[i];
+				if(!(item is TableCellElement))
+					continue;
+				var cell:TableCellElement = item as TableCellElement;
+				if(cell.rowIndex == rowIdx && cell.colIndex == columnIdx)
+					return i;
+			}
+			return -1;
+			
 		}
 	}
 }
