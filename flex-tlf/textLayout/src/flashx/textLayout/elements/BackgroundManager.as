@@ -32,6 +32,7 @@ package flashx.textLayout.elements
 	import flashx.textLayout.compose.ParcelList;
 	import flashx.textLayout.compose.StandardFlowComposer;
 	import flashx.textLayout.compose.TextFlowLine;
+	import flashx.textLayout.compose.TextFlowTableBlock;
 	import flashx.textLayout.container.ContainerController;
 	import flashx.textLayout.container.TextContainerManager;
 	import flashx.textLayout.debug.assert;
@@ -106,6 +107,35 @@ package flashx.textLayout.elements
 				
 				_blockElementDict[elem] = record;
 			}
+		}
+		
+		public static function collectTableBlock(_textFlow:TextFlow,block:TextFlowTableBlock):void
+		{
+			// add block rect for each cell in table block
+			
+			var bb:BackgroundManager;
+			var r:Rectangle;
+			var controller:ContainerController;
+			var composer:IFlowComposer;
+
+			var cells = block.getTableCells();
+			for each(var cell:TableCellElement in cells){
+				if(BackgroundManager.hasBorderOrBackground(cell))
+				{
+					if(!_textFlow.backgroundManager)
+						_textFlow.getBackgroundManager();
+					bb = _textFlow.backgroundManager;
+
+					bb.addBlockElement(cell);
+				
+					var row:TableRowElement = cell.getRow();
+					r = new Rectangle(cell.x, cell.y + block.y, cell.width, row.composedHeight);
+					bb.addBlockRect(cell, r, block.controller);
+
+				}
+			}
+			block.y;
+			
 		}
 		
 		public static function collectBlock(_textFlow:TextFlow, elem:FlowGroupElement, _parcelList:ParcelList = null, tableComposeNotFromBeginning:Boolean = false, tableOutOfView:Boolean = false):void
@@ -619,7 +649,11 @@ package flashx.textLayout.elements
 				//draw background for span	
 				for(var childIdx:int = 0; childIdx<controller.textLines.length; ++childIdx)
 				{
-					var tl:TextLine = controller.textLines[childIdx];
+					var line:* = controller.textLines[childIdx];
+					// skip TextFlowTableBlocks
+					if(!(line is TextLine))
+						continue;
+					var tl:TextLine = line;
 					var entry:Array = _lineDict[tl];
 		
 					if (entry)

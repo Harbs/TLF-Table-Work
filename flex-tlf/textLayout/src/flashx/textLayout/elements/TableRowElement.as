@@ -77,6 +77,14 @@ package flashx.textLayout.elements
 		{
 			super.modelChanged(changeType,elem,changeStart,changeLen,needNormalize,bumpGeneration);
 		}
+		
+		public function getCells():Vector.<TableCellElement>
+		{
+			var table:TableElement = getTable();
+			if(!table)
+				return null;
+			return table.getCellsForRow(table.getRowIndex(this));
+		}
 
 	}
 }

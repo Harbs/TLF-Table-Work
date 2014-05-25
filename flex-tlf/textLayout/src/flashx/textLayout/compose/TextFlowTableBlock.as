@@ -6,6 +6,7 @@ package flashx.textLayout.compose
 	import flashx.textLayout.elements.CellContainer;
 	import flashx.textLayout.elements.ParagraphElement;
 	import flashx.textLayout.elements.TableBlockContainer;
+	import flashx.textLayout.elements.TableCellElement;
 	import flashx.textLayout.elements.TableElement;
 	import flashx.textLayout.elements.TextFlow;
 	import flashx.textLayout.tlf_internal;
@@ -88,6 +89,15 @@ package flashx.textLayout.compose
 		}
 		override public function get y():Number{
 			return _container.y;
+		}
+		public function getTableCells():Vector.<TableCellElement>
+		{
+			var tCells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
+			var cells:Array = getCells();
+			for each(var cellContainer:CellContainer in cells){
+				tCells.push(cellContainer.element);
+			}
+			return tCells;
 		}
 
 	}

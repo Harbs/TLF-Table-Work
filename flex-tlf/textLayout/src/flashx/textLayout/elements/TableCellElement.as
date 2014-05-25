@@ -234,5 +234,10 @@ package flashx.textLayout.elements
 			_controller.updateCompositionShapes();
 		}
 		
+		public function getRow():TableRowElement
+		{
+			return getTable().getRowAt(rowIndex);
+		}
+		
 	}
 }

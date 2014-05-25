@@ -354,6 +354,7 @@ package flashx.textLayout.compose
 				// child is table means recompose starts in the middle of a table. 
 				// In this case, we finished compose the table, then continue
 				// Harbs - need to analize whether this makes sense at all...
+				/*
 				if ( child is TableElement )
 				{
 					child = _curElement;
@@ -386,6 +387,7 @@ package flashx.textLayout.compose
 					
 					BackgroundManager.collectBlock(_textFlow, tableElement, _parcelList, true);
 				}
+				*/
 			}
 			
 			var composeEntireElement:Boolean = (absStart == _curElementStart + _curElementOffset);
@@ -511,7 +513,7 @@ package flashx.textLayout.compose
 			}
 			
 			//for elements, whose text are all visible, except for TableElement, TableRowElement and TableCellElement
-			if(!(elem is TableElement))//  || elem is TableRowElement || elem is TableCellElement (we don't process these...)
+			if(!(elem is TableElement || elem is TableRowElement || elem is TableCellElement))// (we don't process these...)
 				BackgroundManager.collectBlock(_textFlow, elem);
 			
 			return true;
@@ -581,6 +583,7 @@ package flashx.textLayout.compose
 					if(!haveRealRows)
 						curTableBlock.clear();
 					_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);
+					BackgroundManager.collectTableBlock(_textFlow,curTableBlock);
 					blockToAdd = false;
 					
 					_parcelList.next();
@@ -623,9 +626,10 @@ package flashx.textLayout.compose
 				curRow = tableElement.getNextRow();
 				totalRowHeight += rowHeight;
 			}
-			if(_parcelList.currentParcel && blockToAdd)
+			if(_parcelList.currentParcel && blockToAdd){
 				_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);
-
+				BackgroundManager.collectTableBlock(_textFlow,curTableBlock);
+			}
 			//reference ComposeState.composeNextLine() which creates the the TextLine.
 			// We don't need getLineSlug() because tables can extend beyond the container width
 			// We do need to get the available height and push any cells that don't fit to the next Parcel/container

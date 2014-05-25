@@ -201,13 +201,25 @@ package flashx.textLayout.elements
 				return null;
 			return rows[rowIndex];
 		}
-		public function getCellsForRow(index:int):Array{
-			var retVal:Array = [];
+		
+		public function getRowIndex(row:TableRowElement):int
+		{
+			for(var i:int=0;i<rows.length;i++)
+			{
+				if(rows[i] == row)
+					return i;
+			}
+			return -1;
+		}
+		public function getCellsForRow(index:int):Vector.<TableCellElement>{
+			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
+			if(index < 0)
+				return cells;
 			for each(var cell:TableCellElement in this.mxmlChildren){
 				if(cell.rowIndex == index)
-					retVal.push(cell);
+					cells.push(cell);
 			}
-			return retVal;
+			return cells;
 		}
 		public function insertColumn(column:TableColElement=null,cells:Array = null):Boolean{
 			return insertColumnAt(numColumns,column,cells);
