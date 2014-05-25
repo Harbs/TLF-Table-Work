@@ -583,7 +583,7 @@ package flashx.textLayout.compose
 					if(!haveRealRows)
 						curTableBlock.clear();
 					_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);
-					BackgroundManager.collectTableBlock(_textFlow,curTableBlock);
+					BackgroundManager.collectTableBlock(_textFlow,curTableBlock, _parcelList.currentParcel.controller);
 					blockToAdd = false;
 					
 					_parcelList.next();
@@ -628,7 +628,7 @@ package flashx.textLayout.compose
 			}
 			if(_parcelList.currentParcel && blockToAdd){
 				_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);
-				BackgroundManager.collectTableBlock(_textFlow,curTableBlock);
+				BackgroundManager.collectTableBlock(_textFlow,curTableBlock, _parcelList.currentParcel.controller);
 			}
 			//reference ComposeState.composeNextLine() which creates the the TextLine.
 			// We don't need getLineSlug() because tables can extend beyond the container width

@@ -55,8 +55,15 @@
 				table.addRow();
 //				var row:TableRowElement = new TableRowElement();
 //				table.addChild(row);
+				
 				for(var i:int=0;i<numCells;i++){
 					var cell:TableCellElement = new TableCellElement();
+					cell.backgroundAlpha = 1;
+					cell.backgroundColor = "#FF0000";//Math.random();
+					cell.borderBottomColor = "#00FF00";
+					cell.borderBottomWidth = 1;
+					cell.borderRightColor = "#FF00FF";
+					cell.borderRightWidth = 1;
 					cell.colIndex = i;
 					cell.rowIndex = rowIdx;
 					var para:ParagraphElement = new ParagraphElement();

@@ -109,13 +109,12 @@ package flashx.textLayout.elements
 			}
 		}
 		
-		public static function collectTableBlock(_textFlow:TextFlow,block:TextFlowTableBlock):void
+		public static function collectTableBlock(_textFlow:TextFlow,block:TextFlowTableBlock,controller:ContainerController):void
 		{
 			// add block rect for each cell in table block
 			
 			var bb:BackgroundManager;
 			var r:Rectangle;
-			var controller:ContainerController;
 			var composer:IFlowComposer;
 
 			var cells = block.getTableCells();
@@ -129,8 +128,8 @@ package flashx.textLayout.elements
 					bb.addBlockElement(cell);
 				
 					var row:TableRowElement = cell.getRow();
-					r = new Rectangle(cell.x, cell.y + block.y, cell.width, row.composedHeight);
-					bb.addBlockRect(cell, r, block.controller);
+					r = new Rectangle(cell.container.x, cell.container.y + block.y, cell.width, row.composedHeight);
+					bb.addBlockRect(cell, r, controller);
 
 				}
 			}
