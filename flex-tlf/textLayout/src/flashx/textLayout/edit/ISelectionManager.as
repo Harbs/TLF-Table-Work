@@ -25,9 +25,12 @@ package flashx.textLayout.edit
 	import flash.events.MouseEvent;
 	import flash.events.TextEvent;
 	
+	import flashx.textLayout.elements.CellCoordinates;
+	import flashx.textLayout.elements.CellRange;
+	import flashx.textLayout.elements.TableElement;
 	import flashx.textLayout.elements.TextFlow;
-	import flashx.textLayout.formats.TextLayoutFormat;
 	import flashx.textLayout.elements.TextRange;
+	import flashx.textLayout.formats.TextLayoutFormat;
 
 	/** 
 	 * The ISelectionManager interface defines the interface for handling text selection.
@@ -63,6 +66,15 @@ package flashx.textLayout.edit
 		 */
 		function get textFlow():TextFlow;
 		function set textFlow(flow:TextFlow):void;
+		
+		function get currentTable():TableElement;
+		function set currentTable(table:TableElement):void;
+		function hasCellRangeSelection():Boolean;
+		
+		function selectCellRange(anchorCoords:CellCoordinates,activeCoords:CellCoordinates):void;
+		
+		function getCellRange():CellRange;
+		function setCellRange(range:CellRange):void;
 		
 		/** 
 		 * The text position of the start of the selection, as an offset from the start of the text flow.
@@ -250,6 +262,19 @@ package flashx.textLayout.edit
 		 */
 		function get currentSelectionFormat():SelectionFormat;
 
+		/** 
+		 * The current Cell SelectionFormat object.
+		 * 
+		 * <p>The current cell SelectionFormat object is chosen from the SelectionFormat objects assigned to the 
+		 * <code>unfocusedCellSelectionFormat</code>, <code>inactiveCellSelectionFormat</code> and <code>focusedCellSelectionFormat</code> 
+		 * properties based on the current state of the <code>windowActive</code> and <code>focused</code> properties.</p> 
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		function get currentCellSelectionFormat():SelectionFormat;
+
 		/**
 		 * Gets the character format attributes that are common to all characters in the specified text range or current selection.
 		 * 
@@ -346,7 +371,38 @@ package flashx.textLayout.edit
 		 */		 		 
 		 function get inactiveSelectionFormat():SelectionFormat;
 		 function set inactiveSelectionFormat(val:SelectionFormat):void;		 		 
-		
+
+		 /**
+		  * The SelectionFormat object used to draw cell selections in a focused container. 
+		  * 
+		  * @playerversion Flash 10
+		  * @playerversion AIR 1.5
+		  * @langversion 3.0
+		  */		 
+		 function get focusedCellSelectionFormat():SelectionFormat;
+		 function set focusedCellSelectionFormat(val:SelectionFormat):void;
+		 
+		 /**
+		  * The SelectionFormat object used to draw cell selections when they are not in a focused container, but are in
+		  * the active window.
+		  * 
+		  * @playerversion Flash 10
+		  * @playerversion AIR 1.5
+		  * @langversion 3.0
+		  */		 		 
+		 function get unfocusedCellSelectionFormat():SelectionFormat;
+		 function set unfocusedCellSelectionFormat(val:SelectionFormat):void;
+		 
+		 /**
+		  * The SelectionFormat object used to draw cell selections when they are not in the active window.
+		  * 
+		  * @playerversion Flash 10
+		  * @playerversion AIR 1.5
+		  * @langversion 3.0
+		  */		 		 
+		 function get inactiveCellSelectionFormat():SelectionFormat;
+		 function set inactiveCellSelectionFormat(val:SelectionFormat):void;		 		 
+
 		/**
 		 * Executes any pending FlowOperations. 
 		 * 

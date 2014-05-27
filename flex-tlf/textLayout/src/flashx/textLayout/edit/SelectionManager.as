@@ -48,6 +48,8 @@ package flashx.textLayout.edit
     import flashx.textLayout.container.ContainerController;
     import flashx.textLayout.debug.Debugging;
     import flashx.textLayout.debug.assert;
+    import flashx.textLayout.elements.CellCoordinates;
+    import flashx.textLayout.elements.CellRange;
     import flashx.textLayout.elements.Configuration;
     import flashx.textLayout.elements.FlowElement;
     import flashx.textLayout.elements.FlowLeafElement;
@@ -126,19 +128,71 @@ package flashx.textLayout.edit
         private var _focusedSelectionFormat:SelectionFormat;
         private var _unfocusedSelectionFormat:SelectionFormat;
         private var _inactiveSelectionFormat:SelectionFormat;
+		private var _focusedCellSelectionFormat:SelectionFormat;
+		private var _unfocusedCellSelectionFormat:SelectionFormat;
+		private var _inactiveCellSelectionFormat:SelectionFormat;
         private var _selFormatState:String = SelectionFormatState.UNFOCUSED;
         private var _isActive:Boolean;
         
         /** The TextFlow of the selection. */
         private var _textFlow:TextFlow;
+		
+		private var _currentTable:TableElement;
+		
+		// this should probably be produced dynamically rather than keep a reference.
+		private var _cellRange:CellRange;
+		
+		//TODO the following functions need proper comments and should be moved to a logical location within the class.
+		
+		public function get currentTable():TableElement
+		{
+			return _currentTable;
+		}
+		public function set currentTable(table:TableElement):void
+		{
+			_currentTable = table;
+		}
+		
+		public function hasCellRangeSelection():Boolean
+		{
+			if(!_currentTable)
+				return false;
+			//we should really check the anchorCellMark and activeCellMark instead
+			if(!_cellRange)
+				return false;
+			return true;
+		}
+		
+		public function selectCellRange(anchorCoords:CellCoordinates,activeCoords:CellCoordinates):void
+		{
+			_cellRange = new CellRange(_currentTable,anchorCoords,activeCoords);
+			// do something about actually drawing the selection.
+		}
+		
+		public function getCellRange():CellRange
+		{
+			// not really a good implementation. We'll fix this later
+			return _cellRange;
+		}
+		public function setCellRange(range:CellRange):void
+		{
+			_cellRange = range;
+			// do something about actually drawing the selection.
+		}
+
+
         
         // current range of selection
         /** Anchor point of the current selection, as an index into the TextFlow. */
         private var anchorMark:Mark;
         /** Active end of the current selection, as an index into the TextFlow. */
         private var activeMark:Mark;
-        
-        // used to save pending attributes at a point selection
+		/** Anchor point of the current cell selection, as coordinates within the table. */
+        private var anchorCellMark:CellCoordinates;
+		/** Active end of the current cell selection, as coordinates within the table. */
+		private var activeCellMark:CellCoordinates;
+
+		// used to save pending attributes at a point selection
         private var _pointFormat:ITextLayoutFormat;
         /** 
          * The format that will be applied to inserted text. 
@@ -190,6 +244,8 @@ package flashx.textLayout.edit
             _textFlow = null;
             anchorMark = createMark();
             activeMark = createMark();
+			anchorCellMark = createCellMark();
+			activeCellMark = createCellMark();
             _pointFormat = null;
             _isActive = false;
             CONFIG::debug 
@@ -348,7 +404,29 @@ package flashx.textLayout.edit
             }
             return focusedSelectionFormat;
          }
-         
+
+		 /**
+		  *  @copy ISelectionManager#currentCellSelectionFormat
+		  * 
+		  * @playerversion Flash 10
+		  * @playerversion AIR 1.5
+		  * @langversion 3.0
+		  * 
+		  * @see flashx.textLayout.edit.SelectionFormat
+		  */
+		 public function get currentCellSelectionFormat():SelectionFormat
+		 { 
+			 if (_selFormatState == SelectionFormatState.UNFOCUSED)
+			 {
+				 return unfocusedCellSelectionFormat;
+			 }
+			 else if (_selFormatState == SelectionFormatState.INACTIVE)
+			 {
+				 return inactiveCellSelectionFormat;
+			 }
+			 return focusedCellSelectionFormat;
+		 }
+
         /**
          *  @copy ISelectionManager#focusedSelectionFormat
          * 
@@ -420,7 +498,79 @@ package flashx.textLayout.edit
          { 
             return _inactiveSelectionFormat ? _inactiveSelectionFormat : (_textFlow ? _textFlow.configuration.inactiveSelectionFormat : null);
          }       
-         
+
+		 /**
+		  *  @copy ISelectionManager#focusedCellSelectionFormat
+		  * 
+		  * @playerversion Flash 10
+		  * @playerversion AIR 1.5
+		  * @langversion 3.0
+		  * 
+		  * @see flashx.textLayout.edit.SelectionFormat
+		  */
+		 public function set focusedCellSelectionFormat(val:SelectionFormat):void
+		 { 
+			 _focusedCellSelectionFormat = val;
+			 if (this._selFormatState == SelectionFormatState.FOCUSED)
+				 refreshSelection();
+		 }
+		 
+		 /**
+		  * @private - docs on setter
+		  */
+		 public function get focusedCellSelectionFormat():SelectionFormat
+		 { 
+			 return _focusedCellSelectionFormat ? _focusedCellSelectionFormat : (_textFlow ? _textFlow.configuration.focusedSelectionFormat : null);
+		 }       
+		 
+		 /**
+		  *  @copy ISelectionManager#unfocusedCellSelectionFormat
+		  * 
+		  * @playerversion Flash 10
+		  * @playerversion AIR 1.5
+		  * @langversion 3.0
+		  * 
+		  * @see flashx.textLayout.edit.SelectionFormat
+		  */
+		 public function set unfocusedCellSelectionFormat(val:SelectionFormat):void
+		 { 
+			 _unfocusedCellSelectionFormat = val;
+			 if (this._selFormatState == SelectionFormatState.UNFOCUSED)
+				 refreshSelection();
+		 }          
+		 
+		 /**
+		  *  @private - docs on setter
+		  */
+		 public function get unfocusedCellSelectionFormat():SelectionFormat
+		 { 
+			 return _unfocusedCellSelectionFormat ? _unfocusedCellSelectionFormat : (_textFlow ? _textFlow.configuration.unfocusedSelectionFormat : null);
+		 }
+		 
+		 /**
+		  *  @copy ISelectionManager#inactiveCellSelectionFormat
+		  * 
+		  * @playerversion Flash 10
+		  * @playerversion AIR 1.5
+		  * @langversion 3.0
+		  * 
+		  * @see flashx.textLayout.edit.SelectionFormat
+		  */
+		 public function set inactiveCellSelectionFormat(val:SelectionFormat):void
+		 { 
+			 _inactiveCellSelectionFormat = val;
+			 if (this._selFormatState == SelectionFormatState.INACTIVE)
+				 refreshSelection();
+		 }          
+		 
+		 /**
+		  * @private - docs on setter
+		  */
+		 public function get inactiveCellSelectionFormat():SelectionFormat
+		 { 
+			 return _inactiveCellSelectionFormat ? _inactiveCellSelectionFormat : (_textFlow ? _textFlow.configuration.inactiveSelectionFormat : null);
+		 }       
+		 
          /** @private - returns the selectionFormatState.  @see flashx.textLayout.edit.SelectionFormatState */
          tlf_internal function get selectionFormatState():String
          { return _selFormatState; }
@@ -2098,9 +2248,26 @@ package flashx.textLayout.edit
         {
             var idx:int = marks.indexOf(mark);
             if (idx != -1)
-                marks.splice(idx,idx+1);
+                marks.splice(idx,1);
         }
-        
+
+		private var cellMarks:Array = [];
+		
+		/** @private */
+		tlf_internal function createCellMark():CellCoordinates
+		{
+			var mark:CellCoordinates = new CellCoordinates(-1,-1);
+			cellMarks.push(mark);
+			return mark;
+		}
+		/** @private */
+		tlf_internal function removeCellMark(mark:CellCoordinates):void
+		{
+			var idx:int = cellMarks.indexOf(mark);
+			if (idx != -1)
+				marks.splice(idx,1);
+		}
+
         /** 
          * @copy ISelectionManager#notifyInsertOrDelete()
          * 

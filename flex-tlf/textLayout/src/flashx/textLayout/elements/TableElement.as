@@ -18,6 +18,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 package flashx.textLayout.elements
 {
+	import flash.utils.Dictionary;
+	
 	import flashx.textLayout.compose.TextFlowTableBlock;
 	import flashx.textLayout.events.ModelChange;
 	import flashx.textLayout.formats.FormatValue;
@@ -72,6 +74,7 @@ package flashx.textLayout.elements
 		
 		private var _tableBlocks:Vector.<TextFlowTableBlock>;
 		private var _tableBlockIndex:uint = 0;
+		private var _tableBlockDict:Dictionary;
 		
 		public function TableElement()
 		{
@@ -215,7 +218,7 @@ package flashx.textLayout.elements
 			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
 			if(index < 0)
 				return cells;
-			for each(var cell:TableCellElement in this.mxmlChildren){
+			for each(var cell:TableCellElement in mxmlChildren){
 				if(cell.rowIndex == index)
 					cells.push(cell);
 			}
@@ -748,6 +751,94 @@ package flashx.textLayout.elements
 			return -1;
 			
 		}
+		public function getCellsInRange(range:CellRange):Vector.<TableCellElement>
+		{
+			var firstCoords:CellCoordinates = range.anchorCoordinates;
+			var lastCoords:CellCoordinates = range.activeCoordinates;
+			if(
+				range.activeCoordinates.row < range.anchorCoordinates.row ||
+				(range.activeCoordinates.row == range.anchorCoordinates.row && range.activeCoordinates.column < range.anchorCoordinates.column)
+			)
+			{
+				firstCoords = range.activeCoordinates;
+				lastCoords = range.anchorCoordinates;
+			}
+			var firstCell:TableCellElement = findCell(firstCoords);
+			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
+			cells.push(firstCell);
+			var idx:int = mxmlChildren.indexOf(firstCell);
+			while(++idx < mxmlChildren.length)
+			{
+				var nextCell:TableCellElement = mxmlChildren[idx];
+				if(nextCell.rowIndex > lastCoords.row || (nextCell.rowIndex == lastCoords.row && nextCell.colIndex > lastCoords.column))
+					break;
+				
+				cells.push(nextCell);
+			}
+			return cells;
+		}
+		
+		private function findCell(coords:CellCoordinates):TableCellElement
+		{
+			// get a guess of the cell location. If there's no holes (such as spans), it should theoretically pinpoint the index.
+			var idx:int = (coords.row+1) * (coords.column+1) -1;
+			if(idx >= numChildren)
+				idx = numChildren-1;
+			
+			var cell:TableCellElement = mxmlChildren[idx];
+			// look ahead to see if we're short (not sure if this is needed).
+			do
+			{
+				if(idx == numChildren-1)
+					break;
+				var nextCell:TableCellElement = mxmlChildren[idx+1];
+				if(nextCell.rowIndex > coords.row || (nextCell.rowIndex == coords.row && nextCell.colIndex > coords.column))
+					break;
+				
+				cell = nextCell;
+				idx++;
+				
+			}while(true);
+			// look behind accounting for spans
+			do
+			{
+				//check if the coords fall within the row and column span
+				if(
+					cell.colIndex <= coords.column && cell.colIndex + cell.columnSpan - 1 >= coords.column &&
+					cell.rowIndex <= coords.row && cell.rowIndex + cell.rowSpan - 1 >= coords.row
+				)
+					break;
+				//oops we hit the first cell without finding anything. At least return that...
+				if(cell.colIndex == 0 && cell.rowIndex == 0)
+					break;
+				if(idx == 0)
+					break;
+				var prevCell:TableCellElement = mxmlChildren[idx-1];
+				cell = prevCell;
+				idx--;
+			}while(true);
+			
+			return cell;
+		}
+		
+		public function addCellToBlock(cell:TableCellElement,block:TextFlowTableBlock):void
+		{
+			block.addCell(cell.container);
+			tableBlockDict[cell] = block;
+		}
+		
+		public function getCellBlock(cell:TableCellElement):TextFlowTableBlock
+		{
+			return tableBlockDict[cell];
+		}
+
+		private function get tableBlockDict():Dictionary
+		{
+			if(_tableBlockDict == null)
+				_tableBlockDict = new Dictionary();
+			return _tableBlockDict;
+		}
+
 	}
 }
 class CellCoords
