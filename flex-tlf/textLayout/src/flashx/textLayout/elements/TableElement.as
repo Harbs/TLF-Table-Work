@@ -20,12 +20,12 @@ package flashx.textLayout.elements
 {
 	import flash.utils.Dictionary;
 	
+	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.compose.TextFlowTableBlock;
 	import flashx.textLayout.events.ModelChange;
 	import flashx.textLayout.formats.FormatValue;
 	import flashx.textLayout.formats.ITextLayoutFormat;
 	import flashx.textLayout.formats.TextLayoutFormat;
-	import flashx.textLayout.tlf_internal;
 	
 	use namespace tlf_internal;
 	
@@ -118,6 +118,21 @@ package flashx.textLayout.elements
 		{
 			return columns.length;
 		}
+		
+		/**
+		 * Total number of cells
+		 **/
+		public function get numCells():int
+		{
+			return getCells().length;
+		}
+		
+		/**
+		 * Total number of rows in the table. If set to a value lower than
+		 * the current number of rows the rows at the end of the table are removed. 
+		 * If the set to a value greater than the current number of rows additional
+		 * rows are added to the table. 
+		 **/
 		public function set numRows(value:int):void
 		{
 			while(value < numRows){
@@ -129,6 +144,12 @@ package flashx.textLayout.elements
 			}
 		}
 
+		/**
+		 * Total number of columns in the table. If set to a value lower than
+		 * the current number of columns the columns at the end of the table are removed. 
+		 * If the set to a value greater than the current number of columns additional
+		 * columns are added to the table. 
+		 **/
 		public function set numColumns(value:int):void
 		{
 			while(value < numColumns){
@@ -141,6 +162,9 @@ package flashx.textLayout.elements
 		}
 		private var _defaultRowFormat:ITextLayoutFormat;
 
+		/**
+		 * Gets the row format for new rows. 
+		 **/
 		public function get defaultRowFormat():ITextLayoutFormat
 		{
 			if(!_defaultRowFormat)
@@ -155,6 +179,9 @@ package flashx.textLayout.elements
 		
 		private var _defaultColumnFormat:ITextLayoutFormat;
 
+		/**
+		 * Gets the column format for new columns. 
+		 **/
 		public function get defaultColumnFormat():ITextLayoutFormat
 		{
 			if(!_defaultColumnFormat)
@@ -167,10 +194,24 @@ package flashx.textLayout.elements
 			_defaultColumnFormat = value;
 		}
 		
+		/**
+		 * Add a row at the end of the table. You would use this if you want to add a row
+		 * without changing the table cells. 
+		 * @see addRowAt
+		 * @see insertRow
+		 * @see insertRowAt
+		 **/
 		public function addRow(format:ITextLayoutFormat=null):void{
 			addRowAt(rows.length,format);
 		}
-		public function addRowAt(idx:int,format:ITextLayoutFormat=null):void{
+		
+		/**
+		 * Add a row at the index specified. 
+		 * @see addRow
+		 * @see insertRow
+		 * @see insertRowAt
+		 **/
+		public function addRowAt(idx:int, format:ITextLayoutFormat=null):void{
 			if(idx < 0 || idx > rows.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
 			
@@ -180,17 +221,34 @@ package flashx.textLayout.elements
 			row.isMaxHeight = row.computedFormat.minCellHeight == row.computedFormat.maxCellHeight;
 		}
 
+		/**
+		 * Adds a column. You would use this if you want to add a column without changing the table cells. 
+		 * The cells would reflow, so a cell in row 2 might move up to row 1.
+		 * @see addColumnAt
+		 * @see insertColumn
+		 * @see insertColumnAt
+		 **/
 		public function addColumn(format:ITextLayoutFormat=null):void{
 			addColumnAt(columns.length,format);
 		}
-		public function addColumnAt(idx:int,format:ITextLayoutFormat=null):void{
+		
+		/**
+		 * Adds a column at the index specified. 
+		 * @see addColumn
+		 * @see insertColumn
+		 * @see insertColumnAt
+		 **/
+		public function addColumnAt(idx:int, format:ITextLayoutFormat=null):void{
 			if(idx < 0 || idx > columns.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
 			if(!format)
 				format = defaultColumnFormat;
-			columns.splice(idx,0,new TableColElement(format));
+			columns.splice(idx, 0, new TableColElement(format));
 		}
 
+		/**
+		 * Returns the column at the index specified or null if the index is out of range. 
+		 **/
 		public function getColumnAt(columnIndex:int):TableColElement
 		{
 			if ( columnIndex < 0 || columnIndex >= numColumns )
@@ -198,6 +256,9 @@ package flashx.textLayout.elements
 			return columns[columnIndex];
 		}
 		
+		/**
+		 * Returns the row at the index specified or null if the index is out of range. 
+		 **/
 		public function getRowAt(rowIndex:int):TableRowElement
 		{
 			if ( rowIndex < 0 || rowIndex >= numRows )
@@ -205,6 +266,9 @@ package flashx.textLayout.elements
 			return rows[rowIndex];
 		}
 		
+		/**
+		 * Return the index of the row provided or -1 if the row is not found. 
+		 **/
 		public function getRowIndex(row:TableRowElement):int
 		{
 			for(var i:int=0;i<rows.length;i++)
@@ -214,6 +278,10 @@ package flashx.textLayout.elements
 			}
 			return -1;
 		}
+		
+		/**
+		 * Returns the cells for the row specified. 
+		 **/
 		public function getCellsForRow(index:int):Vector.<TableCellElement>{
 			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
 			if(index < 0)
@@ -224,9 +292,26 @@ package flashx.textLayout.elements
 			}
 			return cells;
 		}
+		
+		/**
+		 * Inserts a column at the end of the table. If a column is not provided one is created. 
+		 * 
+		 * @see addColumn
+		 * @see addColumnAt
+		 * @see insertColumnAt
+		 **/
 		public function insertColumn(column:TableColElement=null,cells:Array = null):Boolean{
 			return insertColumnAt(numColumns,column,cells);
 		}
+		
+		/**
+		 * Inserts a column at the column specified. If the column is not provided it
+		 * creates a new column containing the cells supplied or creates the cells
+		 * based on the number of rows in the table. 
+		 * @see addColumn
+		 * @see addColumnAt
+		 * @see insertColumn
+		 **/
 		public function insertColumnAt(idx:int,column:TableColElement=null,cells:Array = null):Boolean{
 			if(idx < 0 || idx > columns.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
@@ -255,10 +340,19 @@ package flashx.textLayout.elements
 			return true;
 		}
 		
+		/**
+		 * Inserts a row at the end of the table. If a row is not provided one is created. 
+		 * @see insertRowAt
+		 **/
 		public function insertRow(row:TableRowElement=null,cells:Array = null):Boolean{
 			return insertRowAt(numRows,row,cells);
 		}
 		
+		/**
+		 * Inserts a row at the index specified. If the row is not provided it
+		 * creates a new row containing the cells supplied or creates the cells
+		 * based on the number of columns in the table. 
+		 **/
 		public function insertRowAt(idx:int,row:TableRowElement=null,cells:Array = null):Boolean{
 			if(idx < 0 || idx > rows.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
@@ -287,6 +381,9 @@ package flashx.textLayout.elements
 			return true;
 		}
 		
+		/**
+		 * Removes the row
+		 **/
 		public function removeRow(row:TableRowElement):TableRowElement {
 			var i:int = rows.indexOf(row);
 			if(i < 0)
@@ -294,6 +391,9 @@ package flashx.textLayout.elements
 			return removeRowAt(i);
 		}
 		
+		/**
+		 * Removes the row and the cells it contains.
+		 **/
 		public function removeRowWithContent(row:TableRowElement):Array
 		{
 			var i:int = rows.indexOf(row);
@@ -302,6 +402,9 @@ package flashx.textLayout.elements
 			return removeRowWithContentAt(i);
 		}
 		
+		/**
+		 * Removes the row at the index specified.
+		 **/
 		public function removeRowAt(idx:int):TableRowElement {
 			if(idx < 0 || idx > rows.length - 1)
 				return null;
@@ -313,6 +416,9 @@ package flashx.textLayout.elements
 			
 		}
 		
+		/**
+		 * Removes the row at the index specified and the cells it contains.
+		 **/
 		public function removeRowWithContentAt(idx:int):Array
 		{
 
@@ -332,12 +438,19 @@ package flashx.textLayout.elements
 			return removedCells;
 		}
 		
+		/**
+		 * Removes the column
+		 **/
 		public function removeColumn(column:TableColElement):TableColElement {
 			var i:int = columns.indexOf(column);
 			if(i < 0)
 				return null;
 			return removeColumnAt(i);
 		}
+		
+		/**
+		 * Removes the column and the cells it contains.
+		 **/
 		public function removeColumnWithContent(column:TableColElement):Array
 		{
 			var i:int = columns.indexOf(column);
@@ -346,7 +459,9 @@ package flashx.textLayout.elements
 			return removeColumnWithContentAt(i);
 		}
 
-		
+		/**
+		 * Removes the column at the index specified
+		 **/
 		public function removeColumnAt(idx:int):TableColElement {
 			if(idx < 0 || idx > columns.length - 1)
 				return null;
@@ -357,6 +472,9 @@ package flashx.textLayout.elements
 			return col;
 		}
 		
+		/**
+		 * Removes the column at the index specified and the cells it contains. 
+		 **/
 		public function removeColumnWithContentAt(idx:int):Array
 		{
 			
@@ -376,6 +494,10 @@ package flashx.textLayout.elements
 
 			return removedCells;
 		}
+		
+		/**
+		 * 
+		 **/
 		private function getBlockedCoords(inRow:int = -1, inColumn:int = -1):Vector.<CellCoords>{
 			var coords:Vector.<CellCoords> = new Vector.<CellCoords>();
 			if(mxmlChildren)
@@ -405,6 +527,10 @@ package flashx.textLayout.elements
 			}
 			return coords;
 		}
+		
+		/**
+		 * 
+		 **/
 		public function normalizeCells():void
 		{
 			this.numColumns;this.numRows;
@@ -455,6 +581,9 @@ package flashx.textLayout.elements
 			}
 		}
 		
+		/**
+		 * Set the width of the specified column. The value can be a number or percent. 
+		 **/
 		public function setColumnWidth(columnIndex:int, value:*):Boolean
 		{
 			//TODO: changing the column width probably requires a recompose of all cells in that column. Mark the cells in that row damaged.
@@ -466,8 +595,11 @@ package flashx.textLayout.elements
 			return true;
 		}
 		
+		/**
+		 * Set the height of the specified row. The value can be a number or percent. 
+		 **/
 		public function setRowHeight(rowIdx:int, value:*):Boolean{
-			//TODO: setting the row hieght might change the composition height of the cells. We'll need to do some housekeeping here.
+			//TODO: setting the row height might change the composition height of the cells. We'll need to do some housekeeping here.
 			// I'm not sure this function makes sense. We need to handle both min and max values to allow for expanding cells.
 			var row:TableRowElement = getRowAt(rowIdx);
 			if(!row)
@@ -475,6 +607,10 @@ package flashx.textLayout.elements
 			
 			return true;
 		}
+		
+		/**
+		 * Get the width of the column. 
+		 **/
 		public function getColumnWidth(columnIndex:int):*
 		{
 			var tableColElement:TableColElement = getColumnAt(columnIndex) as TableColElement;
@@ -483,14 +619,17 @@ package flashx.textLayout.elements
 			return 0;
         }
 		
+		/**
+		 * Sizes and positions the cells in the table. 
+		 **/
 		public function composeCells():void{
 			_composedRowIndex = 0;
 			// make sure the height that defines the row height did not change. If it did we might need to change the row height.
 			if(!hasCellDamage)
 				return;
-			var damaagedCells:Vector.<TableCellElement> = getDamagedCells();
+			var damagedCells:Vector.<TableCellElement> = getDamagedCells();
 			var cell:TableCellElement;
-			for each(cell in damaagedCells){
+			for each(cell in damagedCells){
 				// recompose the cells while tracking row height if necessary
 				cell.compose();
 			}
@@ -586,34 +725,56 @@ package flashx.textLayout.elements
 			}
 		}
 		
+		/**
+		 * 
+		 **/
 		public function getHeaderRows():Vector.< Vector.<TableCellElement> >{
 			return _headerRows;
 		}
 		
+		/**
+		 * 
+		 **/
 		public function getFooterRows():Vector.< Vector.<TableCellElement> >{
 			return _footerRows;
 		}
 		
+		/**
+		 * 
+		 **/
 		public function getBodyRows():Vector.< Vector.<TableCellElement> >{
 			return _bodyRows;
 		}
 		
+		/**
+		 * 
+		 **/
 		public function getNextRow():Vector.<TableCellElement>{
 			if(_composedRowIndex >= _bodyRows.length)
 				return null;
 			return _bodyRows[_composedRowIndex++];
 		}
 		
+		/**
+		 * Computed height of the header cells
+		 **/
 		public function getHeaderHeight():Number{
 			//TODO: compute the header height from the header cells
 			return 0;
 		}
+		
+		/**
+		 * Computed height of the footer cells
+		 **/
 		public function getFooterHeight():Number{
 			//TODO: compute the footer height from the footer cells
 			return 0;
 			
 		}
 		
+		/**
+		 * Accepts a suggested table width and calculates the column widths. 
+		 **/
 		public function normalizeColumnWidths(suggestedWidth:Number = 600):void{
 			//TODO: before composition make sure all column widths are rational numbers
 			// We feed in a width to use if there's no width otherwise specified.
@@ -627,9 +788,11 @@ package flashx.textLayout.elements
 			} else {
 				var cCount:Number = computedFormat.columnCount;
 			}
+			
 			while (cCount > columns.length){
 				addColumn();
 			}
+			
 			var w:Number;
 			switch(typeof(computedFormat.tableWidth)){
 				case "number":
@@ -650,10 +813,15 @@ package flashx.textLayout.elements
 				w = 600;
 			for each(var col:TableColElement in columns){
 				// simply stomp on the settings. (need to finesse this...)
-					col.columnWidth = w / numColumns;
+				col.columnWidth = w / numColumns;
 			}
+			
+			computedWidth = w;
 		}
-        
+		
+		/**
+		 * Returns a vector of all the damaged cells in the table.
+		 **/
 		private function getDamagedCells():Vector.<TableCellElement>{
 			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
 			for each (var cell:* in this.mxmlChildren){
@@ -662,26 +830,72 @@ package flashx.textLayout.elements
 			}
 			return cells;
 		}
+        
+		/**
+		 * Returns a vector of all the table cell elements in the table.
+		 **/
+		public function getCells():Vector.<TableCellElement> {
+			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
+			
+			for each (var cell:* in mxmlChildren){
+				if(cell is TableCellElement)
+					cells.push(cell as TableCellElement);
+			}
+			
+			return cells;
+		}
+		
+		/**
+		 * Returns the table width
+		 **/
+		public function get width():Number
+		{
+			return computedWidth;
+		}
+		
+		/**
+		 * Sets the table width
+		 **/
+		public function set width(value:*):void
+		{
+			normalizeColumnWidths(value);
+		}
+		
+		/**
+		 * 
+		 **/
         public function get height():Number
         {
             return _height[numAcrossParcels];
         }
         
+		/**
+		 * 
+		 **/
         public function set height(val:*):void
         {
             _height[numAcrossParcels] = val;
         }
         
+		/**
+		 * 
+		 **/
         public function get heightArray():Array
         {
             return _height;
         }
         
+		/**
+		 * 
+		 **/
         public function set heightArray(newArray:Array):void
         {
             _height = newArray;
         }
-
+		
+		/**
+		 * Indicates elements in the table have been modified and the table must be recomposed.
+		 **/
 		public function get hasCellDamage():Boolean
 		{
 			return _hasCellDamage;
@@ -692,11 +906,17 @@ package flashx.textLayout.elements
 			_hasCellDamage = value;
 		}
 
+		/**
+		 * 
+		 **/
 		public function get headerRowCount():uint
 		{
 			return _headerRowCount;
 		}
 
+		/**
+		 * 
+		 **/
 		public function set headerRowCount(value:uint):void
 		{
 			if(value != _headerRowCount)
@@ -704,17 +924,27 @@ package flashx.textLayout.elements
 			_headerRowCount = value;
 		}
 
+		/**
+		 * 
+		 **/
 		public function get footerRowCount():uint
 		{
 			return _footerRowCount;
 		}
 
+		/**
+		 * 
+		 **/
 		public function set footerRowCount(value:uint):void
 		{
 			if(value != _footerRowCount)
 				_tableRowsComputed = false;
 			_footerRowCount = value;
 		}
+		
+		/**
+		 * Gets the first TextFlowTableBlock in the table. 
+		 **/
 		public function getFirstBlock():TextFlowTableBlock{
 			if(_tableBlocks == null)
 				_tableBlocks = new Vector.<TextFlowTableBlock>();
@@ -724,6 +954,10 @@ package flashx.textLayout.elements
 			_tableBlocks[0].parentTable = this;
 			return _tableBlocks[0];
 		}
+		
+		/**
+		 * Gets the next TextFlowTableBlock. 
+		 **/
 		public function getNextBlock():TextFlowTableBlock{
 			if(_tableBlocks == null)
 				_tableBlocks = new Vector.<TextFlowTableBlock>();
@@ -734,9 +968,19 @@ package flashx.textLayout.elements
 			_tableBlocks[_tableBlockIndex].parentTable = this;
 			return _tableBlocks[_tableBlockIndex];
 		}
+		
+		/**
+		 * Gets the total atom length of this flow element in the text flow.  
+		 * 
+		 * @inherit
+		 **/
 		override public function get textLength():int{
 			return 1;
 		}
+		
+		/**
+		 * Returns the cell at the specified row and column. 
+		 **/
 		private function getCellIndex(rowIdx:int,columnIdx:int):int{
 			if(rowIdx == 0 && columnIdx == 0)
 				return 0;
@@ -751,6 +995,10 @@ package flashx.textLayout.elements
 			return -1;
 			
 		}
+		
+		/**
+		 * Returns a vector of table cell elements in the given cell range. 
+		 **/
 		public function getCellsInRange(range:CellRange):Vector.<TableCellElement>
 		{
 			var firstCoords:CellCoordinates = range.anchorCoordinates;
@@ -778,6 +1026,9 @@ package flashx.textLayout.elements
 			return cells;
 		}
 		
+		/**
+		 * Finds the cell at the specified cell coordinates or null if no cell is found. 
+		 **/
 		private function findCell(coords:CellCoordinates):TableCellElement
 		{
 			// get a guess of the cell location. If there's no holes (such as spans), it should theoretically pinpoint the index.
@@ -821,22 +1072,38 @@ package flashx.textLayout.elements
 			return cell;
 		}
 		
-		public function addCellToBlock(cell:TableCellElement,block:TextFlowTableBlock):void
+		/**
+		 * Adds the table cell container to the table block specified. 
+		 **/
+		public function addCellToBlock(cell:TableCellElement, block:TextFlowTableBlock):void
 		{
 			block.addCell(cell.container);
 			tableBlockDict[cell] = block;
 		}
 		
+		/**
+		 * Returns the table block for the given table cell. 
+		 **/
 		public function getCellBlock(cell:TableCellElement):TextFlowTableBlock
 		{
 			return tableBlockDict[cell];
 		}
 
+		/**
+		 * Keeps a reference to all the table blocks belonging to this table. 
+		 **/
 		private function get tableBlockDict():Dictionary
 		{
 			if(_tableBlockDict == null)
 				_tableBlockDict = new Dictionary();
 			return _tableBlockDict;
+		}
+		
+		/**
+		 * Returns a vector of the table blocks.
+		 **/
+		public function get tableBlocks():Vector.<TextFlowTableBlock> {
+			return _tableBlocks;
 		}
 
 	}

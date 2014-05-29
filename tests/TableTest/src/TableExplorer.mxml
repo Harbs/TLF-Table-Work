@@ -11,11 +11,14 @@
 		@namespace mx "library://ns.adobe.com/flex/mx";
 		
 		.header {
-			backgroundColor: #D6D6D6;
-			paddingTop: 4;
-			paddingBottom: 2;
-			paddingLeft: 2;
-			paddingRight: 2;
+			fontSize: 12;
+			fontWeight: normal;
+			backgroundColor: #E6E6E6;
+			color: #565656;
+			paddingTop: 6;
+			paddingBottom: 4;
+			paddingLeft: 4;
+			paddingRight: 4;
 		}
 	</fx:Style>
 	
@@ -41,7 +44,11 @@
 	<fx:Script>
 		<![CDATA[
 			import flash.text.engine.TextLine;
-			import flash.utils.ByteArray;ByteArray
+			import flash.utils.ByteArray;
+			
+			import mx.core.mx_internal;
+			
+			import flashx.textLayout.TextLayoutVersion;ByteArray
 			
 			import flashx.textLayout.formats.TextLayoutFormat;TextLayoutFormat
 			
@@ -106,6 +113,10 @@
 				
 				
 				clearTextFlow();
+				
+				versionInfo.text = "Vellum: " + flashx.textLayout.TextLayoutVersion.BUILD_NUMBER + (Configuration.tlf_internal::debugCodeEnabled ? " Debug" : " Release") 
+					+ ", Flex: " + mx_internal::VERSION
+					+ ", Player: " + Capabilities.version;
 			}
 			
 			/******************************************************
@@ -136,7 +147,7 @@
 					textFlow.addChild(table);
 					
 					for (var i:int = 0; i < rows; i++) {
-						addRow();
+						addRow(false);
 					}
 				}
 				
@@ -148,7 +159,7 @@
 			/**
 			 * Adds a row to the table
 			 **/
-			public function addRow():TableRowElement {
+			public function addRow(updateControllers:Boolean = true):TableRowElement {
 				var table:TableElement = getTable();
 				
 				if (!table) {
@@ -176,7 +187,9 @@
 					table.addChild(cell);
 				}
 				
-				updateAllControllers();
+				if (updateControllers) {
+					updateAllControllers();
+				}
 				
 				return table.getRowAt(rowIndex);
 			}
@@ -547,6 +560,8 @@
 				textFlow.flowComposer.updateAllControllers();
 				
 				exportTextFlow(textFlow);
+				
+				updateTableInformation();
 			}
 			
 			/**
@@ -888,6 +903,28 @@
 			public function updateErrorsText(errors:Vector.<String>):void {
 				textFlowMarkupErrors.text = errors ? errors.join("\n") : null;
 			}
+			
+			private function updateTableInformation():void {
+				var table:TableElement = getTable();
+				
+				if (table) {
+					tableWidth.text = String(table.width);
+					tableHeight.text = String(table.height);
+					tableBlocks.text = table.tableBlocks ? String(table.tableBlocks.length) : "";
+					tableCells.text = String(table.numCells);
+					tableRows.text = String(table.numRows);
+					tableColumns.text = String(table.numColumns);
+				}
+				else {
+					tableWidth.text = "";
+					tableHeight.text = "";
+					tableBlocks.text = "";
+					tableCells.text = "";
+					tableRows.text = "";
+					tableColumns.text = "";
+				}
+			}
+			
 		]]>
 	</fx:Script>
 
@@ -920,7 +957,6 @@
 				<mx:LinkButton label="Row" click="addRow()"/>
 				<mx:LinkButton label="Column" click="addColumn()"/>
 				<mx:LinkButton label="Paragraph" click="addParagraph()"/>
-				<mx:LinkButton label="Span" click="notImplemented()"/>
 			</s:HGroup>
 			<s:Label text="Remove Elements" width="100%" styleName="header"/>
 			<s:HGroup>
@@ -959,6 +995,25 @@
 				<mx:LinkButton label="Join Cells" click="joinCells()"/>
 				<mx:LinkButton label="Select Range" click="selectRange()"/>
 				<mx:LinkButton label="Update all controllers" click="updateAllControllers()"/>
+			</s:HGroup>
+			<s:Label text="Table Information" width="100%" styleName="header"/>
+			<s:HGroup minHeight="22" verticalAlign="middle">
+				<s:Label text="Width:" paddingLeft="10" />
+				<s:Label id="tableWidth" /> 
+				<s:Label text="Height:" />
+				<s:Label id="tableHeight" />
+				<s:Label text="Rows:" />
+				<s:Label id="tableRows" />
+				<s:Label text="Columns:" />
+				<s:Label id="tableColumns" />
+				<s:Label text="Total Cells:" />
+				<s:Label id="tableCells" />
+				<s:Label text="Blocks:" />
+				<s:Label id="tableBlocks" />
+			</s:HGroup>
+			<s:Label text="Version Information" width="100%" styleName="header"/>
+			<s:HGroup minHeight="22" verticalAlign="middle">
+				<s:Label id="versionInfo" paddingLeft="10"/>
 			</s:HGroup>
 		</s:VGroup>
 	</s:HGroup>
