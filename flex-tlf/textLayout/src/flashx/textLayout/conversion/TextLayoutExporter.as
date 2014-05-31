@@ -20,6 +20,7 @@ package flashx.textLayout.conversion
 {
 	import flash.utils.Dictionary;
 	
+	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.debug.assert;
 	import flashx.textLayout.elements.ContainerFormattedElement;
 	import flashx.textLayout.elements.DivElement;
@@ -33,6 +34,9 @@ package flashx.textLayout.conversion
 	import flashx.textLayout.elements.SpanElement;
 	import flashx.textLayout.elements.SubParagraphGroupElement;
 	import flashx.textLayout.elements.TCYElement;
+	import flashx.textLayout.elements.TableElement;
+	import flashx.textLayout.elements.TableCellElement;
+	import flashx.textLayout.elements.TableRowElement;
 	import flashx.textLayout.elements.TextFlow;
 	import flashx.textLayout.formats.FormatValue;
 	import flashx.textLayout.formats.ITextLayoutFormat;
@@ -40,7 +44,6 @@ package flashx.textLayout.conversion
 	import flashx.textLayout.formats.TextLayoutFormat;
 	import flashx.textLayout.formats.WhiteSpaceCollapse;
 	import flashx.textLayout.property.Property;
-	import flashx.textLayout.tlf_internal;
 	
 	use namespace tlf_internal;
 	
@@ -170,7 +173,7 @@ package flashx.textLayout.conversion
 				exportStyles(rslt, sortableStyles );
 			}
 			
-			// export id and styleName
+			// export id and typeName
 			if (flowElement.id != null)
 				rslt.@["id"] = flowElement.id;
 			if (flowElement.typeName != flowElement.defaultTypeName)
@@ -179,8 +182,10 @@ package flashx.textLayout.conversion
 			return rslt;
 		}
 
-		/** Base functionality for exporting an Image. Exports as a FlowElement,
+		/** 
+		 * Base functionality for exporting an Image. Exports as a FlowElement,
 		 * and exports image properties.
+		 * 
 		 * @param exporter	Root object for the export
 		 * @param image	Element to export
 		 * @return XMLList	XML for the element
@@ -203,8 +208,10 @@ package flashx.textLayout.conversion
 			return output;
 		}
 
-		/** Base functionality for exporting a LinkElement. Exports as a FlowGroupElement,
+		/** 
+		 * Base functionality for exporting a LinkElement. Exports as a FlowGroupElement,
 		 * and exports link properties.
+		 * 
 		 * @param exporter	Root object for the export
 		 * @param link	Element to export
 		 * @return XMLList	XML for the element
@@ -222,7 +229,9 @@ package flashx.textLayout.conversion
 			return output;
 		}
 		
-		/** Base functionality for exporting a DivElement. Exports as a FlowContainerFormattedElement
+		/** 
+		 * Base functionality for exporting a DivElement. Exports as a FlowContainerFormattedElement
+		 * 
 		 * @param exporter	Root object for the export
 		 * @param div	Element to export
 		 * @return XMLList	XML for the element
@@ -232,7 +241,9 @@ package flashx.textLayout.conversion
 			return exportContainerFormattedElement(exporter, div);
 		}
 		
-		/** Base functionality for exporting a SubParagraphGroupElement. Exports as a FlowGroupElement
+		/** 
+		 * Base functionality for exporting a SubParagraphGroupElement. Exports as a FlowGroupElement
+		 * 
 		 * @param exporter	Root object for the export
 		 * @param elem	Element to export
 		 * @return XMLList	XML for the element
@@ -241,7 +252,9 @@ package flashx.textLayout.conversion
 		{
 			return exportFlowGroupElement(exporter, elem);
 		}
-		/** Base functionality for exporting a TCYElement. Exports as a FlowGroupElement
+		/** 
+		 * Base functionality for exporting a TCYElement. Exports as a FlowGroupElement
+		 * 
 		 * @param exporter	Root object for the export
 		 * @param tcy	Element to export
 		 * @return XMLList	XML for the element
@@ -249,6 +262,42 @@ package flashx.textLayout.conversion
 		static public function exportTCY(exporter:BaseTextLayoutExporter, tcy:TCYElement):XMLList
 		{
 			return exportFlowGroupElement(exporter, tcy);
+		}
+		
+		/** 
+		 * Base functionality for exporting a TableElement. 
+		 * 
+		 * @param exporter	Root object for the export
+		 * @param table	Element to export
+		 * @return XMLList	XML for the element
+		 */
+		static public function exportTable(exporter:BaseTextLayoutExporter, table:TableElement):XMLList
+		{
+			return exportTableElement(exporter, table);
+		}
+		
+		/** 
+		 * Base functionality for exporting a TableRowElement. 
+		 * 
+		 * @param exporter	Root object for the export
+		 * @param table	Element to export
+		 * @return XMLList	XML for the element
+		 */
+		static public function exportTableRow(exporter:BaseTextLayoutExporter, tableRow:TableRowElement):XMLList
+		{
+			return exportTableRowElement(exporter, tableRow);
+		}
+		
+		/** 
+		 * Base functionality for exporting a TableCellElement. 
+		 * 
+		 * @param exporter	Root object for the export
+		 * @param table	Element to export
+		 * @return XMLList	XML for the element
+		 */
+		static public function exportTableCell(exporter:BaseTextLayoutExporter, tableCell:TableCellElement):XMLList
+		{
+			return exportTableCellElement(exporter, tableCell);
 		}
 		
 		override protected function get formatDescription():Object

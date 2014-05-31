@@ -76,7 +76,9 @@ package flashx.textLayout.compose
 	use namespace tlf_internal;
 	
 	
-	/** @private Common composer base class */
+	/** 
+	 * Common composer base class 
+	 * */
 	public class BaseCompose
 	{
 		
@@ -1835,7 +1837,7 @@ package flashx.textLayout.compose
 				bounds = textLine.getAtomBounds(lastAtom != 0 && endOfParagraph ? 1 : 0);						
 				lineWidth -= (_blockProgression == BlockProgression.TB) ? bounds.left : bounds.top;
 			}
-			textLine.flushAtomData();
+			//textLine.flushAtomData(); // Warning: Now does nothing
 			return lineWidth;
 		}
 

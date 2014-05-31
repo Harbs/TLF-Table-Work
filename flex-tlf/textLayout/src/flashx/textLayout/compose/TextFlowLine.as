@@ -1416,8 +1416,9 @@ package flashx.textLayout.compose
 			
 			
 			//allow the atoms to be garbage collected.
-			if (textLine)
-				textLine.flushAtomData();
+			//if (textLine) {
+				//textLine.flushAtomData(); // Warning: Now does nothing
+			//}
 			
 			return selectionCache;
 		}
@@ -2291,7 +2292,7 @@ package flashx.textLayout.compose
 			}
 			
 			//allow the atoms to be garbage collected.
-			textLine.flushAtomData();
+			//textLine.flushAtomData(); // Warning: Now does nothing
 			
 			return rect;
 		}
@@ -2715,7 +2716,7 @@ class NumberLineFactory extends StringTextLineFactory
 				}
 			}
 		}
-		numberLine.flushAtomData();
+		// numberLine.flushAtomData(); // Warning: Now does nothing
 		//trace("textWidth",numberLine.textWidth,maxVal-minVal);
 		return maxVal > minVal ? maxVal-minVal : 0;
 	}

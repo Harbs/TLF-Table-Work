@@ -972,7 +972,7 @@ package flashx.textLayout.elements
 		/**
 		 * Gets the total atom length of this flow element in the text flow.  
 		 * 
-		 * @inherit
+		 * @inheritDoc
 		 **/
 		override public function get textLength():int{
 			return 1;

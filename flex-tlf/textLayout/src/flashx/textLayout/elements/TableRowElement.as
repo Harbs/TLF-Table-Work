@@ -85,6 +85,30 @@ package flashx.textLayout.elements
 				return null;
 			return table.getCellsForRow(table.getRowIndex(this));
 		}
+		
+		/**
+		 * Returns the number of cells in this row. 
+		 **/
+		public function get numCells():int
+		{
+			var table:TableElement = getTable();
+			
+			if(!table)
+				return 0;
+			return table.getCellsForRow(table.getRowIndex(this)).length;
+		}
+		
+		/**
+		 * Returns the cell at the specified index or null if out of range. 
+		 **/
+		public function getCellAt(index:int):TableCellElement
+		{
+			var cells:Vector.<TableCellElement> = getCells();
+			
+			if(!cells || index<0 || index>=cells.length)
+				return null;
+			return cells[index];
+		}
 
 	}
 }

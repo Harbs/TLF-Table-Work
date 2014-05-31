@@ -32,7 +32,7 @@ package flashx.textLayout.compose
 		}
 		
 		/**
-		 * @inherit
+		 * @inheritDoc
 		 **/
 		override tlf_internal function initialize(paragraph:ParagraphElement, outerTargetWidth:Number = 0, lineOffset:Number = 0, absoluteStart:int = 0, numChars:int = 0, textLine:TextLine = null):void
 		{
@@ -127,7 +127,7 @@ package flashx.textLayout.compose
 		}
 		
 		/**
-		 * @inherit
+		 * @inheritDoc
 		 **/
 		override public function get height():Number{
 			return _container.height;
