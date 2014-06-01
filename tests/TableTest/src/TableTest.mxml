@@ -64,9 +64,11 @@
 					cell.borderBottomWidth = 1;
 					cell.borderRightColor = "#FF00FF";
 					cell.borderRightWidth = 1;
+					cell.paddingBottom = 3;
 					cell.colIndex = i;
 					cell.rowIndex = rowIdx;
 					var para:ParagraphElement = new ParagraphElement();
+					para.paragraphStartIndent = 3;
 					var span:SpanElement = new SpanElement();
 					span.text = "This is cell #" + i;
 					para.addChild(span);
