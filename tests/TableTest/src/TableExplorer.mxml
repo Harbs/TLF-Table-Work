@@ -911,7 +911,7 @@
 				
 				if (table) {
 					tableWidth.text = String(table.width);
-					tableHeight.text = String(table.height);
+					tableHeight.text = String(table.getFirstBlock().height);
 					tableBlocks.text = table.tableBlocks ? String(table.tableBlocks.length) : "";
 					tableCells.text = String(table.numCells);
 					tableRows.text = String(table.numRows);

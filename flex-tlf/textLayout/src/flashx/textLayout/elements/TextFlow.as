@@ -1184,8 +1184,8 @@ package flashx.textLayout.elements
 			formatChanged(true);
 		}
 
-		/** The parent element is the element that the TextFlow is nested instead (such as a TableCellElement).
-		 * This property is for support of tested TextFlows to handle things like sleection and editing.
+		/** The parent element is the element that the TextFlow is nested inside (such as a TableCellElement).
+		 * This property is for support of nested TextFlows to handle things like selection and editing.
 		 * 
 		 * @playerversion Flash 10
 		 * @playerversion AIR 1.5

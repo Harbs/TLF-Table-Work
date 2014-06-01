@@ -137,6 +137,8 @@ package flashx.textLayout.edit
         /** The TextFlow of the selection. */
         private var _textFlow:TextFlow;
 		
+		protected var _subManager:SelectionManager;
+		
 		private var _currentTable:TableElement;
 		
 		// this should probably be produced dynamically rather than keep a reference.
@@ -921,11 +923,14 @@ package flashx.textLayout.edit
             //get the nearest column so we can ignore lines which aren't in the column we're looking for.
             //if we don't do this, we won't be able to select across column boundaries.
             var nearestColIdx:int = locateNearestColumn(controller, localX, localY, textFlow.computedFormat.blockProgression,textFlow.computedFormat.direction);
+
+			var prevLineBounds:Rectangle = null;
+			var previousLineIndex:int = -1;
+
+			/*
 			//For the table feature, we are trying to make sure if the current point is in the table and which cell it is in
 			var nearestCell:TableCellElement = locateNearestCell(controller, localX, localY, textFlow.computedFormat.blockProgression,textFlow.computedFormat.direction);
             
-            var prevLineBounds:Rectangle = null;
-            var previousLineIndex:int = -1;
 			
 			if(nearestCell)
 			{
@@ -940,7 +945,7 @@ package flashx.textLayout.edit
 					return cellPara.getAbsoluteStart() + cellPara.textLength - 1;
 				}
 			}
-            
+            */
             var lastLineIndexInColumn:int = -1;
             
             // Matching TextFlowLine and TextLine - they are not necessarily valid
@@ -995,6 +1000,7 @@ package flashx.textLayout.edit
                     //current line,. Otherwise, if the click's perpendicular coordinate is below the mid point between the current
                     //line or below it, then we want to use the line below (ie the previous line, but logically the one after the current)
                     var inPrevLine:Boolean = midPerpCoor != -1 && (isTTB ? perpCoor < midPerpCoor : perpCoor > midPerpCoor);
+					/*
 					if(rtline.paragraph.isInTable())
 					{
 						//if rtline is the last line of the cell and the isPrevLine is true, find the cell of the column in next row
@@ -1025,6 +1031,7 @@ package flashx.textLayout.edit
 							lineIndex = testIndex;
 					}
 					else
+					*/
                     	lineIndex = inPrevLine && testIndex != lastLineIndexInColumn ? testIndex+1 : testIndex;
 					break;
                 }
@@ -1109,7 +1116,7 @@ package flashx.textLayout.edit
             // trace("computeSelectionIndexInContainer:(",origX,origY,")",textFlow.flowComposer.getControllerIndex(controller).toString(),lineIndex.toString(),result.toString());
             return result != -1 ? result : firstCharVisible + length;   
         }
-		
+		/*
 		static private function locateNearestCell(container:ContainerController, localX:Number, localY:Number, wm:String, direction:String):TableCellElement
 		{
 			var cellIdx:int = 0;
@@ -1134,7 +1141,7 @@ package flashx.textLayout.edit
 			}
 			return isFound? curCell : null;
 		}
-        
+        */
         static private function locateNearestColumn(container:ContainerController, localX:Number, localY:Number, wm:String, direction:String):int
         {
             var colIdx:int = 0;
@@ -1521,6 +1528,7 @@ package flashx.textLayout.edit
                     addSelectionShapes();
             }       
             allowOperationMerge = false;
+			event.stopPropagation();
         }
         
         /** 
@@ -2293,5 +2301,16 @@ package flashx.textLayout.edit
                 }
             }
         }
+
+		public function get subManager():SelectionManager
+		{
+			return _subManager;
+		}
+
+		public function set subManager(value:SelectionManager):void
+		{
+			_subManager = value;
+		}
+
     }
 }
