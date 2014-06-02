@@ -58,6 +58,7 @@ package flashx.textLayout.container
 	import flashx.textLayout.edit.SelectionFormat;
 	import flashx.textLayout.elements.BackgroundManager;
 	import flashx.textLayout.elements.CellCoordinates;
+	import flashx.textLayout.elements.CellRange;
 	import flashx.textLayout.elements.Configuration;
 	import flashx.textLayout.elements.ContainerFormattedElement;
 	import flashx.textLayout.elements.FlowElement;
@@ -67,6 +68,9 @@ package flashx.textLayout.container
 	import flashx.textLayout.elements.LinkElement;
 	import flashx.textLayout.elements.ParagraphElement;
 	import flashx.textLayout.elements.TableBlockContainer;
+	import flashx.textLayout.elements.TableCellElement;
+	import flashx.textLayout.elements.TableElement;
+	import flashx.textLayout.elements.TableRowElement;
 	import flashx.textLayout.elements.TextFlow;
 	import flashx.textLayout.events.FlowElementMouseEvent;
 	import flashx.textLayout.events.FlowElementMouseEventManager;
@@ -2815,9 +2819,23 @@ package flashx.textLayout.container
 			addSelectionChild(selObj);
 		}
 		
-		tlf_internal function addCellSelectionShapes(selFormat:SelectionFormat, startCoords:CellCoordinates, endCoords:CellCoordinates): void
+		/** Add cell selection shapes to the displaylist. @private */
+		tlf_internal function addCellSelectionShapes(color:uint, tableBlock:TextFlowTableBlock, startCoords:CellCoordinates, endCoords:CellCoordinates): void
 		{
-			
+			if(!tableBlock)
+				return;
+			if(!startCoords.isValid() || endCoords.isValid())
+				return;
+			var cells:Vector.<TableCellElement> = tableBlock.getCellsInRange(startCoords,endCoords);
+			var selObj:Shape = new Shape();
+			selObj.graphics.beginFill(color);
+			for each( var cell:TableCellElement in cells)
+			{
+				var row:TableRowElement = cell.getRow();
+				var r:Rectangle = new Rectangle(cell.container.x, cell.container.y + tableBlock.y, cell.width, row.composedHeight);
+				selObj.graphics.drawRect(r.x,r.y,r.width,r.height);
+			}
+			addSelectionChild(selObj);
 		}
 		
 		/** Add selection shapes to the displaylist. @private */

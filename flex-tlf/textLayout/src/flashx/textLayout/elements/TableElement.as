@@ -20,12 +20,12 @@ package flashx.textLayout.elements
 {
 	import flash.utils.Dictionary;
 	
-	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.compose.TextFlowTableBlock;
 	import flashx.textLayout.events.ModelChange;
 	import flashx.textLayout.formats.FormatValue;
 	import flashx.textLayout.formats.ITextLayoutFormat;
 	import flashx.textLayout.formats.TextLayoutFormat;
+	import flashx.textLayout.tlf_internal;
 	
 	use namespace tlf_internal;
 	
@@ -961,29 +961,30 @@ package flashx.textLayout.elements
 		/**
 		 * Returns a vector of table cell elements in the given cell range. 
 		 **/
-		public function getCellsInRange(range:CellRange):Vector.<TableCellElement>
+		public function getCellsInRange(anchorCoords:CellCoordinates, activeCoords:CellCoordinates, block:TextFlowTableBlock=null):Vector.<TableCellElement>
 		{
-			var firstCoords:CellCoordinates = range.anchorCoordinates;
-			var lastCoords:CellCoordinates = range.activeCoordinates;
+			var firstCoords:CellCoordinates = anchorCoords;
+			var lastCoords:CellCoordinates = activeCoords;
 			if(
-				range.activeCoordinates.row < range.anchorCoordinates.row ||
-				(range.activeCoordinates.row == range.anchorCoordinates.row && range.activeCoordinates.column < range.anchorCoordinates.column)
+				activeCoords.row < anchorCoords.row ||
+				(activeCoords.row == anchorCoords.row && activeCoords.column < anchorCoords.column)
 			)
 			{
-				firstCoords = range.activeCoordinates;
-				lastCoords = range.anchorCoordinates;
+				firstCoords = activeCoords;
+				lastCoords = anchorCoords;
 			}
 			var firstCell:TableCellElement = findCell(firstCoords);
 			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
-			cells.push(firstCell);
+			if(!block || getCellBlock(firstCell) == block)
+				cells.push(firstCell);
 			var idx:int = mxmlChildren.indexOf(firstCell);
 			while(++idx < mxmlChildren.length)
 			{
 				var nextCell:TableCellElement = mxmlChildren[idx];
 				if(nextCell.rowIndex > lastCoords.row || (nextCell.rowIndex == lastCoords.row && nextCell.colIndex > lastCoords.column))
 					break;
-				
-				cells.push(nextCell);
+				if(!block || getCellBlock(nextCell) == block)
+					cells.push(nextCell);				
 			}
 			return cells;
 		}

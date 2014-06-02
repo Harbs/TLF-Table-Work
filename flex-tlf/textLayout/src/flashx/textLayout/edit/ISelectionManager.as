@@ -160,7 +160,7 @@ package flashx.textLayout.edit
 		function get activePosition() : int;
 		
 		/**
-		 * Indicates whether there is a selection. 
+		 * Indicates whether there is a text selection. 
 		 * 
 		 * <p>Returns <code>true</code> if there is either a range selection or a point selection. 
 		 * By default, when a selection manager is first set up, there is no selection (the start and end are -1).</p>
@@ -172,6 +172,34 @@ package flashx.textLayout.edit
  		 * @langversion 3.0
 		 */
 		function hasSelection():Boolean;
+
+		/**
+		 * Indicates whether there is a text or cell selection. 
+		 * 
+		 * <p>Returns <code>true</code> if there is either a range selection or a point selection. 
+		 * By default, when a selection manager is first set up, there is no selection (the start and end are -1).</p>
+		 * 
+		 * @includeExample examples\SelectionManager_hasSelection.as -noswf
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		function hasAnySelection():Boolean;
+
+		/**
+		 * Indicates the type of selection. 
+		 * 
+		 * <p>The <code>selectionType</code> describes the kind of selection. 
+		 * It can either be <code>SelectionType.TEXT</code> or <code>SelectionType.CELLS</code>
+		 * 
+		 * @see flashx.textLayout.edit.SelectionType
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		function get selectionType() : String;
 		
 		/**
 		 * Indicates whether the selection covers a range of text.

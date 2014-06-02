@@ -16,37 +16,15 @@
 //  limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
-package flashx.textLayout.elements
+package flashx.textLayout.edit
 {
-	public class CellCoordinates
+	public class SelectionType
 	{
-		private var _column:int;
-		private var _row:int;
-		public function CellCoordinates(row:int,column:int)
+		public static const TEXT:String = "text";
+		public static const CELLS:String = "cells";
+		public static const NONE:String = "none";
+		public function SelectionType()
 		{
-			_row = row;
-			_column = column;
 		}
-
-		public function get column():int
-			{return _column;}
-		public function set column(value:int):void
-			{_column = value;}
-
-		public function get row():int
-			{return _row;}
-		public function set row(value:int):void
-			{_row = value;}
-		
-		public static function areEqual(coords1:CellCoordinates,coords2:CellCoordinates):Boolean
-		{
-			return coords1.row == coords2.row && coords1.column == coords2.column;
-		}
-		
-		public function isValid():Boolean
-		{
-			return column > -1 && row > -1;
-		}
-
 	}
 }
