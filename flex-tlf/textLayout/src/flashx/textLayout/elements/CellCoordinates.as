@@ -42,6 +42,11 @@ package flashx.textLayout.elements
 		{
 			return coords1.row == coords2.row && coords1.column == coords2.column;
 		}
+		
+		public function outOfBounds():Boolean
+		{
+			return column < 0 || row < 0;
+		}
 
 	}
 }

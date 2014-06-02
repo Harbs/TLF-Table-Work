@@ -73,8 +73,8 @@
 					span.text = "This is cell #" + i;
 					para.addChild(span);
 					var cellFlow:TextFlow = new TextFlow();
-					cellFlow.interactionManager = new EditManager(undoManager);
 					cellFlow.addChild(para);
+					cellFlow.interactionManager = new EditManager(undoManager);
 					cell.textFlow = cellFlow;
 					//cell.addChild(para);
 					table.addChild(cell);

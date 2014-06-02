@@ -137,7 +137,8 @@ package flashx.textLayout.edit
         /** The TextFlow of the selection. */
         private var _textFlow:TextFlow;
 		
-		protected var _subManager:SelectionManager;
+		protected var _subManager:ISelectionManager;
+		protected var _superManager:ISelectionManager;
 		
 		private var _currentTable:TableElement;
 		
@@ -159,7 +160,7 @@ package flashx.textLayout.edit
 		{
 			if(!_currentTable)
 				return false;
-			//we should really check the anchorCellMark and activeCellMark instead
+			//we should really check the anchorCellPosition and activeCellPosition instead
 			if(!_cellRange)
 				return false;
 			return true;
@@ -167,6 +168,7 @@ package flashx.textLayout.edit
 		
 		public function selectCellRange(anchorCoords:CellCoordinates,activeCoords:CellCoordinates):void
 		{
+			clear();
 			_cellRange = new CellRange(_currentTable,anchorCoords,activeCoords);
 			// do something about actually drawing the selection.
 		}
@@ -189,10 +191,8 @@ package flashx.textLayout.edit
         private var anchorMark:Mark;
         /** Active end of the current selection, as an index into the TextFlow. */
         private var activeMark:Mark;
-		/** Anchor point of the current cell selection, as coordinates within the table. */
-        private var anchorCellMark:CellCoordinates;
-		/** Active end of the current cell selection, as coordinates within the table. */
-		private var activeCellMark:CellCoordinates;
+        private var _anchorCellPosition:CellCoordinates;
+		private var _activeCellPosition:CellCoordinates;
 
 		// used to save pending attributes at a point selection
         private var _pointFormat:ITextLayoutFormat;
@@ -246,8 +246,8 @@ package flashx.textLayout.edit
             _textFlow = null;
             anchorMark = createMark();
             activeMark = createMark();
-			anchorCellMark = createCellMark();
-			activeCellMark = createCellMark();
+			anchorCellPosition = createCellMark();
+			activeCellPosition = createCellMark();
             _pointFormat = null;
             _isActive = false;
             CONFIG::debug 
@@ -1496,7 +1496,36 @@ package flashx.textLayout.edit
          */ 
         public function mouseDownHandler(event:MouseEvent):void
         {
-            handleMouseEventForSelection(event, event.shiftKey);
+			if(subManager)
+				subManager.selectRange(-1,-1);
+			
+			var cell:TableCellElement = _textFlow.parentElement as TableCellElement;
+			if(cell)
+			{
+				superManager = cell.getTextFlow().interactionManager;
+				if(event.shiftKey && cell.getTable() == superManager.currentTable)
+				{
+					// expand cell selection if applicable
+					var coords:CellCoordinates = new CellCoordinates(cell.rowIndex,cell.colIndex);
+					if(
+						!CellCoordinates.areEqual(coords,superManager.anchorCellPosition) ||
+						!superManager.activeCellPosition.outOfBounds()
+					){
+						superManager.subManager = null;
+						superManager.selectCellRange(superManager.anchorCellPosition,superManager.activeCellPosition);
+						allowOperationMerge = false;
+						event.stopPropagation();
+						return;
+					}
+				}
+				superManager.currentTable = cell.getTable();
+				superManager.selectRange(-1,-1);
+				superManager.setSelectionState(new SelectionState(superManager.textFlow,-1,-1) );
+				superManager.anchorCellPosition.column = cell.colIndex;
+				superManager.anchorCellPosition.row = cell.rowIndex;
+				superManager.subManager = this;
+			}
+            handleMouseEventForSelection(event, event.shiftKey,cell);
         }
         
         /**
@@ -1511,11 +1540,11 @@ package flashx.textLayout.edit
             if (wmode != BlockProgression.RL) 
                 setMouseCursor(MouseCursor.IBEAM);          
             if (event.buttonDown)
-                handleMouseEventForSelection(event, true);
+                handleMouseEventForSelection(event, true,_textFlow.parentElement != null);
         }
         
         /** @private */
-        tlf_internal function handleMouseEventForSelection(event:MouseEvent, allowExtend:Boolean):void
+        tlf_internal function handleMouseEventForSelection(event:MouseEvent, allowExtend:Boolean,stopPropogate:Boolean=false):void
         {
             var startSelectionActive:Boolean = hasSelection();
             
@@ -1528,7 +1557,8 @@ package flashx.textLayout.edit
                     addSelectionShapes();
             }       
             allowOperationMerge = false;
-			event.stopPropagation();
+			if(stopPropogate)
+				event.stopPropagation();
         }
         
         /** 
@@ -2031,6 +2061,9 @@ package flashx.textLayout.edit
             }
             else if (event.keyCode == Keyboard.ESCAPE)
                 handleKeyEvent(event);
+			if(_textFlow.parentElement)
+				event.stopPropagation();
+			
         }
 
         /** 
@@ -2302,15 +2335,61 @@ package flashx.textLayout.edit
             }
         }
 
-		public function get subManager():SelectionManager
+		/**
+		 * The ISelectionManager object used to for cell selections nested within the TextFlow managed by this ISelectionManager.
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */		 		 
+		public function get subManager():ISelectionManager
 		{
 			return _subManager;
 		}
-
-		public function set subManager(value:SelectionManager):void
+		public function set subManager(value:ISelectionManager):void
 		{
+			if(_subManager)
+				_subManager.selectRange(-1,-1);
 			_subManager = value;
 		}
+		/**
+		 * The ISelectionManager object used to manage the parent TextFlow of this ISelectionManager (i.e. for cell ISelectionManagers).
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */		 		 
+
+		public function get superManager():ISelectionManager
+		{
+			return _superManager;
+		}
+
+		public function set superManager(value:ISelectionManager):void
+		{
+			_superManager = value;
+		}
+
+		/** Anchor point of the current cell selection, as coordinates within the table. */
+		public function get anchorCellPosition():CellCoordinates
+		{
+			return _anchorCellPosition;
+		}
+		public function set anchorCellPosition(value:CellCoordinates):void
+		{
+			_anchorCellPosition = value;
+		}
+
+		/** Active end of the current cell selection, as coordinates within the table. */
+		public function get activeCellPosition():CellCoordinates
+		{
+			return _activeCellPosition;
+		}
+		public function set activeCellPosition(value:CellCoordinates):void
+		{
+			_activeCellPosition = value;
+		}
+
 
     }
 }
