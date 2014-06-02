@@ -557,7 +557,9 @@ package flashx.textLayout.compose
 					
 					if(!haveRealRows)
 						curTableBlock.clear();
-					_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);
+					curTableBlock.setController(_parcelList.currentParcel.controller,_parcelList.currentParcel.columnIndex);
+
+//					_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);
 					BackgroundManager.collectTableBlock(_textFlow,curTableBlock, _parcelList.currentParcel.controller);
 					blockToAdd = false;
 					
@@ -589,7 +591,8 @@ package flashx.textLayout.compose
 					var col:TableColElement = tableElement.getColumnAt(cell.colIndex);
 					if(col)
 						cell.container.x =  col.x;
-					curTableBlock.addCell(cell.container);
+					tableElement.addCellToBlock(cell,curTableBlock);
+//					curTableBlock.addCell(cell.container);
 					// add the cells to _parcelList.currentParcel.controller
 					// need to figure out exactly how.
 					
@@ -602,7 +605,8 @@ package flashx.textLayout.compose
 				totalRowHeight += rowHeight;
 			}
 			if(_parcelList.currentParcel && blockToAdd){
-				_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);
+				curTableBlock.setController(_curParcel.controller,_curParcel.columnIndex);
+//				_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);
 				BackgroundManager.collectTableBlock(_textFlow,curTableBlock, _parcelList.currentParcel.controller);
 			}
 			//reference ComposeState.composeNextLine() which creates the the TextLine.

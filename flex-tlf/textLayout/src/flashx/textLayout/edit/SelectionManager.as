@@ -44,6 +44,7 @@ package flashx.textLayout.edit
     
     import flashx.textLayout.compose.IFlowComposer;
     import flashx.textLayout.compose.TextFlowLine;
+    import flashx.textLayout.compose.TextFlowTableBlock;
     import flashx.textLayout.container.ColumnState;
     import flashx.textLayout.container.ContainerController;
     import flashx.textLayout.debug.Debugging;
@@ -170,6 +171,11 @@ package flashx.textLayout.edit
 		{
 			clear();
 			_cellRange = new CellRange(_currentTable,anchorCoords,activeCoords);
+			var blocks:Vector.<TextFlowTableBlock> = _currentTable.getTableBlocksInRange(anchorCoords,activeCoords);
+			for each(var block:TextFlowTableBlock in blocks)
+			{
+				block.controller.addCellSelectionShapes(currentCellSelectionFormat.rangeColor, block, anchorCoords, activeCoords);
+			}
 			// do something about actually drawing the selection.
 		}
 		
@@ -1548,8 +1554,8 @@ package flashx.textLayout.edit
 						!CellCoordinates.areEqual(coords,superManager.anchorCellPosition) ||
 						superManager.activeCellPosition.isValid()
 					){
-						superManager.subManager = null;
 						superManager.selectCellRange(superManager.anchorCellPosition,coords);
+						superManager.subManager = null;
 						allowOperationMerge = false;
 						event.stopPropagation();
 						return;

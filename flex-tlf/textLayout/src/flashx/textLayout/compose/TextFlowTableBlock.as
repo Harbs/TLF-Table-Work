@@ -3,6 +3,7 @@ package flashx.textLayout.compose
 	
 	import flash.text.engine.TextLine;
 	
+	import flashx.textLayout.container.ContainerController;
 	import flashx.textLayout.elements.CellContainer;
 	import flashx.textLayout.elements.CellCoordinates;
 	import flashx.textLayout.elements.ParagraphElement;
@@ -40,6 +41,12 @@ package flashx.textLayout.compose
 			_container.userData = this;
 			super.initialize(paragraph, outerTargetWidth, lineOffset, absoluteStart, numChars, textLine);
 		}
+		override tlf_internal function setController(cont:ContainerController,colNumber:int):void
+		{
+			super.setController(cont, colNumber);
+			controller.addComposedTableBlock(container);
+		}
+
 		
 		/**
 		 * The table that owns this table block

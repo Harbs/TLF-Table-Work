@@ -1065,8 +1065,35 @@ package flashx.textLayout.elements
 		/**
 		 * Returns a vector of the table blocks.
 		 **/
-		public function get tableBlocks():Vector.<TextFlowTableBlock> {
+		public function get tableBlocks():Vector.<TextFlowTableBlock>
+		{
 			return _tableBlocks;
+		}
+		
+		public function getTableBlocksInRange(start:CellCoordinates,end:CellCoordinates):Vector.<TextFlowTableBlock>
+		{
+			if(end.column < start.column)
+			{
+				var temp:CellCoordinates = start;
+				start = end;
+				end = temp;
+			}
+			var blocks:Vector.<TextFlowTableBlock> = new Vector.<TextFlowTableBlock>();
+			var block:TextFlowTableBlock = getCellBlock(findCell(start));
+			if(block)
+				blocks.push(block);
+			while(block)
+			{
+				start.row++;
+				if(start.row > end.row)
+					break;
+				if(getCellBlock(findCell(start)) == block)
+					continue;
+				block = getCellBlock(findCell(start));
+				if(block)
+					blocks.push(block);
+			}
+			return blocks;
 		}
 
 	}

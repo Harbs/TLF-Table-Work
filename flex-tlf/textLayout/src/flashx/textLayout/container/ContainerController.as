@@ -2824,7 +2824,7 @@ package flashx.textLayout.container
 		{
 			if(!tableBlock)
 				return;
-			if(!startCoords.isValid() || endCoords.isValid())
+			if(!startCoords.isValid() || !endCoords.isValid())
 				return;
 			var cells:Vector.<TableCellElement> = tableBlock.getCellsInRange(startCoords,endCoords);
 			var selObj:Shape = new Shape();

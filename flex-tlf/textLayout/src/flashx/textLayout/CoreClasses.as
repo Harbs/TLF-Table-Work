@@ -57,6 +57,7 @@ package flashx.textLayout
 		import flashx.textLayout.edit.ISelectionManager; ISelectionManager;
 		import flashx.textLayout.edit.SelectionFormat; SelectionFormat;
 		import flashx.textLayout.edit.SelectionState; SelectionState;
+		import flashx.textLayout.edit.SelectionType; SelectionType;
 		
 		import flashx.textLayout.elements.SubParagraphGroupElementBase; SubParagraphGroupElementBase;
 		import flashx.textLayout.elements.BreakElement; BreakElement;
