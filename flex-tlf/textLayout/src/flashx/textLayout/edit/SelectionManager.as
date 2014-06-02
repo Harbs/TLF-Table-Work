@@ -1525,7 +1525,7 @@ package flashx.textLayout.edit
 				superManager.anchorCellPosition.row = cell.rowIndex;
 				superManager.subManager = this;
 			}
-            handleMouseEventForSelection(event, event.shiftKey,cell);
+            handleMouseEventForSelection(event, event.shiftKey, cell != null);
         }
         
         /**
