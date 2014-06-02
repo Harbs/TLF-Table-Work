@@ -878,18 +878,7 @@
 				
 				var exporter:ITextExporter = TextConverter.getExporter(TextConverter.TEXT_LAYOUT_FORMAT);
 				exporter.throwOnError = false;
-				
-				// we need to set white space to collapse to allow space bar to work in the text area
-				// if we set the attribute manually it works
-				// unfortunately I can't get it to export with collapse
-				//textFlow.whiteSpaceCollapse = WhiteSpaceCollapse.COLLAPSE;
-				//textFlow.setStyle("whiteSpaceCollapse", WhiteSpaceCollapse.COLLAPSE);
-				//textFlow.flowComposer.updateAllControllers();
-				/*
-				var format:TextLayoutFormat = new TextLayoutFormat();
-				format.whiteSpaceCollapse = WhiteSpaceCollapse.COLLAPSE;
-				var config:Configuration = new Configuration();
-				config.textFlowInitialFormat = format;*/
+				exporter.config.whiteSpaceCollapse = WhiteSpaceCollapse.COLLAPSE;
 				
 				var object:Object = exporter.export(textFlow, TextConverter.TEXT_LAYOUT_FORMAT);				
 				textFlowMarkup.text = object is XML ? XML(object).toXMLString() : null;

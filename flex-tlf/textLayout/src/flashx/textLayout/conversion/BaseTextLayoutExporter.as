@@ -32,8 +32,8 @@ package flashx.textLayout.conversion
 	import flashx.textLayout.elements.LinkElement;
 	import flashx.textLayout.elements.ParagraphFormattedElement;
 	import flashx.textLayout.elements.SpanElement;
-	import flashx.textLayout.elements.TableElement;
 	import flashx.textLayout.elements.TableCellElement;
+	import flashx.textLayout.elements.TableElement;
 	import flashx.textLayout.elements.TableRowElement;
 	import flashx.textLayout.elements.TextFlow;
 	import flashx.textLayout.elements.TextRange;
@@ -48,14 +48,13 @@ package flashx.textLayout.conversion
 	 * Base export converter for TextLayout format. 
 	 */
 	public class BaseTextLayoutExporter extends ConverterBase implements ITextExporter
-	{	
-		private var _config:ImportExportConfiguration;
+	{
 		private var _rootTag:XML;
 		private var _ns:Namespace;
 		
-		public function BaseTextLayoutExporter(ns:Namespace, rootTag:XML, config:ImportExportConfiguration)
+		public function BaseTextLayoutExporter(ns:Namespace, rootTag:XML, configuration:ImportExportConfiguration)
 		{
-			_config = config;
+			config = configuration;
 			_ns = ns;
 			_rootTag = rootTag;
 		}
@@ -146,7 +145,7 @@ package flashx.textLayout.conversion
 		protected function exportFlowElement (flowElement:FlowElement):XMLList
 		{
 			var className:String = flash.utils.getQualifiedClassName(flowElement);
-			var elementName:String = _config.lookupName(className);	// NO PMD
+			var elementName:String = config.lookupName(className);	// NO PMD
 			var output:XML = <{elementName}/>;
 			output.setNamespace(_ns);
 			return XMLList(output);
@@ -478,8 +477,10 @@ package flashx.textLayout.conversion
 		{
 			var output:XMLList = exportContainerFormattedElement(exporter, textFlow);
 			
-			// TextLayout will use PRESERVE on output
-			output.@[TextLayoutFormat.whiteSpaceCollapseProperty.name] = WhiteSpaceCollapse.PRESERVE;
+			if (exporter.config.whiteSpaceCollapse) {
+				// TextLayout will use PRESERVE on output
+				output.@[TextLayoutFormat.whiteSpaceCollapseProperty.name] = exporter.config.whiteSpaceCollapse;
+			}
 			
 			// TextLayout adds version information
 			output.@["version"] = TextLayoutVersion.getVersionString(TextLayoutVersion.CURRENT_VERSION);
@@ -499,7 +500,7 @@ package flashx.textLayout.conversion
 		public function exportChild(flowElement:FlowElement):XMLList
 		{
 			var className:String = flash.utils.getQualifiedClassName(flowElement);
-			var info:FlowElementInfo = _config.lookupByClass(className);
+			var info:FlowElementInfo = config.lookupByClass(className);
 			if (info != null)
 				return info.exporter(this, flowElement);
 			return null;
@@ -538,7 +539,6 @@ package flashx.textLayout.conversion
 		protected function get formatDescription():Object
 		{
 			return null;
-		}		
-
+		}
 	}
 }

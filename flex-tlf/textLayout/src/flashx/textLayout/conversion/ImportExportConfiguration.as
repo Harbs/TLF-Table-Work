@@ -18,8 +18,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 package flashx.textLayout.conversion
 {
-	import flashx.textLayout.debug.assert;
 	import flashx.textLayout.tlf_internal;
+	import flashx.textLayout.debug.assert;
+	import flashx.textLayout.formats.WhiteSpaceCollapse;
+
 	use namespace tlf_internal;
 
 	/** 
@@ -33,10 +35,18 @@ package flashx.textLayout.conversion
 	 */
 	public class ImportExportConfiguration 
 	{
-		/** array of FlowElementInfo objects (key = name, value = FlowElementInfo) */	
+		/** 
+		 * array of FlowElementInfo objects (key = name, value = FlowElementInfo) 
+		 * */	
 		tlf_internal var flowElementInfoList:Object = {};	
 		tlf_internal var flowElementClassList:Object= {};	
 		tlf_internal var classToNameMap:Object = {};
+		
+		/**
+		 * Whitespace collapse export setting
+		 * @default WhiteSpaceCollapse.PRESERVE
+		 **/
+		public var whiteSpaceCollapse:String = WhiteSpaceCollapse.PRESERVE;
 
 		/** 
 		 * Constructor.
