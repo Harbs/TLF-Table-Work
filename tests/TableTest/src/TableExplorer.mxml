@@ -46,9 +46,10 @@
 			import flash.text.engine.TextLine;
 			import flash.utils.ByteArray;
 			
-			import mx.core.mx_internal;
+			import flashx.textLayout.TextLayoutVersion;
+			import flashx.textLayout.compose.TextFlowTableBlock;
 			
-			import flashx.textLayout.TextLayoutVersion;ByteArray
+			import mx.core.mx_internal;ByteArray
 			
 			import flashx.textLayout.formats.TextLayoutFormat;TextLayoutFormat
 			
@@ -470,9 +471,10 @@
 					pos += line.textLength;
 				}
 				
-				bounds.y = table.totalRowDepth;
-				bounds.width = table.tableWidth;
-				bounds.height = table.height;
+				var block:TextFlowTableBlock = table.getFirstBlock();
+				bounds.y = block.y;
+				bounds.width = block.container.width;
+				bounds.height = block.height;
 				
 				sprite.graphics.clear();
 				sprite.graphics.beginFill(color);
@@ -898,7 +900,7 @@
 				
 				if (table) {
 					tableWidth.text = String(table.width);
-					tableHeight.text = String(table.height);
+					tableHeight.text = String(table.getFirstBlock().height);
 					tableBlocks.text = table.tableBlocks ? String(table.tableBlocks.length) : "";
 					tableCells.text = String(table.numCells);
 					tableRows.text = String(table.numRows);

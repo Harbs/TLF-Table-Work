@@ -110,7 +110,7 @@ package flashx.textLayout.compose
 		}
 		
 		/**
-		 * 
+		 * Triggers drawing of composed cell contents
 		 **/
 		public function updateCompositionShapes():void{
 			var cells:Array = getCells();

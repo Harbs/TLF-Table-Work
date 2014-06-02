@@ -44,18 +44,10 @@ package flashx.textLayout.elements
 	public class TableElement extends TableFormattedElement 
 	{
 		
-		private var _height:Array = []; // parcel-indexed
-		public var computedWidth:Number;
+		private var _computedWidth:Number;
 		
 		public var x:Number;
 		public var y:Number;
-		
-		//These attributes is from the original loop prototype. Maybe changed later
-		public var totalRowDepth:Number = undefined;
-		public var originParcelIndex:Number;
-		public var numAcrossParcels:int;
-        public var curRowIdx:int = 0; // this value should be only used while composing
-        public var outOfLastParcel:Boolean = false; 
 		
 		private var columns:Vector.<TableColElement> = new Vector.<TableColElement>();
 		private var rows:Vector.<TableRowElement> = new Vector.<TableRowElement>();
@@ -496,7 +488,8 @@ package flashx.textLayout.elements
 		}
 		
 		/**
-		 * 
+		 * @private
+		 * Gets table coordinates which represents the space occupied by cells spanning rows or columns
 		 **/
 		private function getBlockedCoords(inRow:int = -1, inColumn:int = -1):Vector.<CellCoords>{
 			var coords:Vector.<CellCoords> = new Vector.<CellCoords>();
@@ -529,7 +522,7 @@ package flashx.textLayout.elements
 		}
 		
 		/**
-		 * 
+		 * Sets the row and column idices of the cells in the table to match their logical position as described by the table columns and rows
 		 **/
 		public function normalizeCells():void
 		{
@@ -726,28 +719,28 @@ package flashx.textLayout.elements
 		}
 		
 		/**
-		 * 
+		 * returns the header rows for composition
 		 **/
 		public function getHeaderRows():Vector.< Vector.<TableCellElement> >{
 			return _headerRows;
 		}
 		
 		/**
-		 * 
+		 * returns the footer rows for composition
 		 **/
 		public function getFooterRows():Vector.< Vector.<TableCellElement> >{
 			return _footerRows;
 		}
 		
 		/**
-		 * 
+		 * returns the body rows (sans header and footer cells) for composition
 		 **/
 		public function getBodyRows():Vector.< Vector.<TableCellElement> >{
 			return _bodyRows;
 		}
 		
 		/**
-		 * 
+		 * returns a vector of table cells in the next row during composition
 		 **/
 		public function getNextRow():Vector.<TableCellElement>{
 			if(_composedRowIndex >= _bodyRows.length)
@@ -816,7 +809,7 @@ package flashx.textLayout.elements
 				col.columnWidth = w / numColumns;
 			}
 			
-			computedWidth = w;
+			_computedWidth = w;
 		}
 		
 		/**
@@ -850,7 +843,7 @@ package flashx.textLayout.elements
 		 **/
 		public function get width():Number
 		{
-			return computedWidth;
+			return _computedWidth;
 		}
 		
 		/**
@@ -861,37 +854,6 @@ package flashx.textLayout.elements
 			normalizeColumnWidths(value);
 		}
 		
-		/**
-		 * 
-		 **/
-        public function get height():Number
-        {
-            return _height[numAcrossParcels];
-        }
-        
-		/**
-		 * 
-		 **/
-        public function set height(val:*):void
-        {
-            _height[numAcrossParcels] = val;
-        }
-        
-		/**
-		 * 
-		 **/
-        public function get heightArray():Array
-        {
-            return _height;
-        }
-        
-		/**
-		 * 
-		 **/
-        public function set heightArray(newArray:Array):void
-        {
-            _height = newArray;
-        }
 		
 		/**
 		 * Indicates elements in the table have been modified and the table must be recomposed.
@@ -907,7 +869,7 @@ package flashx.textLayout.elements
 		}
 
 		/**
-		 * 
+		 * Returns the number of header rows in the table
 		 **/
 		public function get headerRowCount():uint
 		{
@@ -915,7 +877,7 @@ package flashx.textLayout.elements
 		}
 
 		/**
-		 * 
+		 * Sets the number of header rows in the table
 		 **/
 		public function set headerRowCount(value:uint):void
 		{
@@ -925,7 +887,7 @@ package flashx.textLayout.elements
 		}
 
 		/**
-		 * 
+		 * Returns the number of footer rows in the table
 		 **/
 		public function get footerRowCount():uint
 		{
@@ -933,7 +895,7 @@ package flashx.textLayout.elements
 		}
 
 		/**
-		 * 
+		 * Sets the number of footer rows in the table
 		 **/
 		public function set footerRowCount(value:uint):void
 		{

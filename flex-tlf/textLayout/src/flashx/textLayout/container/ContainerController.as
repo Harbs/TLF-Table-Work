@@ -57,6 +57,7 @@ package flashx.textLayout.container
 	import flashx.textLayout.edit.ISelectionManager;
 	import flashx.textLayout.edit.SelectionFormat;
 	import flashx.textLayout.elements.BackgroundManager;
+	import flashx.textLayout.elements.CellCoordinates;
 	import flashx.textLayout.elements.Configuration;
 	import flashx.textLayout.elements.ContainerFormattedElement;
 	import flashx.textLayout.elements.FlowElement;
@@ -2814,6 +2815,11 @@ package flashx.textLayout.container
 			addSelectionChild(selObj);
 		}
 		
+		tlf_internal function addCellSelectionShapes(selFormat:SelectionFormat, startCoords:CellCoordinates, endCoords:CellCoordinates): void
+		{
+			
+		}
+		
 		/** Add selection shapes to the displaylist. @private */
 		tlf_internal function addSelectionShapes(selFormat:SelectionFormat, selectionAbsoluteStart:int, selectionAbsoluteEnd:int): void
 		{
@@ -3045,10 +3051,13 @@ package flashx.textLayout.container
 		{
 			setTextLength(0); 
 			
-			for each (var textLine:TextLine in _shapeChildren)
+			for each (var line:* in _shapeChildren)
 			{
-				removeTextLine(textLine);
-				CONFIG::debug { Debugging.traceFTECall(null,_container,"removeTextLine",textLine); }
+				if(line is TextLine)
+					removeTextLine(line as TextLine);
+				else
+					removeTableBlock(line as TableBlockContainer);
+				CONFIG::debug { Debugging.traceFTECall(null,_container,"removeTextLine",line); }
 			}
 			_shapeChildren.length = 0;
 			_linesInView.length = 0;

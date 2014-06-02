@@ -359,35 +359,8 @@ package flashx.textLayout.compose
 				/*
 				if ( child is TableElement )
 				{
-					child = _curElement;
-					while ( child && ! (child is TableRowElement) )
-						child = child.parent;
-					
-					var tableElement:TableElement = child.parent as TableElement;
-					tableElement.totalRowDepth = 0;
-					tableElement.numAcrossParcels = 0;
-					tableElement.originParcelIndex = 0;
-					tableElement.heightArray = [];
-					if ( ! composeBlockElement(child.parent, _curElementStart, true, (child as TableRowElement).rowIndex) )
-					{
-						BackgroundManager.collectBlock(_textFlow, tableElement, _parcelList, true);
-						return false;
-					}
-					
-					// Add table border info
-					tableElement.totalRowDepth += tableElement.getEffectiveBorderBottomWidth() + tableElement.computedFormat.cellSpacing;
-					tableElement.height = tableElement.totalRowDepth;
-					
-					absStart = _curElementStart;
-					idx ++;
-					
-					if ( ! gotoParcel(tableElement.numAcrossParcels, tableElement.totalRowDepth) )	
-						return false;
-					
-					_atColumnStart = false;
-					_parcelList.addTotalDepth(tableElement.getEffectiveMarginBottom());
-					
-					BackgroundManager.collectBlock(_textFlow, tableElement, _parcelList, true);
+				// if it makes sense, we need to redo this logic.
+
 				}
 				*/
 			}
@@ -638,146 +611,11 @@ package flashx.textLayout.compose
 			// Repeat until there's no more Parcels.
 			
 			// step 4 draw the backgrounds and borders
-			
-			/*
-			// old process. Leaving it here for reference...
-			//1st step findout the TableGroup element and get the composing parameter for the columns
-			//my first idea is to read them to be a TableElement list or map. And remove all the column 
-			//element so that the column element will not fall into the recursive loop
-			tableElement.numAcrossParcels = 0;
-            tableElement.heightArray = [];
-            tableElement.curRowIdx = 0;
-            tableElement.outOfLastParcel = false;
-            
-			//2nd step setup the environment settings
-			var marginLeft:Number = tableElement.computedFormat.marginLeft;
-			var marginTop:Number  = tableElement.computedFormat.marginTop;
-            
-			tableElement.x = _parcelList.currentParcel.x + marginLeft;
-			tableElement.y = _parcelList.totalDepth + (_atColumnStart ? marginTop : _firstLineDescentAndLeading + marginTop);
-			
-			_parcelList.addTotalDepth(tableElement.y - _parcelList.totalDepth);
-			
-			// The following codes are setting the column width
-			serializeTableColumnWidth(tableElement);
-			
-			//TO-DO: Verify the borderTopWidth Value
-			tableElement.originParcelIndex = _parcelList.currentParcelIndex;
-			var originParcel:Parcel = _parcelList.currentParcel;
-			
-			// Add table border info
-			_parcelList.addTotalDepth(tableElement.getEffectiveBorderTopWidth());
-			tableElement.totalRowDepth = _parcelList.totalDepth;
-			
-			//2nd step recursively compose the table elements
-			if ( ! composeBlockElement(FlowGroupElement(tableElement), absStart, true) )
-            {
-                // If we're out of parcel, we don't need to calculate table height anymore,
-                // because we've done in composeTableRowElement before it return false.
-                if(tableElement.outOfLastParcel)
-                    BackgroundManager.collectBlock(_textFlow, tableElement, _parcelList, false, true);
-                
-                return false;
-            }
-			
-			// Add table border info
-			tableElement.totalRowDepth += tableElement.getEffectiveBorderBottomWidth() + tableElement.computedFormat.cellSpacing;
-			
-            if(tableElement.numAcrossParcels == 0 && _startComposePosition <= tableElement.getAbsoluteStart())
-                tableElement.height = tableElement.totalRowDepth - tableElement.y;
-            else
-				tableElement.height = tableElement.totalRowDepth;
-
-			// If current composition position plus one line height beyond the parcel bottom, then we jump to next parcel 
-			var depth:Number = tableElement.totalRowDepth;
-			
-			// If table already full the last column, we won't goto table cell parcel. Just goto last not table cell parcel
-			var parcelIdx:int = tableElement.originParcelIndex + tableElement.numAcrossParcels;
-			if ( _parcelList.getParcelAt(parcelIdx).isTableParcel )
-				depth = _parcelList.getParcelAt(--parcelIdx).bottom;
-			
-			if ( ! gotoParcel(parcelIdx, depth) )	
-				return false;
-			
-            _atColumnStart = false;
-			_parcelList.addTotalDepth(tableElement.getEffectiveMarginBottom());
-			
-			BackgroundManager.collectBlock(_textFlow, tableElement, _parcelList);
-			return true;
-			*/
+			// handled by the BackgroundManager			
 			
 			return true;
 		}
 		
-
-		
-		/** @private
-		 * Calculate table columm width based on column's width value, the rule is :
-		 * if there are zero column width or the sum(columnWidth) not equal to table.tableWidth,
-		 * we calculate average column width.
-		 * In  : Number or percentage
-		 * Out : Set pixcel based width of each table column
-		 */
-		/*
-		
-		//Moving this logic to inside TableElement
-		
-		private function serializeTableColumnWidth(table:TableElement):void
-		{
-            var curParcelWidth:Number = _parcelList.currentParcel.width;
-			if ( table.tableWidth != undefined && table.tableWidth < curParcelWidth )
-				table.computedWidth = table.tableWidth;
-			else
-                table.computedWidth = curParcelWidth;
-            
-            if(table.computedFormat.marginLeft > 0)
-                table.computedWidth -= table.computedFormat.marginLeft;
-            
-            table.computedWidth -= table.computedFormat.marginRight;
-            
-			var logicalWidth:Number = table.computedWidth - table.getEffectiveBorderLeftWidth() - table.getEffectiveBorderRightWidth() - (table.column + 1) * table.computedFormat.cellSpacing;
-			var columnTotalWidth:Number = table.getEffectiveBorderLeftWidth() + table.computedFormat.marginLeft;
-            
-			for ( var i:int = 0; i < table.column; i ++ )
-			{
-				var colWidth:* = table.getColumnWidth(i);
-				
-				// Column width is percentage like "20%"
-				var strWidth:String = colWidth as String;
-				if ( strWidth && strWidth.length != 0 && strWidth.charAt(strWidth.length - 1) == '%' )
-				{
-					colWidth = Property.toNumberIfPercent(colWidth) * logicalWidth / 100;
-					if ( colWidth >= 0 )
-						table.setColumnWidth(i, colWidth);
-				}
-				
-				columnTotalWidth += table.computedFormat.cellSpacing;
-				table.getColumnAt(i).x = columnTotalWidth;
-				columnTotalWidth += colWidth;
-			}
-            
-			columnTotalWidth -= (table.computedFormat.marginLeft + table.getEffectiveBorderLeftWidth() + table.column * table.computedFormat.cellSpacing);
-			
-			// If the sum of column width wider than table width,
-			// we set every column width to average column width
-			if ( columnTotalWidth - logicalWidth > 1 )
-			{
-				var avgColumnWidth:Number = logicalWidth / table.column;
-				for ( var m:int = 0; m < table.column; m ++ )
-				{
-					table.setColumnWidth(m, avgColumnWidth);
-					table.getColumnAt(m).x = table.getEffectiveBorderLeftWidth() + table.computedFormat.marginLeft 
-						+ (m+1)*table.computedFormat.cellSpacing + m * avgColumnWidth;
-				}
-			} 
-			// if the sum of column width less than table width, we enlarge the last column's width to fit table width
-			else if ( columnTotalWidth < logicalWidth ) 
-			{
-				var orgWidth:Number = table.getColumnWidth(table.column - 1);
-				table.setColumnWidth(table.column - 1, orgWidth + logicalWidth - columnTotalWidth);
-			}
-		}
-		*/
 		/**
 		 * Compose the flow into the text container. Starts at the root element,
 		 * and composes elements until either there are no more elements, or the

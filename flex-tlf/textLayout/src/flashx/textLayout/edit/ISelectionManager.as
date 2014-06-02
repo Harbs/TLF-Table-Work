@@ -75,7 +75,15 @@ package flashx.textLayout.edit
 		
 		function getCellRange():CellRange;
 		function setCellRange(range:CellRange):void;
+
+		/** Anchor point of the current cell selection, as coordinates within the table. */
+		function get anchorCellPosition():CellCoordinates;
+		function set anchorCellPosition(value:CellCoordinates):void;
 		
+		/** Active end of the current cell selection, as coordinates within the table. */
+		function get activeCellPosition():CellCoordinates;
+		function set activeCellPosition(value:CellCoordinates):void;
+
 		/** 
 		 * The text position of the start of the selection, as an offset from the start of the text flow.
 		 *  
@@ -435,6 +443,25 @@ package flashx.textLayout.edit
  	 	 * @langversion 3.0
 		 */
 		function notifyInsertOrDelete(absolutePosition:int, length:int):void		 
-		 	
+		 
+		/**
+		 * The ISelectionManager object used to for cell selections nested within the TextFlow managed by this ISelectionManager.
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */		 		 
+		function get subManager():ISelectionManager;
+		function set subManager(value:ISelectionManager):void;
+		
+		/**
+		 * The ISelectionManager object used to manage the parent TextFlow of this ISelectionManager (i.e. for cell ISelectionManagers).
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */		 		 
+		function get superManager():ISelectionManager;
+		function set superManager(value:ISelectionManager):void;
 	}
 }
