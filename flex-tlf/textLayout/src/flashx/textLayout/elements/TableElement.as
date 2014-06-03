@@ -963,8 +963,8 @@ package flashx.textLayout.elements
 		 **/
 		public function getCellsInRange(anchorCoords:CellCoordinates, activeCoords:CellCoordinates, block:TextFlowTableBlock=null):Vector.<TableCellElement>
 		{
-			var firstCoords:CellCoordinates = anchorCoords;
-			var lastCoords:CellCoordinates = activeCoords;
+			var firstCoords:CellCoordinates = anchorCoords.clone();
+			var lastCoords:CellCoordinates = activeCoords.clone();
 			if(
 				activeCoords.row < anchorCoords.row ||
 				(activeCoords.row == anchorCoords.row && activeCoords.column < anchorCoords.column)
@@ -972,6 +972,14 @@ package flashx.textLayout.elements
 			{
 				firstCoords = activeCoords;
 				lastCoords = anchorCoords;
+			}
+			
+			// make sure the rectangle is not inversed
+			if(lastCoords.column < firstCoords.column)
+			{
+				var col:int = firstCoords.column;
+				firstCoords.column = lastCoords.column;
+				lastCoords.column = col;
 			}
 			var firstCell:TableCellElement = findCell(firstCoords);
 			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
