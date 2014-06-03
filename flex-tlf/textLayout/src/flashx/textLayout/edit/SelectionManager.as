@@ -169,11 +169,13 @@ package flashx.textLayout.edit
 		
 		public function selectCellRange(anchorCoords:CellCoordinates,activeCoords:CellCoordinates):void
 		{
-			clear();
+			if(selectionType == SelectionType.TEXT)
+				clear();
 			_cellRange = new CellRange(_currentTable,anchorCoords,activeCoords);
 			var blocks:Vector.<TextFlowTableBlock> = _currentTable.getTableBlocksInRange(anchorCoords,activeCoords);
 			for each(var block:TextFlowTableBlock in blocks)
 			{
+				block.controller.clearSelectionShapes();
 				block.controller.addCellSelectionShapes(currentCellSelectionFormat.rangeColor, block, anchorCoords, activeCoords);
 			}
 			// do something about actually drawing the selection.
