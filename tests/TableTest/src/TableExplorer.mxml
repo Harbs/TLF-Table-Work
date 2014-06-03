@@ -20,6 +20,7 @@
 			paddingLeft: 4;
 			paddingRight: 4;
 		}
+		
 	</fx:Style>
 	
 	<fx:Declarations>
@@ -130,9 +131,11 @@
 			public function addTable(rows:int = 1, columns:int = 1, selectable:Boolean = false, editable:Boolean = false):TableElement {
 				var table:TableElement = new TableElement();
 				var cell:TableCellElement;
-				var option:Boolean;
+				var createTable:int = 2;
+				var i:int;
 				
-				if (option) {
+				
+				if (createTable==0) {
 					cell = new TableCellElement();
 					cell.textFlow = getTextFlowContent(null, selectable, editable);
 					cell.colIndex = 0;
@@ -143,13 +146,25 @@
 					table.addChild(cell);
 					textFlow.addChild(table);
 				}
-				else {
+				// add table rows
+				else if (createTable==1) {
 					table.numColumns = columns;
 					textFlow.addChild(table);
 					
-					for (var i:int = 0; i < rows; i++) {
+					for (i=0;i<rows;i++) {
 						addRow(false);
 					}
+				}
+				// insert table rows
+				else if (createTable==2) {
+					table.numColumns = columns;
+					
+					for (i=0;i<rows;i++) {
+						table.insertRow();
+					}
+					
+					textFlow.addChild(table);
+					
 				}
 				
 				updateAllControllers();
@@ -200,11 +215,13 @@
 			 **/
 			public function addColumn():TableColElement {
 				var table:TableElement = getTable();
-				var columnIndex:int = table.numColumns;
+				var columnIndex:int;
 				
 				if (!table) {
 					table = addTable();
 				}
+				
+				columnIndex = table.numColumns;
 				
 				table.addColumn();
 				

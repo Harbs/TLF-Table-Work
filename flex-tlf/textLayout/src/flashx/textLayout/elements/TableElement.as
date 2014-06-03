@@ -357,9 +357,14 @@ package flashx.textLayout.elements
 			var blockedCoords:Vector.<CellCoords> = getBlockedCoords(idx);
 			var cellIdx:int = getCellIndex(idx,0);
 			var colIdx:int = 0;
+			
+			if (cells==null) cells = [];
+			
+			// create more cells 
 			while(cells.length < numColumns){
 				cells.push(new TableCellElement());
 			}
+			
 			for each(var cell:TableCellElement in cells){
 				while(blockedCoords.length && blockedCoords[0].column == colIdx){
 					colIdx++;
