@@ -314,6 +314,9 @@ package flashx.textLayout.elements
 			var blockedCoords:Vector.<CellCoords> = getBlockedCoords(-1,idx);
 			var cellIdx:int = getCellIndex(0,idx);
 			var rowIdx:int = 0;
+			
+			if (cells==null) cells = []; 
+			
 			while(cells.length < numRows){
 				cells.push(new TableCellElement());
 			}
