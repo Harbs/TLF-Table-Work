@@ -44,6 +44,7 @@ package flashx.textLayout.edit
     
     import flashx.textLayout.compose.IFlowComposer;
     import flashx.textLayout.compose.TextFlowLine;
+    import flashx.textLayout.compose.TextFlowTableBlock;
     import flashx.textLayout.container.ColumnState;
     import flashx.textLayout.container.ContainerController;
     import flashx.textLayout.debug.Debugging;
@@ -170,6 +171,11 @@ package flashx.textLayout.edit
 		{
 			clear();
 			_cellRange = new CellRange(_currentTable,anchorCoords,activeCoords);
+			var blocks:Vector.<TextFlowTableBlock> = _currentTable.getTableBlocksInRange(anchorCoords,activeCoords);
+			for each(var block:TextFlowTableBlock in blocks)
+			{
+				block.controller.addCellSelectionShapes(currentCellSelectionFormat.rangeColor, block, anchorCoords, activeCoords);
+			}
 			// do something about actually drawing the selection.
 		}
 		
@@ -296,8 +302,45 @@ package flashx.textLayout.edit
          * @langversion 3.0
          */
         public function hasSelection():Boolean
-        { return anchorMark.position != -1; }
+        {
+			return selectionType == SelectionType.TEXT;
+		}
 
+		/**
+		 *  @copy ISelectionManager#hasAnySelection()
+		 * 
+		 * @includeExample examples\SelectionManager_hasSelection.as -noswf
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		public function hasAnySelection():Boolean
+		{
+			return selectionType != SelectionType.NONE;
+		}
+
+		/**
+		 * Indicates the type of selection. 
+		 * 
+		 * <p>The <code>selectionType</code> describes the kind of selection. 
+		 * It can either be <code>SelectionType.TEXT</code> or <code>SelectionType.CELLS</code>
+		 * 
+		 * @see flashx.textLayout.edit.SelectionType
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		public function get selectionType() : String
+		{
+			if(anchorMark.position != -1)
+				return SelectionType.TEXT;
+			else if(anchorCellPosition.isValid())
+				return SelectionType.CELLS;
+			
+			return SelectionType.NONE;
+		}
         /** 
          *  @copy ISelectionManager#isRangeSelection()
          * 
@@ -1509,10 +1552,10 @@ package flashx.textLayout.edit
 					var coords:CellCoordinates = new CellCoordinates(cell.rowIndex,cell.colIndex);
 					if(
 						!CellCoordinates.areEqual(coords,superManager.anchorCellPosition) ||
-						!superManager.activeCellPosition.outOfBounds()
+						superManager.activeCellPosition.isValid()
 					){
+						superManager.selectCellRange(superManager.anchorCellPosition,coords);
 						superManager.subManager = null;
-						superManager.selectCellRange(superManager.anchorCellPosition,superManager.activeCellPosition);
 						allowOperationMerge = false;
 						event.stopPropagation();
 						return;

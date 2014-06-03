@@ -3,7 +3,9 @@ package flashx.textLayout.compose
 	
 	import flash.text.engine.TextLine;
 	
+	import flashx.textLayout.container.ContainerController;
 	import flashx.textLayout.elements.CellContainer;
+	import flashx.textLayout.elements.CellCoordinates;
 	import flashx.textLayout.elements.ParagraphElement;
 	import flashx.textLayout.elements.TableBlockContainer;
 	import flashx.textLayout.elements.TableCellElement;
@@ -39,6 +41,12 @@ package flashx.textLayout.compose
 			_container.userData = this;
 			super.initialize(paragraph, outerTargetWidth, lineOffset, absoluteStart, numChars, textLine);
 		}
+		override tlf_internal function setController(cont:ContainerController,colNumber:int):void
+		{
+			super.setController(cont, colNumber);
+			controller.addComposedTableBlock(container);
+		}
+
 		
 		/**
 		 * The table that owns this table block
@@ -66,6 +74,16 @@ package flashx.textLayout.compose
 				_cells = [];
 			}
 			return _cells;
+		}
+		
+		/**
+		 * Returns a vector of table cell elements in the given cell range. 
+		 **/
+		public function getCellsInRange(anchorCoords:CellCoordinates,activeCoords:CellCoordinates):Vector.<TableCellElement>
+		{
+			if(!parentTable)
+				return null;
+			return parentTable.getCellsInRange(anchorCoords,activeCoords,this);
 		}
 		
 		/**
