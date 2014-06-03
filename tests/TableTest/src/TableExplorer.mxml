@@ -20,6 +20,10 @@
 			paddingLeft: 4;
 			paddingRight: 4;
 		}
+		
+		s|NumericStepper {
+			focusThickness: 0;
+		}
 	</fx:Style>
 	
 	<fx:Declarations>
@@ -46,10 +50,10 @@
 			import flash.text.engine.TextLine;
 			import flash.utils.ByteArray;
 			
-			import flashx.textLayout.TextLayoutVersion;
-			import flashx.textLayout.compose.TextFlowTableBlock;
+			import mx.core.mx_internal;
 			
-			import mx.core.mx_internal;ByteArray
+			import flashx.textLayout.TextLayoutVersion;
+			import flashx.textLayout.compose.TextFlowTableBlock;ByteArray
 			
 			import flashx.textLayout.formats.TextLayoutFormat;TextLayoutFormat
 			
@@ -100,6 +104,8 @@
 			public var controller:ContainerController;
 			public var tableData:String;
 			
+			public var tableNotCreatedError:String = "Create the table before calling this method";
+			
 			// embed table test
 			[Embed(source="data/tableExample.xml",mimeType="application/octet-stream")]
 			private var TableExample:Class;
@@ -130,9 +136,11 @@
 			public function addTable(rows:int = 1, columns:int = 1, selectable:Boolean = false, editable:Boolean = false):TableElement {
 				var table:TableElement = new TableElement();
 				var cell:TableCellElement;
-				var option:Boolean;
+				var createTableMethod:int = 1;
+				var i:int;
 				
-				if (option) {
+				
+				if (createTableMethod==0) {
 					cell = new TableCellElement();
 					cell.textFlow = getTextFlowContent(null, selectable, editable);
 					cell.colIndex = 0;
@@ -143,13 +151,26 @@
 					table.addChild(cell);
 					textFlow.addChild(table);
 				}
-				else {
+				// add table rows
+				else if (createTableMethod==1) {
 					table.numColumns = columns;
+					
+					for (i=0;i<rows;i++) {
+						addRow(table, false);
+					}
+					
+					textFlow.addChild(table);
+				}
+				// insert table rows
+				else if (createTableMethod==2) {
+					table.numColumns = columns;
+					
+					for (i=0;i<rows;i++) {
+						table.insertRow();
+					}
+					
 					textFlow.addChild(table);
 					
-					for (var i:int = 0; i < rows; i++) {
-						addRow(false);
-					}
 				}
 				
 				updateAllControllers();
@@ -158,13 +179,33 @@
 			}
 			
 			/**
-			 * Adds a row to the table
+			 * Inserts a row into the table. Creates the cells automatically.
 			 **/
-			public function addRow(updateControllers:Boolean = true):TableRowElement {
-				var table:TableElement = getTable();
+			public function insertRow(table:TableElement, updateControllers:Boolean = true):TableRowElement {
+				var rowIndex:int;
 				
 				if (!table) {
-					table = addTable();
+					textFlowMarkupErrors.text = tableNotCreatedError;
+					return null;
+				}
+				
+				rowIndex = table.numRows - 1;
+				
+				table.insertRow();
+				
+				updateAllControllers();
+				
+				return table.getRowAt(rowIndex);
+			}
+			
+			/**
+			 * Adds a row to the table. Cells are created and added manually. 
+			 **/
+			public function addRow(table:TableElement, updateControllers:Boolean = true):TableRowElement {
+				
+				if (!table) {
+					textFlowMarkupErrors.text = tableNotCreatedError;
+					return null;
 				}
 				
 				table.addRow();
@@ -196,17 +237,43 @@
 			}
 			
 			/**
-			 * Adds a column to the table
+			 * Adds a column to the table. 
+			 * TODO Cells must be added manually. 
 			 **/
-			public function addColumn():TableColElement {
-				var table:TableElement = getTable();
-				var columnIndex:int = table.numColumns;
+			public function addColumn(table:TableElement):TableColElement {
+				var columnIndex:int;
 				
 				if (!table) {
-					table = addTable();
+					textFlowMarkupErrors.text = tableNotCreatedError;
+					return null;
 				}
 				
+				columnIndex = table.numColumns;
+				
+				// add column does not add cells
 				table.addColumn();
+				
+				updateAllControllers();
+				
+				return table.getColumnAt(columnIndex);
+			}
+			
+			/**
+			 * Inserts a column to the table. Cells are adding automatically.
+			 **/
+			public function insertColumn(table:TableElement):TableColElement {
+				var columnIndex:int;
+				
+				if (!table) {
+					textFlowMarkupErrors.text = tableNotCreatedError;
+					return null;
+				}
+				
+				columnIndex = table.numColumns;
+				
+				// add column does not add cells
+				//table.addColumn();
+				table.insertColumn();
 				
 				updateAllControllers();
 				
@@ -216,47 +283,57 @@
 			/**
 			 * Remove the selected table or last table in the text flow
 			 **/
-			public function removeTable():TableElement {
-				var table:TableElement = getTable();
+			public function removeTable(table:TableElement):void {
 				
-				if (table) {
-					textFlow.removeChild(table);
+				if (!table) {
+					textFlowMarkupErrors.text = tableNotCreatedError;
+					return;
 				}
 				
+				textFlow.removeChild(table);
+				
 				updateAllControllers();
-				return table;
+				
 			}
 			
 			/**
 			 * Removes the selected row or the last row in the table
 			 **/
-			public function removeRow():TableRowElement {
-				var table:TableElement = getTable();
-				var rowElement:TableRowElement;
+			public function removeRow(table:TableElement):Array {
+				var rowElements:Array;
 				
-				if (table) {
-					rowElement = table.removeRowAt(table.numRows - 1);
+				if (!table) {
+					textFlowMarkupErrors.text = tableNotCreatedError;
+					return null;
 				}
+				
+				// removeRowAt does not remove cells - using remove row with content
+				//rowElement = table.removeRowAt(table.numRows - 1);
+				rowElements = table.removeRowWithContentAt(table.numRows - 1);
 				
 				updateAllControllers();
 				
-				return rowElement;
+				return rowElements;
 			}
 			
 			/**
 			 * Removes the selected column or last column in the table
 			 **/
-			public function removeColumn():TableColElement {
-				var table:TableElement = getTable();
-				var columnElement:TableColElement;
+			public function removeColumn(table:TableElement):Array {
+				var columnElements:Array;
 				
-				if (table) {
-					columnElement = table.removeColumnAt(table.numColumns - 1) as TableColElement;
+				if (!table) {
+					textFlowMarkupErrors.text = tableNotCreatedError;
+					return null;
 				}
+				
+				// removeColumnAt does not remove cells - using remove column with content
+				//columnElement = table.removeColumnAt(table.numColumns - 1) as TableColElement;
+				columnElements = table.removeColumnWithContentAt(table.numColumns - 1);
 				
 				updateAllControllers();
 				
-				return columnElement;
+				return columnElements;
 			}
 			
 			/**
@@ -903,17 +980,57 @@
 					tableHeight.text = String(table.getFirstBlock().height);
 					tableBlocks.text = table.tableBlocks ? String(table.tableBlocks.length) : "";
 					tableCells.text = String(table.numCells);
-					tableRows.text = String(table.numRows);
-					tableColumns.text = String(table.numColumns);
+					tableRowsStepper.value = table.numRows;
+					tableColumnsStepper.value = table.numColumns;
 				}
 				else {
 					tableWidth.text = "";
 					tableHeight.text = "";
 					tableBlocks.text = "";
 					tableCells.text = "";
-					tableRows.text = "";
-					tableColumns.text = "";
+					tableRowsStepper.value = 0;
+					tableColumnsStepper.value = 0;
 				}
+			}
+			
+			protected function tableRowsStepper_changeHandler(event:Event):void
+			{
+				var table:TableElement = getTable();
+				
+				if (table) {
+					// this adds the row but not the cells
+					//table.numRows = tableRowsStepper.value;
+					//updateAllControllers();
+					
+					if (tableRowsStepper.value<table.numRows) {
+						removeRow(table);
+					}
+					else {
+						//addRow(table);
+						insertRow(table);
+					}
+				}
+				
+			}
+			
+			protected function tableColumnStepper_changeHandler(event:Event):void
+			{
+				var table:TableElement = getTable();
+				
+				if (table) {
+					// this adds the row but not the cells
+					//table.numColumns = tableColumnsStepper.value;
+					//updateAllControllers();
+					
+					if (tableColumnsStepper.value<table.numColumns) {
+						removeColumn(table);
+					}
+					else {
+						insertColumn(table);
+					}
+					
+				}
+				
 			}
 			
 		]]>
@@ -929,6 +1046,20 @@
 						 />					
 			</s:HGroup>  
 			<s:BorderContainer id="group" width="100%" height="100%" minHeight="250"/>
+			<s:HGroup minHeight="22" verticalAlign="middle">
+				<s:Label text="Width:" paddingLeft="10" />
+				<s:Label id="tableWidth" />
+				<s:Label text="Height:" />
+				<s:Label id="tableHeight" />
+				<s:Label text="Rows:" />
+				<s:NumericStepper id="tableRowsStepper" change="tableRowsStepper_changeHandler(event)"/>
+				<s:Label text="Columns:" />
+				<s:NumericStepper id="tableColumnsStepper" change="tableColumnStepper_changeHandler(event)"/>
+				<s:Label text="Total Cells:" />
+				<s:Label id="tableCells" />
+				<s:Label text="Blocks:" />
+				<s:Label id="tableBlocks" />
+			</s:HGroup>
 			<s:Label text="TextFlow Markup" width="100%" styleName="header"/>
 			<s:TextArea id="textFlowMarkup" width="100%" height="100%" 
 						focusThickness="0" change="textFlowMarkup_changeHandler(event)"/>
@@ -945,15 +1076,15 @@
 				<mx:LinkButton label="Editable Table" click="addTable(3, 3, false, true)"/>
 			</s:HGroup>
 			<s:HGroup>
-				<mx:LinkButton label="Row" click="addRow()"/>
-				<mx:LinkButton label="Column" click="addColumn()"/>
+				<mx:LinkButton label="Row" click="addRow(getTable())"/>
+				<mx:LinkButton label="Column" click="addColumn(getTable())"/>
 				<mx:LinkButton label="Paragraph" click="addParagraph()"/>
 			</s:HGroup>
 			<s:Label text="Remove Elements" width="100%" styleName="header"/>
 			<s:HGroup>
-				<mx:LinkButton label="Table" click="removeTable()"/>
-				<mx:LinkButton label="Row" click="removeRow()"/>
-				<mx:LinkButton label="Column" click="removeColumn()"/>
+				<mx:LinkButton label="Table" click="removeTable(getTable())"/>
+				<mx:LinkButton label="Row" click="removeRow(getTable())"/>
+				<mx:LinkButton label="Column" click="removeColumn(getTable())"/>
 				<mx:LinkButton label="Paragraph" />
 				<mx:LinkButton label="Span" />
 				<mx:LinkButton label="Shapes" click="removeShapes()"/>
@@ -986,21 +1117,6 @@
 				<mx:LinkButton label="Join Cells" click="joinCells()"/>
 				<mx:LinkButton label="Select Range" click="selectRange()"/>
 				<mx:LinkButton label="Update all controllers" click="updateAllControllers()"/>
-			</s:HGroup>
-			<s:Label text="Table Information" width="100%" styleName="header"/>
-			<s:HGroup minHeight="22" verticalAlign="middle">
-				<s:Label text="Width:" paddingLeft="10" />
-				<s:Label id="tableWidth" /> 
-				<s:Label text="Height:" />
-				<s:Label id="tableHeight" />
-				<s:Label text="Rows:" />
-				<s:Label id="tableRows" />
-				<s:Label text="Columns:" />
-				<s:Label id="tableColumns" />
-				<s:Label text="Total Cells:" />
-				<s:Label id="tableCells" />
-				<s:Label text="Blocks:" />
-				<s:Label id="tableBlocks" />
 			</s:HGroup>
 			<s:Label text="Version Information" width="100%" styleName="header"/>
 			<s:HGroup minHeight="22" verticalAlign="middle">
