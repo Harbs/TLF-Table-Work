@@ -47,6 +47,11 @@ package flashx.textLayout.elements
 		{
 			return column > -1 && row > -1;
 		}
+		
+		public function clone():CellCoordinates
+		{
+			return new CellCoordinates(row,column);
+		}
 
 	}
 }

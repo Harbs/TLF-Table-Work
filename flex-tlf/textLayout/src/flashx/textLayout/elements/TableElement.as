@@ -1072,24 +1072,24 @@ package flashx.textLayout.elements
 		
 		public function getTableBlocksInRange(start:CellCoordinates,end:CellCoordinates):Vector.<TextFlowTableBlock>
 		{
+			var coords:CellCoordinates = start.clone();
 			if(end.column < start.column)
 			{
-				var temp:CellCoordinates = start;
-				start = end;
-				end = temp;
+				coords = end.clone();
+				end = start;
 			}
 			var blocks:Vector.<TextFlowTableBlock> = new Vector.<TextFlowTableBlock>();
-			var block:TextFlowTableBlock = getCellBlock(findCell(start));
+			var block:TextFlowTableBlock = getCellBlock(findCell(coords));
 			if(block)
 				blocks.push(block);
 			while(block)
 			{
-				start.row++;
-				if(start.row > end.row)
+				coords.row++;
+				if(coords.row > end.row)
 					break;
-				if(getCellBlock(findCell(start)) == block)
+				if(getCellBlock(findCell(coords)) == block)
 					continue;
-				block = getCellBlock(findCell(start));
+				block = getCellBlock(findCell(coords));
 				if(block)
 					blocks.push(block);
 			}
