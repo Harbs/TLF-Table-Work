@@ -983,6 +983,9 @@ package flashx.textLayout.elements
 				var nextCell:TableCellElement = mxmlChildren[idx];
 				if(nextCell.rowIndex > lastCoords.row || (nextCell.rowIndex == lastCoords.row && nextCell.colIndex > lastCoords.column))
 					break;
+				// skip cells outside rectangle
+				if(nextCell.colIndex > lastCoords.column || nextCell.colIndex < firstCoords.column)
+					continue;
 				if(!block || getCellBlock(nextCell) == block)
 					cells.push(nextCell);				
 			}
