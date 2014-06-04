@@ -24,6 +24,10 @@
 		s|NumericStepper {
 			focusThickness: 0;
 		}
+		
+		.buttonGroup {
+			fontSize: 12;
+		}
 	</fx:Style>
 	
 	<fx:Declarations>
@@ -105,6 +109,7 @@
 			public var tableData:String;
 			
 			public var tableNotCreatedError:String = "Create the table before calling this method";
+			public var notImplementedMessage:String = "Not yet implemented";
 			
 			// embed table test
 			[Embed(source="data/tableExample.xml",mimeType="application/octet-stream")]
@@ -185,7 +190,7 @@
 				var rowIndex:int;
 				
 				if (!table) {
-					textFlowMarkupErrors.text = tableNotCreatedError;
+					updateErrorsText(tableNotCreatedError);
 					return null;
 				}
 				
@@ -204,7 +209,7 @@
 			public function addRow(table:TableElement, updateControllers:Boolean = true):TableRowElement {
 				
 				if (!table) {
-					textFlowMarkupErrors.text = tableNotCreatedError;
+					updateErrorsText(tableNotCreatedError);
 					return null;
 				}
 				
@@ -224,7 +229,8 @@
 					
 					cell.colIndex = i;
 					cell.rowIndex = rowIndex;
-					cell.textFlow = getTextFlowContent("R " + rowIndex + " C " + cell.colIndex, selectable, editable);
+					//cell.textFlow = getTextFlowContent("R " + rowIndex + " C " + cell.colIndex, selectable, editable);
+					cell.textFlow = getTextFlowContent(String(table.numChildren+1), selectable, editable);
 					
 					table.addChild(cell);
 				}
@@ -244,7 +250,7 @@
 				var columnIndex:int;
 				
 				if (!table) {
-					textFlowMarkupErrors.text = tableNotCreatedError;
+					updateErrorsText(tableNotCreatedError);
 					return null;
 				}
 				
@@ -265,7 +271,7 @@
 				var columnIndex:int;
 				
 				if (!table) {
-					textFlowMarkupErrors.text = tableNotCreatedError;
+					updateErrorsText(tableNotCreatedError);
 					return null;
 				}
 				
@@ -286,7 +292,7 @@
 			public function removeTable(table:TableElement):void {
 				
 				if (!table) {
-					textFlowMarkupErrors.text = tableNotCreatedError;
+					updateErrorsText(tableNotCreatedError);
 					return;
 				}
 				
@@ -303,7 +309,7 @@
 				var rowElements:Array;
 				
 				if (!table) {
-					textFlowMarkupErrors.text = tableNotCreatedError;
+					updateErrorsText(tableNotCreatedError);
 					return null;
 				}
 				
@@ -323,7 +329,7 @@
 				var columnElements:Array;
 				
 				if (!table) {
-					textFlowMarkupErrors.text = tableNotCreatedError;
+					updateErrorsText(tableNotCreatedError);
 					return null;
 				}
 				
@@ -346,6 +352,8 @@
 					
 				}
 				
+				updateErrorsText(notImplementedMessage);
+				
 				return null;
 			}
 			
@@ -358,6 +366,8 @@
 				if (table) {
 					
 				}
+				
+				updateErrorsText(notImplementedMessage);
 				
 				return null;
 			}
@@ -372,6 +382,23 @@
 					
 				}
 				
+				updateErrorsText(notImplementedMessage);
+				
+				return null;
+			}
+			
+			/**
+			 * Selects the table
+			 **/
+			public function selectTable(rowIndex:int = 0):TableElement {
+				var table:TableElement = getTable();
+				
+				if (table) {
+					
+				}
+				
+				updateErrorsText(notImplementedMessage);
+				
 				return null;
 			}
 			
@@ -384,6 +411,8 @@
 				if (table) {
 					
 				}
+				
+				updateErrorsText(notImplementedMessage);
 				
 				return null;
 			}
@@ -398,6 +427,8 @@
 					
 				}
 				
+				updateErrorsText(notImplementedMessage);
+				
 				return null;
 			}
 			
@@ -407,13 +438,26 @@
 			 *****************************************************/
 			
 			/**
+			 * Table block areas
+			 **/
+			public function showTextBlocksBounds():void
+			{
+				var table:TableElement = getTable();
+				
+				if (!table) {
+					textFlowMarkupErrors.text = notImplementedMessage;
+					return;
+				}
+			}
+			
+			/**
 			 * So the text line bounds. 
 			 * There are a few types of fills and they all seem to differ. 
 			 * There is: 
 			 * - background color fill style created by the BackgroundManager. see addParagraph()
 			 * - selection fill. select some text
 			 * - this fill method based on what I found online
-			 * - Label background fill. I don't think it uses BackgroundManager. 
+			 * - Label background fill. 
 			 **/
 			public function showTextLineBounds():void
 			{
@@ -935,14 +979,6 @@
 			}
 			
 			/**
-			 * 
-			 **/
-			public function notImplemented():void
-			{
-				Alert.show("Not implemented", "Message");
-			}
-			
-			/**
 			 * Exports the text flow markup and reports any errors.
 			 * Changes can be overwritten when using inline graphics
 			 **/
@@ -968,8 +1004,17 @@
 			/**
 			 * Adds errors during export or import to the errors text box
 			 **/
-			public function updateErrorsText(errors:Vector.<String>):void {
-				textFlowMarkupErrors.text = errors ? errors.join("\n") : null;
+			public function updateErrorsText(errors:*):void {
+				
+				if (errors is Vector) {
+					textFlowMarkupErrors.text = errors ? errors.join("\n") : null;
+				}
+				else if (errors is String) {
+					textFlowMarkupErrors.text = errors;
+				}
+				else {
+					textFlowMarkupErrors.text = "";
+				}
 			}
 			
 			private function updateTableInformation():void {
@@ -1006,8 +1051,8 @@
 						removeRow(table);
 					}
 					else {
-						//addRow(table);
-						insertRow(table);
+						addRow(table);
+						//insertRow(table);
 					}
 				}
 				
@@ -1026,11 +1071,26 @@
 						removeColumn(table);
 					}
 					else {
-						insertColumn(table);
+						addColumn(table);
+						//insertColumn(table);
 					}
 					
 				}
 				
+			}
+			
+			protected function tableWidth_changeHandler(event:TextOperationEvent):void
+			{
+				var table:TableElement = getTable();
+				
+				if (!table) {
+					updateErrorsText(tableNotCreatedError);
+					return;
+				}
+					
+				table.width = Number(tableWidth.text);
+				
+				updateAllControllers();
 			}
 			
 		]]>
@@ -1043,18 +1103,23 @@
 				<s:Label text="clear" click="clearTextFlow()" 
 						 styleName="header" 
 						 useHandCursor="true" buttonMode="true"
-						 />					
-			</s:HGroup>  
+						 />
+			</s:HGroup>
 			<s:BorderContainer id="group" width="100%" height="100%" minHeight="250"/>
 			<s:HGroup minHeight="22" verticalAlign="middle">
-				<s:Label text="Width:" paddingLeft="10" />
-				<s:Label id="tableWidth" />
+				<s:Image source="assets/images/addTableIcons.png"
+						 toolTip="Add Table"
+						 click="addTable(3, 3)" useHandCursor="true" buttonMode="true"/>
+				<s:Image toolTip="Remove Table"
+						 source="assets/images/subtractTableIcons.png" click="removeTable(getTable())" useHandCursor="true" buttonMode="true"/>
+				<s:Image toolTip="Rows" source="assets/images/rowsIcon.png" />
+				<s:NumericStepper id="tableRowsStepper" change="tableRowsStepper_changeHandler(event)"/>
+				<s:Image toolTip="Columns" source="assets/images/columnsIcon.png" />
+				<s:NumericStepper id="tableColumnsStepper" change="tableColumnStepper_changeHandler(event)"/>
+				<s:Label text="Width:" paddingLeft="10"/>
+				<s:TextInput id="tableWidth" width="50" change="tableWidth_changeHandler(event)"/>
 				<s:Label text="Height:" />
 				<s:Label id="tableHeight" />
-				<s:Label text="Rows:" />
-				<s:NumericStepper id="tableRowsStepper" change="tableRowsStepper_changeHandler(event)"/>
-				<s:Label text="Columns:" />
-				<s:NumericStepper id="tableColumnsStepper" change="tableColumnStepper_changeHandler(event)"/>
 				<s:Label text="Total Cells:" />
 				<s:Label id="tableCells" />
 				<s:Label text="Blocks:" />
@@ -1068,55 +1133,54 @@
 			<s:TextArea id="textFlowMarkupErrors" width="100%" height="30%" color="red"
 						/>
 		</s:VGroup>
-		<s:VGroup width="100%" height="100%">
-			<s:Label text="Add Elements" width="100%" styleName="header"/>
-			<s:HGroup>
-				<mx:LinkButton label="Table" click="addTable(3, 3)"/>
-				<mx:LinkButton label="Selectable Table" click="addTable(3, 3, true)"/>
-				<mx:LinkButton label="Editable Table" click="addTable(3, 3, false, true)"/>
+		<s:VGroup width="100%" height="100%" >
+			<s:Label text="Elements" width="100%" styleName="header"/>
+			<s:HGroup styleName="buttonGroup">
+				<mx:LinkButton label="Add Table" click="addTable(3, 3)"/>
+				<mx:LinkButton label="Add Selectable Table" click="addTable(3, 3, true)"/>
+				<mx:LinkButton label="Add Editable Table" click="addTable(3, 3, false, true)"/>
+				<mx:LinkButton label="Remove Table" click="removeTable(getTable())"/>
 			</s:HGroup>
 			<s:HGroup>
-				<mx:LinkButton label="Row" click="addRow(getTable())"/>
-				<mx:LinkButton label="Column" click="addColumn(getTable())"/>
-				<mx:LinkButton label="Paragraph" click="addParagraph()"/>
+				<mx:LinkButton label="Add Row" click="addRow(getTable())"/>
+				<mx:LinkButton label="Remove Row" click="removeRow(getTable())"/>
+				<mx:LinkButton label="Add Column" click="addColumn(getTable())"/>
+				<mx:LinkButton label="Remove Column" click="removeColumn(getTable())"/>
 			</s:HGroup>
-			<s:Label text="Remove Elements" width="100%" styleName="header"/>
 			<s:HGroup>
-				<mx:LinkButton label="Table" click="removeTable(getTable())"/>
-				<mx:LinkButton label="Row" click="removeRow(getTable())"/>
-				<mx:LinkButton label="Column" click="removeColumn(getTable())"/>
-				<mx:LinkButton label="Paragraph" />
-				<mx:LinkButton label="Span" />
-				<mx:LinkButton label="Shapes" click="removeShapes()"/>
-				<mx:LinkButton label="All" click="clearTextFlow()"/>
+				<mx:LinkButton label="Add Paragraph" click="addParagraph()"/>
+				<mx:LinkButton label="Remove Paragraph" />
+				<mx:LinkButton label="Remove Shapes" click="removeShapes()"/>
+				<mx:LinkButton label="Remove All" click="clearTextFlow()"/>
 			</s:HGroup>
-			<s:Label text="Select Elements" width="100%" styleName="header"/>
+			<s:Label text="Selection" width="100%" styleName="header"/>
 			<s:HGroup>
-				<mx:LinkButton label="Table" click="selectRange()"/>
-				<mx:LinkButton label="Row" click="selectRow()"/>
-				<mx:LinkButton label="Column" click="selectColumn()"/>
-				<mx:LinkButton label="Cell" click="selectCell()"/>
-				<mx:LinkButton label="Cells" click="selectCells()"/>
-			</s:HGroup>
-			<s:Label text="Show Boundaries" width="100%" styleName="header"/>
-			<s:HGroup>
-				<mx:LinkButton label="Paragraph" click="showParagraphBounds()"/>
-				<mx:LinkButton label="Table" click="showTableBounds()"/>
-				<mx:LinkButton label="Parcels" click="showParcelBounds()"/>
-				<mx:LinkButton label="TextLines" click="showTextLineBounds()"/>
-				<mx:LinkButton label="Atoms" click="showAtomBounds()"/>
-			</s:HGroup>
-			<s:Label text="Import" width="100%" styleName="header"/>
-			<s:HGroup>
-				<mx:LinkButton label="Table" click="importToFlow(tableData)"/>
-				<mx:LinkButton label="Simple TextFlow" click="importToFlow(simpleTextMarkup)"/>
-				<mx:LinkButton label="Complex TextFlow" click="importToFlow(complexTextFlow)"/>
+				<mx:LinkButton label="Select Table" click="selectTable()"/>
+				<mx:LinkButton label="Select Row" click="selectRow()"/>
+				<mx:LinkButton label="Select Column" click="selectColumn()"/>
+				<mx:LinkButton label="Select Cell" click="selectCell()"/>
+				<mx:LinkButton label="Select Cells" click="selectCells()"/>
 			</s:HGroup>
 			<s:Label text="Misc" width="100%" styleName="header"/>
 			<s:HGroup>
 				<mx:LinkButton label="Join Cells" click="joinCells()"/>
 				<mx:LinkButton label="Select Range" click="selectRange()"/>
 				<mx:LinkButton label="Update all controllers" click="updateAllControllers()"/>
+			</s:HGroup>
+			<s:Label text="Boundaries" width="100%" styleName="header"/>
+			<s:HGroup>
+				<mx:LinkButton label="Table" click="showTableBounds()"/>
+				<mx:LinkButton label="TableBlocks" click="showTextBlocksBounds()"/>
+				<mx:LinkButton label="TextLines" click="showTextLineBounds()"/>
+				<mx:LinkButton label="Paragraph" click="showParagraphBounds()"/>
+				<mx:LinkButton label="Parcels" click="showParcelBounds()"/>
+				<mx:LinkButton label="Atoms" click="showAtomBounds()"/>
+			</s:HGroup>
+			<s:Label text="Import Text Flows" width="100%" styleName="header"/>
+			<s:HGroup>
+				<mx:LinkButton label="Simple Table TextFlow" click="importToFlow(tableData)"/>
+				<mx:LinkButton label="Simple TextFlow" click="importToFlow(simpleTextMarkup)"/>
+				<mx:LinkButton label="Complex TextFlow" click="importToFlow(complexTextFlow)"/>
 			</s:HGroup>
 			<s:Label text="Version Information" width="100%" styleName="header"/>
 			<s:HGroup minHeight="22" verticalAlign="middle">
