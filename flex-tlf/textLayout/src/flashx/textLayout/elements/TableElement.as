@@ -696,21 +696,31 @@ package flashx.textLayout.elements
 				// we need to think this through.
 				_bodyRows = new Vector.< Vector.<TableCellElement> >();
 				
-				for(i=0;i<mxmlChildren.length;i++){
-					if( !(mxmlChildren[i] is TableCellElement) )
-						continue;
-					cell = mxmlChildren[i] as TableCellElement;
-					while(cell.rowIndex >= _bodyRows.length)
-						_bodyRows.push(new Vector.<TableCellElement>());
+				if (mxmlChildren) {
+					for(i=0;i<mxmlChildren.length;i++){
 						
-					var rowVec:Vector.<TableCellElement> = _bodyRows[cell.rowIndex] as Vector.<TableCellElement>;
-					if(!rowVec){
-						rowVec = new Vector.<TableCellElement>();
-						_bodyRows[cell.rowIndex] = rowVec;
+						if ( !(mxmlChildren[i] is TableCellElement) ) {
+							continue;
+						}
+						
+						cell = mxmlChildren[i] as TableCellElement;
+						
+						while(cell.rowIndex >= _bodyRows.length)
+							_bodyRows.push(new Vector.<TableCellElement>());
+							
+						var rowVec:Vector.<TableCellElement> = _bodyRows[cell.rowIndex] as Vector.<TableCellElement>;
+						
+						if(!rowVec){
+							rowVec = new Vector.<TableCellElement>();
+							_bodyRows[cell.rowIndex] = rowVec;
+						}
+						
+						if(rowVec.length > cell.colIndex && rowVec[cell.colIndex]) {
+							throw new Error("Two cells cannot have the same coordinates");
+						}
+						
+						rowVec[cell.colIndex] = cell;
 					}
-					if(rowVec.length > cell.colIndex && rowVec[cell.colIndex])
-						throw new Error("Two cells cannot have the same coordinates");
-					rowVec[cell.colIndex] = cell;
 				}
 				
 				if(headerRowCount > 0){
