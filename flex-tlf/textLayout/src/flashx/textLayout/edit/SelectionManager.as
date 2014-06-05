@@ -191,8 +191,6 @@ package flashx.textLayout.edit
 			_cellRange = range;
 			// do something about actually drawing the selection.
 		}
-
-
         
         // current range of selection
         /** Anchor point of the current selection, as an index into the TextFlow. */
