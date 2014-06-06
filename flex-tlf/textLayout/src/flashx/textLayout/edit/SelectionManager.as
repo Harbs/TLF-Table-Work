@@ -169,16 +169,35 @@ package flashx.textLayout.edit
 		
 		public function selectCellRange(anchorCoords:CellCoordinates,activeCoords:CellCoordinates):void
 		{
+			var blocks:Vector.<TextFlowTableBlock>;
+			var block:TextFlowTableBlock;
+			var controller:ContainerController;
 			if(selectionType == SelectionType.TEXT)
 				clear();
-			_cellRange = new CellRange(_currentTable,anchorCoords,activeCoords);
-			var blocks:Vector.<TextFlowTableBlock> = _currentTable.getTableBlocksInRange(anchorCoords,activeCoords);
-			for each(var block:TextFlowTableBlock in blocks)
+			if(_cellRange)
 			{
-				block.controller.clearSelectionShapes();
-				block.controller.addCellSelectionShapes(currentCellSelectionFormat.rangeColor, block, anchorCoords, activeCoords);
+				blocks = _currentTable.getTableBlocksInRange(_cellRange.anchorCoordinates,_cellRange.activeCoordinates);
+				for each(block in blocks)
+				{
+					if(controller != block.controller)
+						block.controller.clearSelectionShapes();
+					
+					controller = block.controller;
+				}
+				
 			}
-			// do something about actually drawing the selection.
+			if(anchorCoords && activeCoords)
+			{
+				_cellRange = new CellRange(_currentTable,anchorCoords,activeCoords);
+				blocks = _currentTable.getTableBlocksInRange(anchorCoords,activeCoords);
+				for each(block in blocks)
+				{
+					block.controller.clearSelectionShapes();
+					block.controller.addCellSelectionShapes(currentCellSelectionFormat.rangeColor, block, anchorCoords, activeCoords);
+				}
+			}
+			else
+				_cellRange = null;
 		}
 		
 		public function getCellRange():CellRange
@@ -872,7 +891,7 @@ package flashx.textLayout.edit
                     {
                         _textFlow.flowComposer.getControllerAt(containerIter++).addSelectionShapes(currentSelectionFormat, absoluteStart, absoluteEnd);
                     }
-                } 
+                }
             }
         }
         
@@ -898,7 +917,7 @@ package flashx.textLayout.edit
         */
         public function refreshSelection(): void
         {
-            if (hasSelection())
+            if (hasAnySelection())
             {
                 clearSelectionShapes();
                 addSelectionShapes();
