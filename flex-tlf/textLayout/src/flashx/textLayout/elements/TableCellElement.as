@@ -45,8 +45,8 @@ package flashx.textLayout.elements
 	 */
 	public final class TableCellElement extends TableFormattedElement
 	{		
-		public var x:Number;
-		public var y:Number;
+		private var _x:Number;
+		private var _y:Number;
 		private var _width:Number;
 		private var _height:Number;
 		private var _parcelIndex:int;
@@ -238,6 +238,27 @@ package flashx.textLayout.elements
 		{
 			return getTable().getRowAt(rowIndex);
 		}
+
+		public function get x():Number
+		{
+			return container.x;
+		}
+
+		public function set x(value:Number):void
+		{
+			container.x = value;
+		}
+
+		public function get y():Number
+		{
+			return container.y;
+		}
+
+		public function set y(value:Number):void
+		{
+			container.y = value;
+		}
+
 		
 	}
 }

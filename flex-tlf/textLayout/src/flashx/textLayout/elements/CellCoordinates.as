@@ -22,10 +22,11 @@ package flashx.textLayout.elements
 	{
 		private var _column:int;
 		private var _row:int;
-		public function CellCoordinates(row:int,column:int)
+		public function CellCoordinates(row:int,column:int,table:TableElement=null)
 		{
 			_row = row;
 			_column = column;
+			this.table = table;
 		}
 
 		public function get column():int
@@ -53,5 +54,6 @@ package flashx.textLayout.elements
 			return new CellCoordinates(row,column);
 		}
 
+		public var table:TableElement;
 	}
 }

@@ -933,6 +933,7 @@ package flashx.textLayout.elements
 				_tableBlocks.push(new TextFlowTableBlock(0));
 			_tableBlockIndex = 0;
 			_tableBlocks[0].parentTable = this;
+			
 			return _tableBlocks[0];
 		}
 		
@@ -947,6 +948,7 @@ package flashx.textLayout.elements
 				_tableBlocks.push( new TextFlowTableBlock(_tableBlocks.length) );
 			}
 			_tableBlocks[_tableBlockIndex].parentTable = this;
+			
 			return _tableBlocks[_tableBlockIndex];
 		}
 		
@@ -1022,7 +1024,7 @@ package flashx.textLayout.elements
 		/**
 		 * Finds the cell at the specified cell coordinates or null if no cell is found. 
 		 **/
-		private function findCell(coords:CellCoordinates):TableCellElement
+		public function findCell(coords:CellCoordinates):TableCellElement
 		{
 			// get a guess of the cell location. If there's no holes (such as spans), it should theoretically pinpoint the index.
 			var idx:int = (coords.row+1) * (coords.column+1) -1;

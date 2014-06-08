@@ -49,6 +49,7 @@ package flashx.textLayout.edit
     import flashx.textLayout.container.ContainerController;
     import flashx.textLayout.debug.Debugging;
     import flashx.textLayout.debug.assert;
+    import flashx.textLayout.elements.CellContainer;
     import flashx.textLayout.elements.CellCoordinates;
     import flashx.textLayout.elements.CellRange;
     import flashx.textLayout.elements.Configuration;
@@ -1383,6 +1384,142 @@ package flashx.textLayout.edit
             return false;   // not on the stage
 
         }
+		/** @private - find a controller and adjusts the x and y values of localPoint if necessary */
+		private static function findController(textFlow:TextFlow, target:Object, currentTarget:Object, localPoint:Point):ContainerController
+		{
+			var localX:Number = localPoint.x;
+			var localY:Number = localPoint.y;
+			var controller:ContainerController;
+			var containerPoint:Point; // scratch
+			
+			var globalPoint:Point = DisplayObject(target).localToGlobal(new Point(localX, localY));
+
+			for (var idx:int = 0; idx < textFlow.flowComposer.numControllers; idx++)
+			{
+				var testController:ContainerController = textFlow.flowComposer.getControllerAt(idx); 
+				if (testController.container == target || testController.container == currentTarget)
+				{
+					controller = testController;
+					break;
+				}
+			}
+			if (controller)
+			{   
+				if (target != controller.container)
+				{
+					containerPoint = DisplayObject(controller.container).globalToLocal(globalPoint);
+					localPoint.x = containerPoint.x;
+					localPoint.y = containerPoint.y;
+				}
+				return controller;         
+			} 
+			
+			//the point is someplace else on stage.  Map the target 
+			//to the textFlow.container.
+			CONFIG::debug { assert(textFlow.flowComposer && textFlow.flowComposer.numControllers,"findController: invalid textFlow"); }
+			
+			
+			
+			// result of the search
+			var controllerCandidate:ContainerController = null;
+			var candidateLocalX:Number;
+			var candidateLocalY:Number;
+			var relDistance:Number = Number.MAX_VALUE;
+			
+			for (var containerIndex:int = 0; containerIndex < textFlow.flowComposer.numControllers; containerIndex++)
+			{
+				var curContainerController:ContainerController = textFlow.flowComposer.getControllerAt(containerIndex);
+				
+				// displayed??
+				if (!checkForDisplayed(curContainerController.container as DisplayObject))
+					continue;
+				
+				// handle measured containers??
+				var bounds:Rectangle = curContainerController.getContentBounds();
+				var containerWidth:Number = isNaN(curContainerController.compositionWidth) ? curContainerController.getTotalPaddingLeft()+bounds.width : curContainerController.compositionWidth;
+				var containerHeight:Number = isNaN(curContainerController.compositionHeight) ? curContainerController.getTotalPaddingTop()+bounds.height : curContainerController.compositionHeight;
+				
+				containerPoint = DisplayObject(curContainerController.container).globalToLocal(globalPoint);
+				
+				// remove scrollRect effects for the distance test but add it back in for the result
+				var adjustX:Number = 0;
+				var adjustY:Number = 0;
+				
+				if (curContainerController.hasScrollRect)
+				{
+					containerPoint.x -= (adjustX = curContainerController.container.scrollRect.x);
+					containerPoint.y -= (adjustY = curContainerController.container.scrollRect.y);
+				}
+				
+				if ((containerPoint.x >= 0) && (containerPoint.x <= containerWidth) &&
+					(containerPoint.y >= 0) && (containerPoint.y <= containerHeight))
+				{
+					controllerCandidate = curContainerController;
+					candidateLocalX = containerPoint.x+adjustX;
+					candidateLocalY = containerPoint.y+adjustY;
+					break;
+				}
+				
+				// figure minimum distance of containerPoint to curContainerController - 8 cases
+				var relDistanceX:Number = 0;
+				var relDistanceY:Number = 0;
+				
+				if (containerPoint.x < 0)
+				{
+					relDistanceX = containerPoint.x;
+					if (containerPoint.y < 0)
+						relDistanceY = containerPoint.y;
+					else if (containerPoint.y > containerHeight)
+						relDistanceY = containerPoint.y-containerHeight;
+				}
+				else if (containerPoint.x > containerWidth)
+				{
+					relDistanceX = containerPoint.x-containerWidth;
+					if (containerPoint.y < 0)
+						relDistanceY = containerPoint.y;
+					else if (containerPoint.y > containerHeight)
+						relDistanceY = containerPoint.y-containerHeight;
+				}
+				else if (containerPoint.y < 0)
+					relDistanceY = -containerPoint.y;
+				else
+					relDistanceY = containerPoint.y-containerHeight;
+				var tempDist:Number = relDistanceX*relDistanceX + relDistanceY*relDistanceY;    // could do sqrt but why bother - there is no Math.hypot function
+				if (tempDist <= relDistance)
+				{
+					relDistance = tempDist;
+					controllerCandidate = curContainerController;
+					candidateLocalX = containerPoint.x+adjustX;
+					candidateLocalY = containerPoint.y+adjustY;
+				}
+			}
+			localPoint.x = candidateLocalX;
+			localPoint.y = candidateLocalY;
+			return controllerCandidate;
+
+		}
+		/** @private - given a target and location compute the CellCoordinates */
+		static tlf_internal function computeCellCoordinates(textFlow:TextFlow, target:Object, currentTarget:Object, localX:Number,localY:Number):CellCoordinates
+		{
+			var rslt:CellCoordinates;
+			var containerPoint:Point; // scratch
+			
+
+			if (target is TextLine)
+				return null;
+			if(target is CellContainer)
+			{
+				var cell:TableCellElement = (target as CellContainer).element;
+				return new CellCoordinates(cell.rowIndex,cell.colIndex,cell.getTable());
+			}
+			var localPoint:Point = new Point(localX,localY);
+			var controller:ContainerController = findController(textFlow, target, currentTarget, localPoint);
+			if(!controller)
+				return null;
+			
+			return controller.findCellAtPosition(localPoint);
+		}
+
         /** @private - given a target and location compute the selectionIndex */
         static tlf_internal function computeSelectionIndex(textFlow:TextFlow, target:Object, currentTarget:Object, localX:Number,localY:Number):int
         {           
@@ -1415,112 +1552,9 @@ package flashx.textLayout.edit
                 rslt = computeSelectionIndexInLine(textFlow, TextLine(target), localX, localY);
             else
             {
-                var controller:ContainerController;
-                for (var idx:int = 0; idx < textFlow.flowComposer.numControllers; idx++)
-                {
-                    var testController:ContainerController = textFlow.flowComposer.getControllerAt(idx); 
-                    if (testController.container == target || testController.container == currentTarget)
-                    {
-                        controller = testController;
-                        break;
-                    }
-                }
-                if (controller)
-                {   
-                    if (target != controller.container)
-                    {
-                        containerPoint = DisplayObject(target).localToGlobal(new Point(localX, localY));
-                        containerPoint = DisplayObject(controller.container).globalToLocal(containerPoint);
-                        localX = containerPoint.x;
-                        localY = containerPoint.y;
-                    }
-                    rslt = computeSelectionIndexInContainer(textFlow, controller, localX, localY);          
-                } 
-                else 
-                {
-                    //the point is someplace else on stage.  Map the target 
-                    //to the textFlow.container.
-                    CONFIG::debug { assert(textFlow.flowComposer && textFlow.flowComposer.numControllers,"computeSelectionIndex: invalid textFlow"); }
-                    
-                    
-                    // result of the search
-                    var controllerCandidate:ContainerController = null;
-                    var candidateLocalX:Number;
-                    var candidateLocalY:Number;
-                    var relDistance:Number = Number.MAX_VALUE;
-                    
-                    for (var containerIndex:int = 0; containerIndex < textFlow.flowComposer.numControllers; containerIndex++)
-                    {
-                        var curContainerController:ContainerController = textFlow.flowComposer.getControllerAt(containerIndex);
-                        
-                        // displayed??
-                        if (!checkForDisplayed(curContainerController.container as DisplayObject))
-                            continue;
-
-                        // handle measured containers??
-                        var bounds:Rectangle = curContainerController.getContentBounds();
-                        var containerWidth:Number = isNaN(curContainerController.compositionWidth) ? curContainerController.getTotalPaddingLeft()+bounds.width : curContainerController.compositionWidth;
-                        var containerHeight:Number = isNaN(curContainerController.compositionHeight) ? curContainerController.getTotalPaddingTop()+bounds.height : curContainerController.compositionHeight;
-                        
-                        containerPoint = DisplayObject(target).localToGlobal(new Point(localX, localY));
-                        containerPoint = DisplayObject(curContainerController.container).globalToLocal(containerPoint);
-                        
-                        // remove scrollRect effects for the distance test but add it back in for the result
-                        var adjustX:Number = 0;
-                        var adjustY:Number = 0;
-                        
-                        if (curContainerController.hasScrollRect)
-                        {
-                            containerPoint.x -= (adjustX = curContainerController.container.scrollRect.x);
-                            containerPoint.y -= (adjustY = curContainerController.container.scrollRect.y);
-                        }
-                        
-                        if ((containerPoint.x >= 0) && (containerPoint.x <= containerWidth) &&
-                            (containerPoint.y >= 0) && (containerPoint.y <= containerHeight))
-                        {
-                            controllerCandidate = curContainerController;
-                            candidateLocalX = containerPoint.x+adjustX;
-                            candidateLocalY = containerPoint.y+adjustY;
-                            break;
-                        }
-                        
-                        // figure minimum distance of containerPoint to curContainerController - 8 cases
-                        var relDistanceX:Number = 0;
-                        var relDistanceY:Number = 0;
-
-                        if (containerPoint.x < 0)
-                        {
-                            relDistanceX = containerPoint.x;
-                            if (containerPoint.y < 0)
-                                relDistanceY = containerPoint.y;
-                            else if (containerPoint.y > containerHeight)
-                                relDistanceY = containerPoint.y-containerHeight;
-                        }
-                        else if (containerPoint.x > containerWidth)
-                        {
-                            relDistanceX = containerPoint.x-containerWidth;
-                            if (containerPoint.y < 0)
-                                relDistanceY = containerPoint.y;
-                            else if (containerPoint.y > containerHeight)
-                                relDistanceY = containerPoint.y-containerHeight;
-                        }
-                        else if (containerPoint.y < 0)
-                            relDistanceY = -containerPoint.y;
-                        else
-                            relDistanceY = containerPoint.y-containerHeight;
-                        var tempDist:Number = relDistanceX*relDistanceX + relDistanceY*relDistanceY;    // could do sqrt but why bother - there is no Math.hypot function
-                        if (tempDist <= relDistance)
-                        {
-                            relDistance = tempDist;
-                            controllerCandidate = curContainerController;
-                            candidateLocalX = containerPoint.x+adjustX;
-                            candidateLocalY = containerPoint.y+adjustY;
-                        }
-                    }
-
-
-                    rslt = controllerCandidate ? computeSelectionIndexInContainer(textFlow, controllerCandidate, candidateLocalX, candidateLocalY) : -1;
-                }
+				var localPoint:Point = new Point(localX,localY);
+                var controller:ContainerController = findController(textFlow, target, currentTarget, localPoint);
+				rslt = controller ? computeSelectionIndexInContainer(textFlow, controller, localPoint.x, localPoint.y) : -1;
             }
             
             if (rslt >= textFlow.textLength)
@@ -1562,13 +1596,19 @@ package flashx.textLayout.edit
 				subManager.selectRange(-1,-1);
 			
 			var cell:TableCellElement = _textFlow.parentElement as TableCellElement;
-			if(cell)
+			var coords:CellCoordinates;
+			if(!cell)
+				coords = computeCellCoordinates(textFlow,event.target,event.currentTarget,event.localX, event.localY);
+			if(cell || coords)
 			{
+				if(coords)
+					cell = currentTable.findCell(coords);
+				
 				superManager = cell.getTextFlow().interactionManager;
 				if(event.shiftKey && cell.getTable() == superManager.currentTable)
 				{
 					// expand cell selection if applicable
-					var coords:CellCoordinates = new CellCoordinates(cell.rowIndex,cell.colIndex);
+					coords = new CellCoordinates(cell.rowIndex,cell.colIndex);
 					if(
 						!CellCoordinates.areEqual(coords,superManager.anchorCellPosition) ||
 						superManager.activeCellPosition.isValid()
@@ -1579,6 +1619,14 @@ package flashx.textLayout.edit
 						event.stopPropagation();
 						return;
 					}
+				}
+				if(superManager == this)
+				{
+					if(cell.textFlow.interactionManager)
+					{
+						cell.textFlow.interactionManager.mouseDownHandler(event);
+					}
+					return;
 				}
 				superManager.currentTable = cell.getTable();
 				superManager.selectRange(-1,-1);
@@ -1602,7 +1650,38 @@ package flashx.textLayout.edit
             if (wmode != BlockProgression.RL) 
                 setMouseCursor(MouseCursor.IBEAM);          
             if (event.buttonDown)
-                handleMouseEventForSelection(event, true,_textFlow.parentElement != null);
+			{
+				var cell:TableCellElement = _textFlow.parentElement as TableCellElement;
+				// if the event is owned by a cell, we need to check if the mouse is now above another cell to select a cell range.
+				if(cell)
+				{
+					do{
+						var cellCoords:CellCoordinates = new CellCoordinates(cell.rowIndex,cell.colIndex,cell.getTable());
+						var coords:CellCoordinates = computeCellCoordinates(cell.getTextFlow(),event.target,event.currentTarget,event.localX, event.localY);
+						if(!coords)
+							break;
+						if(CellCoordinates.areEqual(cellCoords,coords))
+							break;
+						if(coords.table != cellCoords.table)
+							break;
+						
+						superManager = cell.getTextFlow().interactionManager;
+						if(
+							!CellCoordinates.areEqual(coords,superManager.activeCellPosition)
+						){
+							superManager.selectCellRange(superManager.anchorCellPosition,coords);
+							superManager.subManager = null;
+							allowOperationMerge = false;
+							event.stopPropagation();
+							return;
+						}
+
+						
+					}while(0);
+				}
+				handleMouseEventForSelection(event, true,_textFlow.parentElement != null);
+
+			}
         }
         
         /** @private */

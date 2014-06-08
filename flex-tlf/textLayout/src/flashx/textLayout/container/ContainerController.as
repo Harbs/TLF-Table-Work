@@ -3195,7 +3195,7 @@ package flashx.textLayout.container
 					{
 						// Shape is in the new list, but not in the old list, add it to the display list at the current location, and advance to next item
 						addTableBlock((newChild as TableBlockContainer), childIdx++);
-						CONFIG::debug { Debugging.traceFTECall(null,_container,"addTextLine",newChild); }
+						CONFIG::debug { Debugging.traceFTECall(null,_container,"addTableBlock",newChild); }
 						newIdx++;
 					}
 					else
@@ -4853,7 +4853,47 @@ package flashx.textLayout.container
 			}
 			return boundsRect;
 		}
-		
+		/** @private */
+		tlf_internal function findCellAtPosition(point:Point):CellCoordinates
+		{
+			point = point.clone();
+			for each(var chld:Object in _shapeChildren)
+			{
+				if( !(chld is TableBlockContainer) )
+					continue;
+				
+				var block:TableBlockContainer = chld as TableBlockContainer;
+				if(block.y > point.y)
+					continue;
+				if(block.x > point.x)
+					continue;
+				if(block.y + block.height < point.y)
+					continue;
+				if(block.x + block.getTableWidth() < point.x)
+					continue;
+				
+				point.x -= block.x;
+				point.y -= block.y;
+				
+				// the point falls out inside the block. Find the cell...
+				var cells:Vector.<TableCellElement> = block.userData.getTableCells();
+				for each (var cell:TableCellElement in  cells)
+				{
+					if(cell.x + cell.width < point.x)
+						continue;
+					if(cell.y + cell.getRow().composedHeight < point.y)
+						continue;
+					if(cell.x > point.x)
+						continue;
+					if(cell.y > point.y)
+						continue;
+					return new CellCoordinates(cell.rowIndex,cell.colIndex,cell.getTable());
+					
+				}
+			}
+			
+			return null;
+		}
 		/** @private */
 		tlf_internal function getPlacedTextLineBounds(textLine:TextLine):Rectangle
 		{

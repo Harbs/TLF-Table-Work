@@ -19,5 +19,13 @@ package flashx.textLayout.elements
 		 * A reference to the TextFlowTableBlock
 		 **/
 		public var userData:TextFlowTableBlock;
+		public function getTableWidth():Number
+		{
+			if(!userData)
+				return NaN;
+			if(!userData.parentTable)
+				return NaN;
+			return userData.parentTable.width;
+		}
 	}
 }
