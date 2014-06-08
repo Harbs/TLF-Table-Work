@@ -190,6 +190,7 @@ package flashx.textLayout.edit
 			if(anchorCoords && activeCoords)
 			{
 				_cellRange = new CellRange(_currentTable,anchorCoords,activeCoords);
+				activeCellPosition = activeCoords;
 				blocks = _currentTable.getTableBlocksInRange(anchorCoords,activeCoords);
 				for each(block in blocks)
 				{
@@ -198,7 +199,11 @@ package flashx.textLayout.edit
 				}
 			}
 			else
+			{
 				_cellRange = null;
+				activeCellPosition.column = -1;
+				activeCellPosition.row = -1;
+			}
 		}
 		
 		public function getCellRange():CellRange
@@ -1660,7 +1665,9 @@ package flashx.textLayout.edit
 						var coords:CellCoordinates = computeCellCoordinates(cell.getTextFlow(),event.target,event.currentTarget,event.localX, event.localY);
 						if(!coords)
 							break;
-						if(CellCoordinates.areEqual(cellCoords,coords))
+						if(CellCoordinates.areEqual(cellCoords,coords) &&
+							(!superManager.activeCellPosition.isValid() || CellCoordinates.areEqual(coords,superManager.activeCellPosition))
+						)
 							break;
 						if(coords.table != cellCoords.table)
 							break;
