@@ -84,20 +84,21 @@ package flashx.textLayout.elements
 		/** @private */
 		tlf_internal override function canOwnFlowElement(elem:FlowElement):Boolean
 		{
-			return (elem is TableCellElement); // (elem is TableBodyElement) ||  //(elem is TableRowElement) || (elem is TableColElement) || (elem is TableColGroupElement);
+			return (elem is TableCellElement) || (elem is TableRowElement) || (elem is TableColElement);// || (elem is TableBodyElement) || (elem is TableColGroupElement);
 		}
 		
 		/** @private if its in a numbered list expand the damage to all list items - causes the numbers to be regenerated */
 		tlf_internal override function modelChanged(changeType:String, elem:FlowElement, changeStart:int, changeLen:int, needNormalize:Boolean = true, bumpGeneration:Boolean = true):void
 		{
-			switch(changeType)
-			{
-				case ModelChange.ELEMENT_ADDED:
-				case ModelChange.ELEMENT_REMOVAL:
-					if(headerRowCount > 0 || footerRowCount > 0){
-						
-					}
+			if (changeType==ModelChange.ELEMENT_ADDED) {
+				
 			}
+			else if (changeType==ModelChange.ELEMENT_REMOVAL) {
+				if (headerRowCount > 0 || footerRowCount > 0) {
+					
+				}
+			}
+			
 			super.modelChanged(changeType,elem,changeStart,changeLen,needNormalize,bumpGeneration);
 		}
 		
@@ -273,16 +274,40 @@ package flashx.textLayout.elements
 		}
 		
 		/**
-		 * Returns the cells for the row specified. 
+		 * Returns a vector of the cells for the row specified. 
 		 **/
 		public function getCellsForRow(index:int):Vector.<TableCellElement>{
 			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
-			if(index < 0)
+			
+			if (index < 0) {
 				return cells;
-			for each(var cell:TableCellElement in mxmlChildren){
-				if(cell.rowIndex == index)
-					cells.push(cell);
 			}
+			
+			for each(var cell:TableCellElement in mxmlChildren){
+				if (cell.rowIndex == index) {
+					cells.push(cell);
+				}
+			}
+			
+			return cells;
+		}
+		
+		/**
+		 * Returns an array of the cells for the row specified. 
+		 **/
+		public function getCellsForRowArray(index:int):Array {
+			var cells:Array = [];
+			
+			if (index < 0) {
+				return cells;
+			}
+			
+			for each(var cell:TableCellElement in mxmlChildren){
+				if (cell.rowIndex == index) {
+					cells.push(cell);
+				}
+			}
+			
 			return cells;
 		}
 		
@@ -405,6 +430,7 @@ package flashx.textLayout.elements
 		
 		/**
 		 * Removes the row at the index specified.
+		 * @see removeRowWithContentAt
 		 **/
 		public function removeRowAt(idx:int):TableRowElement {
 			if(idx < 0 || idx > rows.length - 1)
@@ -424,6 +450,7 @@ package flashx.textLayout.elements
 		{
 
 			var removedCells:Array = [];
+			
 			if(mxmlChildren){
 				for (var i:int = mxmlChildren.length-1;i>=0;i--){
 					var child:* = mxmlChildren[i];
@@ -435,8 +462,46 @@ package flashx.textLayout.elements
 					}
 				}
 			}
+			
 			removeRowAt(idx);
 			return removedCells;
+		}
+		
+		/**
+		 * Removes all the rows and the cells.
+		 **/
+		public function removeAllRowsWithContent():void
+		{
+			var rowCount:int;
+			var cellCount:int;
+			
+			if (numRows>-1) {
+				rowCount = numRows-1;
+				
+				for (;rowCount>-1;) {
+					removeRowWithContentAt(rowCount--);
+				}
+				
+			}
+		}
+		
+		/**
+		 * Removes all the rows. Does not remove the cells.
+		 * @see removeAllRowsWithContent
+		 **/
+		public function removeAllRows():void
+		{
+			var rowCount:int;
+			var cellCount:int;
+			
+			if (numRows>-1) {
+				rowCount = numRows;
+				
+				for (var i:int; i < rowCount; i++) {
+					removeRowAt(i);
+				}
+				
+			}
 		}
 		
 		/**
@@ -502,10 +567,11 @@ package flashx.textLayout.elements
 		 **/
 		private function getBlockedCoords(inRow:int = -1, inColumn:int = -1):Vector.<CellCoords>{
 			var coords:Vector.<CellCoords> = new Vector.<CellCoords>();
-			if(mxmlChildren)
-			{
+			
+			if(mxmlChildren) {
 				for each(var child:* in mxmlChildren){
 					var cell:TableCellElement = child as TableCellElement;
+					if (cell==null) continue;
 					if(cell.columnSpan == 1 && cell.rowSpan == 1)
 						continue;
 					var curRow:int = cell.rowIndex;
@@ -521,7 +587,7 @@ package flashx.textLayout.elements
 							if(rowIdx == curRow && colIdx == curColumn){
 								continue;
 							}
-							coords.push( new CellCoords(colIdx,rowIdx) );
+							coords.push( new CellCoords(colIdx, rowIdx) );
 						}
 					}
 
@@ -531,7 +597,7 @@ package flashx.textLayout.elements
 		}
 		
 		/**
-		 * Sets the row and column idices of the cells in the table to match their logical position as described by the table columns and rows
+		 * Sets the row and column indices of the cells in the table to match their logical position as described by the table columns and rows
 		 **/
 		public function normalizeCells():void
 		{
@@ -850,8 +916,9 @@ package flashx.textLayout.elements
 			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
 			
 			for each (var cell:* in mxmlChildren){
-				if(cell is TableCellElement)
+				if (cell is TableCellElement) {
 					cells.push(cell as TableCellElement);
+				}
 			}
 			
 			return cells;

@@ -17,7 +17,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 package flashx.textLayout.conversion 
-{	
+{
 	import flash.display.Shape;
 	import flash.text.engine.TextRotation;
 	import flash.utils.Dictionary;
@@ -26,7 +26,10 @@ package flashx.textLayout.conversion
 	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.container.ContainerController;
 	import flashx.textLayout.debug.assert;
+	import flashx.textLayout.edit.EditManager;
+	import flashx.textLayout.edit.SelectionManager;
 	import flashx.textLayout.elements.BreakElement;
+	import flashx.textLayout.elements.ContainerFormattedElement;
 	import flashx.textLayout.elements.DivElement;
 	import flashx.textLayout.elements.FlowElement;
 	import flashx.textLayout.elements.FlowGroupElement;
@@ -41,9 +44,9 @@ package flashx.textLayout.conversion
 	import flashx.textLayout.elements.SubParagraphGroupElement;
 	import flashx.textLayout.elements.TCYElement;
 	import flashx.textLayout.elements.TabElement;
+	import flashx.textLayout.elements.TableCellElement;
 	import flashx.textLayout.elements.TableColElement;
 	import flashx.textLayout.elements.TableElement;
-	import flashx.textLayout.elements.TableCellElement;
 	import flashx.textLayout.elements.TableRowElement;
 	import flashx.textLayout.elements.TextFlow;
 	import flashx.textLayout.formats.ITextLayoutFormat;
@@ -53,7 +56,6 @@ package flashx.textLayout.conversion
 	
 	use namespace tlf_internal;
 
-	[ExcludeClass]
 	/** 
 	 * @private
 	 * TextLayoutImporter converts from XML to TextLayout data structures and back.
@@ -88,6 +90,7 @@ package flashx.textLayout.conversion
 				_defaultConfiguration.addIEInfo("img", InlineGraphicElement, TextLayoutImporter.parseInlineGraphic, TextLayoutExporter.exportImage);	
 				_defaultConfiguration.addIEInfo("table", TableElement, 		 TextLayoutImporter.parseTable,     	TextLayoutExporter.exportTable);	
 				_defaultConfiguration.addIEInfo("tr", TableRowElement, 	     TextLayoutImporter.parseTableRow,	    TextLayoutExporter.exportTableRow);	
+				_defaultConfiguration.addIEInfo("th", TableCellElement, 	 TextLayoutImporter.parseTableCell,  	TextLayoutExporter.exportTableCell);	
 				_defaultConfiguration.addIEInfo("td", TableCellElement, 	 TextLayoutImporter.parseTableCell,  	TextLayoutExporter.exportTableCell);	
 				
 				// validate the defaultTypeName values.  They are to match the TLF format export xml names
@@ -572,12 +575,11 @@ package flashx.textLayout.conversion
 		static public function parseTable(importFilter:BaseTextLayoutImporter, xmlToParse:XML, parent:FlowGroupElement):void
 		{
 			var tableElement:TableElement = TextLayoutImporter(importFilter).createTableFromXML(xmlToParse);
-			if (importFilter.addChild(parent, tableElement))
+			
+			if (importFilter.addChild(parent, tableElement)) 
 			{
 				importFilter.parseFlowGroupElementChildren(xmlToParse, tableElement);
-				// we can't have a <table> tag w/no children... so, add an empty row
-				if (tableElement.numChildren == 0)
-					tableElement.addChild(new TableRowElement());
+				
 			}
 		}
 		
@@ -591,18 +593,28 @@ package flashx.textLayout.conversion
 		static public function parseTableRow(importFilter:BaseTextLayoutImporter, xmlToParse:XML, parent:FlowGroupElement):void
 		{
 			var tableRowElement:TableRowElement = TextLayoutImporter(importFilter).createTableRowFromXML(xmlToParse);
+			var table:TableElement;
 			
 			if (importFilter.addChild(parent, tableRowElement))
 			{
+				
 				importFilter.parseFlowGroupElementChildren(xmlToParse, tableRowElement);
-				// we can't have a <table> tag w/no children... so, add an empty row
-				if (tableRowElement.numChildren == 0)
-					tableRowElement.addChild(new TableCellElement());
+				
+				table = tableRowElement.getTable();
+				
+				var columnCount:int = tableRowElement.getColumnCount();
+				
+				if (table.numColumns<columnCount) {
+					table.numColumns = columnCount;
+				}
+				
+				table.insertRow(tableRowElement, tableRowElement.mxmlChildren);
+				
 			}
 		}
 		
 		/** 
-		 * Parse the <td ...> tag (TableCellElement) and all its children
+		 * Parse the <td ...> or <th ...> tag (TableCellElement) and all its children
 		 * 
 		 * @param - importFilter:BaseTextLayoutImportFilter - parser object
 		 * @param - xmlToParse:XML - the xml describing the Table
@@ -614,12 +626,52 @@ package flashx.textLayout.conversion
 			
 			if (importFilter.addChild(parent, tableCellElement))
 			{
-				importFilter.parseFlowGroupElementChildren(xmlToParse, tableCellElement);
-				
-				// we can't have a <table> tag w/no children... so, add an empty row
-				if (tableCellElement.numChildren == 0)
-					tableCellElement.addChild(new TextFlow());
+				importFilter.parseTableCellElementChildren(xmlToParse, tableCellElement);
 			}
+			
+			//tableCellElement.textFlow = getTextFlowContent("test cell");
+			
+			TableRowElement(parent).addCell(tableCellElement);
+			//TableRowElement(parent).getTable().addChild(tableCellElement);
+			//importFilter.parseFlowGroupElementChildren(xmlToParse, tableCellElement);
+			
+			// we can't have a <td> tag w/no children... so, add an empty text flow
+			//if (tableCellElement.numChildren == 0) {
+			//	tableCellElement.addChild(new TextFlow());
+			//}
+				
+		}
+		
+		/**
+		 * Creates default text flow from the text value passed in. Used for table cell text flows. 
+		 * Used for testing. May be removed in the future. 
+		 **/
+		static public function getTextFlowContent(text:String = null, selectable:Boolean = false, editable:Boolean = false):TextFlow {
+			var textFlowContent:TextFlow = new TextFlow();
+			var paragraph:ParagraphElement = new ParagraphElement();
+			var span:SpanElement = new SpanElement();
+			
+			if (text) {
+				span.text = text;
+			}
+			else {
+				span.text = "";
+			}
+			
+			paragraph.backgroundAlpha = 0.2;
+			paragraph.backgroundColor = 0xFF0000;
+			paragraph.addChild(span);
+			
+			if (editable) {
+				//textFlowContent.interactionManager = new EditManager(new UndoManager);
+			}
+			else if (selectable) {
+				//textFlowContent.interactionManager = new SelectionManager();
+			}
+			
+			textFlowContent.addChild(paragraph);
+			
+			return textFlowContent;
 		}
 	}
 }

@@ -45,6 +45,9 @@ package flashx.textLayout.elements
 		private var _anchorCoords:CellCoordinates;
 		private var _activeCoords:CellCoordinates;
 		
+		/**
+		 * Limits the row and column values to 0 or the number of rows or column. 
+		 **/
 		private function clampToRange(coords:CellCoordinates):CellCoordinates
 		{
 			if(coords == null)
@@ -60,7 +63,7 @@ package flashx.textLayout.elements
 			return coords;
 		}
 
-		public function CellRange(table:TableElement,anchorCoords:CellCoordinates,activeCoords:CellCoordinates)
+		public function CellRange(table:TableElement, anchorCoords:CellCoordinates, activeCoords:CellCoordinates)
 		{
 			_table = table;
 			_anchorCoords = clampToRange(anchorCoords);
@@ -68,7 +71,8 @@ package flashx.textLayout.elements
 			
 		}
 		
-		/** Update the range with new anchor or active position values.
+		/** 
+		 * Update the range with new anchor or active position values.
 		 *
 		 * @playerversion Flash 10
 		 * @playerversion AIR 1.5
@@ -77,7 +81,7 @@ package flashx.textLayout.elements
 		 *  @param newActivePosition	the active index of the selection.
 		 *  @return true if selection is changed.
 		 */
-		public function updateRange(newAnchorCoordinates:CellCoordinates,newActiveCoordinates:CellCoordinates):Boolean
+		public function updateRange(newAnchorCoordinates:CellCoordinates, newActiveCoordinates:CellCoordinates):Boolean
 		{
 			clampToRange(newAnchorCoordinates);
 			clampToRange(newActiveCoordinates);
@@ -106,7 +110,9 @@ package flashx.textLayout.elements
 			_table = value;
 		}
 
-		/** Anchor point of the current selection, as a CellCoordinates in the TableElement. */
+		/** 
+		 * Anchor point of the current selection, as a CellCoordinates in the TableElement. 
+		 */
 		public function get anchorCoordinates():CellCoordinates
 		{
 			return _anchorCoords;
@@ -120,7 +126,9 @@ package flashx.textLayout.elements
 			_anchorCoords = value;
 		}
 
-		/** Active end of the current selection, as a CellCoordinates in the TableElement. */
+		/** 
+		 * Active end of the current selection, as a CellCoordinates in the TableElement. 
+		 */
 		public function get activeCoordinates():CellCoordinates
 		{
 			return _activeCoords;

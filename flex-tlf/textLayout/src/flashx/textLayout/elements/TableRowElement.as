@@ -18,8 +18,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 package flashx.textLayout.elements
 {
-	import flashx.textLayout.formats.ITextLayoutFormat;
+	import flash.utils.getQualifiedClassName;
+	
 	import flashx.textLayout.tlf_internal;
+	import flashx.textLayout.edit.EditManager;
+	import flashx.textLayout.edit.SelectionManager;
+	import flashx.textLayout.formats.ITextLayoutFormat;
 	
 	use namespace tlf_internal;
 	
@@ -69,7 +73,7 @@ package flashx.textLayout.elements
 		/** @private */
 		tlf_internal override function canOwnFlowElement(elem:FlowElement):Boolean
 		{
-			return false;//(elem is TableCellElement);
+			return (elem is TableCellElement);
 		}
 		
 		/** @private if its in a numbered list expand the damage to all list items - causes the numbers to be regenerated */
@@ -78,12 +82,32 @@ package flashx.textLayout.elements
 			super.modelChanged(changeType,elem,changeStart,changeLen,needNormalize,bumpGeneration);
 		}
 		
+		/**
+		 * Returns a vector of table cell elements or null if the row contains no cells
+		 **/
 		public function getCells():Vector.<TableCellElement>
 		{
 			var table:TableElement = getTable();
-			if(!table)
+			
+			if(!table) {
 				return null;
+			}
+			
 			return table.getCellsForRow(table.getRowIndex(this));
+		}
+		
+		/**
+		 * Get an array of cells or null if the row contains no cells
+		 **/
+		public function get cells():Array
+		{
+			var table:TableElement = getTable();
+			
+			if (!table) {
+				return null;
+			}
+			
+			return table.getCellsForRowArray(table.getRowIndex(this));
 		}
 		
 		/**
@@ -93,8 +117,10 @@ package flashx.textLayout.elements
 		{
 			var table:TableElement = getTable();
 			
-			if(!table)
+			if (!table) {
 				return 0;
+			}
+			
 			return table.getCellsForRow(table.getRowIndex(this)).length;
 		}
 		
@@ -108,6 +134,48 @@ package flashx.textLayout.elements
 			if(!cells || index<0 || index>=cells.length)
 				return null;
 			return cells[index];
+		}
+		
+		/**
+		 * Adds a table cell to the row
+		 **/
+		public function addCell(cell:TableCellElement):TableCellElement
+		{
+			var table:TableElement = getTable();
+			var cellLength:int = numChildren;
+			
+			if (!table) {
+				throw new Error("Table must be set");
+			}
+			
+			cell.rowIndex = rowIndex;
+			
+			if (cell.colIndex==-1) {
+				cell.colIndex = cellLength;
+			}
+			
+			cells.push(cell);
+			//var selectable:Boolean = textFlow.interactionManager is SelectionManager;
+			//var editable:Boolean = textFlow.interactionManager is EditManager;
+			
+			return cell;
+		}
+		
+		/**
+		 * Adds a table cell to the row
+		 **/
+		public function addCellAt(index:int):TableCellElement
+		{
+			throw new Error("Add cell at is not implemented");
+		}
+		
+		/**
+		 * Get an estimate column count for this row.
+		 * This is temporary. TODO loop through cells and check for column span.
+		 **/
+		public function getColumnCount():int
+		{
+			return numCells || numChildren;
 		}
 
 	}

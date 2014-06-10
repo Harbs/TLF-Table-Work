@@ -2,6 +2,7 @@
 <s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
 			 xmlns:s="library://ns.adobe.com/flex/spark" 
 			 xmlns:mx="library://ns.adobe.com/flex/mx" 
+			 xmlns:local="*"
 			 
 			 minWidth="955" minHeight="600" 
 			 applicationComplete="importApplicationCompleteHandler(event)">
@@ -47,6 +48,65 @@
 				</p>
 			</TextFlow>
 		</fx:XML>
+		
+		<fx:XML id="simpleTableTextFlow">
+			<TextFlow fontSize="11" paddingLeft="8" paddingRight="8" paddingTop="8" whiteSpaceCollapse="collapse" version="3.0.0" xmlns="http://ns.adobe.com/textLayout/2008">
+				<p>
+					<span>A un Angleso it va semblar un simplificat Angles</span>
+				</p>
+				<table borderColor="0xFF00FF" borderThickness="1" borderStyle="solid" paddingLeft="8" paddingTop="2" paddingRight="8" paddingBottom="2">
+					<tr italic="true">
+						<td headers="t1"><p><span>T. Sexton</span></p></td>
+						<td headers="t2"><p><span>10</span></p></td>
+						<td headers="t3"><p><span>Espresso</span></p></td>
+						<td headers="t4"><p><span>No</span></p></td>
+					</tr>
+					<tr>
+						<td headers="t1"><p><span>J. Dinnen</span></p></td>
+						<td headers="t2"><p><span>5</span></p></td>
+						<td headers="t3"><p><span>Decaf</span></p></td>
+						<td headers="t4"><p><span>Yes</span></p></td>
+					</tr>
+				</table>
+			</TextFlow>
+		</fx:XML>
+		
+		<fx:Component className="ImageButton" >
+			<s:Image useHandCursor="true" buttonMode="true" 
+					 mouseDown="filters=buttonDownFilters" 
+					 mouseUp="filters=bevelFilters" 
+					 rollOut="filters=bevelFilters">
+				
+				<s:filters>
+					<fx:Array id="bevelFilters">
+						<s:BevelFilter id="bevelFilter" 
+									   angle="45.0" 
+									   blurX="1" blurY="1" 
+									   distance="0.4"
+									   highlightAlpha="1.0" 
+									   knockout="false"
+									   highlightColor="#FFFFFF" 
+									   shadowColor="#000000" 
+									   quality="3" 
+									   shadowAlpha="1.0" 
+									   strength="1.5"
+									   type="inner"/>
+					</fx:Array>
+				</s:filters>
+				
+				<fx:Declarations>
+					<fx:Array id="buttonDownFilters">
+						
+						<s:BevelFilter angle="-135" 
+									   distance="1" 
+									   strength=".8" 
+									   blurX="2" blurY="2"
+									   highlightColor="0xffffff" 
+									   type="inner"/>
+					</fx:Array>
+				</fx:Declarations>
+			</s:Image>
+		</fx:Component>
 	</fx:Declarations>
 	
 	<fx:Script>
@@ -64,7 +124,6 @@
 			import mx.core.IVisualElement;
 			import mx.events.FlexEvent;
 			
-			import spark.components.Alert;
 			import spark.core.SpriteVisualElement;
 			import spark.events.TextOperationEvent;
 			
@@ -106,7 +165,7 @@
 			public var textFlow:TextFlow;
 			public var container:SpriteVisualElement;
 			public var controller:ContainerController;
-			public var tableData:String;
+			public var complexTableData:String;
 			
 			public var tableNotCreatedError:String = "Create the table before calling this method";
 			public var notImplementedMessage:String = "Not yet implemented";
@@ -118,7 +177,7 @@
 			
 			protected function importApplicationCompleteHandler(event:FlexEvent):void {
 				var tableByte:ByteArray = new TableExample();
-				tableData = tableByte.readMultiByte(tableByte.length,"utf-8");
+				complexTableData = tableByte.readMultiByte(tableByte.length,"utf-8");
 				
 				//textFlow = importer.importToFlow(tableData);
 				importToFlow(simpleTextMarkup);
@@ -219,15 +278,13 @@
 				var columnCount:int = table.numColumns;
 				var cell:TableCellElement;
 				var cellTextFlow:TextFlow;
-				var para:ParagraphElement;
-				var span:SpanElement;
 				var selectable:Boolean = textFlow.interactionManager is SelectionManager;
 				var editable:Boolean = textFlow.interactionManager is EditManager;
 				
-				for(var i:int=0;i<columnCount;i++){
+				for(var columnIndex:int=0;columnIndex<columnCount;columnIndex++){
 					cell = new TableCellElement();
 					
-					cell.colIndex = i;
+					cell.colIndex = columnIndex;
 					cell.rowIndex = rowIndex;
 					//cell.textFlow = getTextFlowContent("R " + rowIndex + " C " + cell.colIndex, selectable, editable);
 					cell.textFlow = getTextFlowContent(String(table.numChildren+1), selectable, editable);
@@ -316,6 +373,24 @@
 				// removeRowAt does not remove cells - using remove row with content
 				//rowElement = table.removeRowAt(table.numRows - 1);
 				rowElements = table.removeRowWithContentAt(table.numRows - 1);
+				
+				updateAllControllers();
+				
+				return rowElements;
+			}
+			
+			/**
+			 * Removes all the rows in the table
+			 **/
+			public function removeAllRows(table:TableElement):Array {
+				var rowElements:Array;
+				
+				if (!table) {
+					updateErrorsText(tableNotCreatedError);
+					return null;
+				}
+				
+				table.removeAllRowsWithContent();
 				
 				updateAllControllers();
 				
@@ -1006,7 +1081,7 @@
 			 **/
 			public function updateErrorsText(errors:*):void {
 				
-				if (errors is Vector) {
+				if (errors is Vector.<String>) {
 					textFlowMarkupErrors.text = errors ? errors.join("\n") : null;
 				}
 				else if (errors is String) {
@@ -1042,18 +1117,21 @@
 			{
 				var table:TableElement = getTable();
 				
-				if (table) {
-					// this adds the row but not the cells
-					//table.numRows = tableRowsStepper.value;
-					//updateAllControllers();
-					
-					if (tableRowsStepper.value<table.numRows) {
-						removeRow(table);
-					}
-					else {
-						addRow(table);
-						//insertRow(table);
-					}
+				if (!table) {
+					updateErrorsText(tableNotCreatedError);
+					return;
+				}
+				
+				// this adds the row but not the cells
+				//table.numRows = tableRowsStepper.value;
+				//updateAllControllers();
+				
+				if (tableRowsStepper.value<table.numRows) {
+					removeRow(table);
+				}
+				else {
+					addRow(table);
+					//insertRow(table);
 				}
 				
 			}
@@ -1062,19 +1140,21 @@
 			{
 				var table:TableElement = getTable();
 				
-				if (table) {
+				if (!table) {
+					updateErrorsText(tableNotCreatedError);
+					return;
+				}
+				
 					// this adds the row but not the cells
-					//table.numColumns = tableColumnsStepper.value;
-					//updateAllControllers();
-					
-					if (tableColumnsStepper.value<table.numColumns) {
-						removeColumn(table);
-					}
-					else {
-						addColumn(table);
-						//insertColumn(table);
-					}
-					
+				//table.numColumns = tableColumnsStepper.value;
+				//updateAllControllers();
+				
+				if (tableColumnsStepper.value<table.numColumns) {
+					removeColumn(table);
+				}
+				else {
+					addColumn(table);
+					//insertColumn(table);
 				}
 				
 			}
@@ -1087,7 +1167,7 @@
 					updateErrorsText(tableNotCreatedError);
 					return;
 				}
-					
+				
 				table.width = Number(tableWidth.text);
 				
 				updateAllControllers();
@@ -1096,8 +1176,8 @@
 		]]>
 	</fx:Script>
 
-	<s:HGroup width="100%" minHeight="400" top="50" left="10" right="10">
-		<s:VGroup width="100%" height="100%">
+	<s:HGroup width="100%" minHeight="400" top="50" left="10" right="10" styleName="header">
+		<s:VGroup width="60%" height="100%">
 			<s:HGroup width="100%" gap="1" >
 				<s:Label text="TextFlow" width="100%" styleName="header"/>
 				<s:Label text="clear" click="clearTextFlow()" 
@@ -1107,11 +1187,27 @@
 			</s:HGroup>
 			<s:BorderContainer id="group" width="100%" height="100%" minHeight="250"/>
 			<s:HGroup minHeight="22" verticalAlign="middle">
-				<s:Image source="assets/images/addTableIcons.png"
+				<local:ImageButton source="assets/images/addTableIcon.png"
 						 toolTip="Add Table"
-						 click="addTable(3, 3)" useHandCursor="true" buttonMode="true"/>
-				<s:Image toolTip="Remove Table"
-						 source="assets/images/subtractTableIcons.png" click="removeTable(getTable())" useHandCursor="true" buttonMode="true"/>
+						 click="addTable(3, 3)" />
+				<local:ImageButton toolTip="Remove Table"
+						 source="assets/images/removeTableIcon.png" 
+						 click="removeTable(getTable())" />
+				<s:Label text="|" />
+				<local:ImageButton source="assets/images/addRowIcon.png"
+								   toolTip="Add Row"
+								   click="addRow(getTable())" />
+				<local:ImageButton source="assets/images/removeRowIcon.png"
+								   toolTip="Remove Row"
+								   click="removeRow(getTable())" />
+				<s:Label text="|" />
+				<local:ImageButton source="assets/images/addColumnIcon.png"
+								   toolTip="Add Column"
+								   click="addColumn(getTable())" />
+				<local:ImageButton source="assets/images/removeColumnIcon.png"
+								   toolTip="Remove Column"
+								   click="removeColumn(getTable())" />
+				<s:Label text="|" />
 				<s:Image toolTip="Rows" source="assets/images/rowsIcon.png" />
 				<s:NumericStepper id="tableRowsStepper" change="tableRowsStepper_changeHandler(event)"/>
 				<s:Image toolTip="Columns" source="assets/images/columnsIcon.png" />
@@ -1131,21 +1227,17 @@
 			<s:Label text="TextFlow Markup Errors" width="100%" styleName="header"
 						/>
 			<s:TextArea id="textFlowMarkupErrors" width="100%" height="30%" color="red"
-						/>
+						>
+			</s:TextArea>
 		</s:VGroup>
-		<s:VGroup width="100%" height="100%" >
+		<s:VGroup width="40%" height="100%" >
 			<s:Label text="Elements" width="100%" styleName="header"/>
 			<s:HGroup styleName="buttonGroup">
 				<mx:LinkButton label="Add Table" click="addTable(3, 3)"/>
 				<mx:LinkButton label="Add Selectable Table" click="addTable(3, 3, true)"/>
 				<mx:LinkButton label="Add Editable Table" click="addTable(3, 3, false, true)"/>
 				<mx:LinkButton label="Remove Table" click="removeTable(getTable())"/>
-			</s:HGroup>
-			<s:HGroup>
-				<mx:LinkButton label="Add Row" click="addRow(getTable())"/>
-				<mx:LinkButton label="Remove Row" click="removeRow(getTable())"/>
-				<mx:LinkButton label="Add Column" click="addColumn(getTable())"/>
-				<mx:LinkButton label="Remove Column" click="removeColumn(getTable())"/>
+				<mx:LinkButton label="Remove All Rows" click="removeAllRows(getTable())"/>
 			</s:HGroup>
 			<s:HGroup>
 				<mx:LinkButton label="Add Paragraph" click="addParagraph()"/>
@@ -1178,7 +1270,8 @@
 			</s:HGroup>
 			<s:Label text="Import Text Flows" width="100%" styleName="header"/>
 			<s:HGroup>
-				<mx:LinkButton label="Simple Table TextFlow" click="importToFlow(tableData)"/>
+				<mx:LinkButton label="Simple Table TextFlow" click="importToFlow(simpleTableTextFlow)"/>
+				<mx:LinkButton label="Complex Table TextFlow" click="importToFlow(complexTableData)"/>
 				<mx:LinkButton label="Simple TextFlow" click="importToFlow(simpleTextMarkup)"/>
 				<mx:LinkButton label="Complex TextFlow" click="importToFlow(complexTextFlow)"/>
 			</s:HGroup>
@@ -1186,6 +1279,22 @@
 			<s:HGroup minHeight="22" verticalAlign="middle">
 				<s:Label id="versionInfo" paddingLeft="10"/>
 			</s:HGroup>
+			
+			<!--<s:TextArea width="100%" height="10%" color="blue"
+						>
+				<s:content>
+					<s:p>
+						<s:span>test</s:span>
+					</s:p>
+					<s:table>
+						<s:tr>
+							<s:td>
+								Hello world
+							</s:td>
+						</s:tr>
+					</s:table>
+				</s:content>
+			</s:TextArea>-->
 		</s:VGroup>
 	</s:HGroup>
 	

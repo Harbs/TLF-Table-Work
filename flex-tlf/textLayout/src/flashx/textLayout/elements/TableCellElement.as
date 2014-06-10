@@ -77,7 +77,7 @@ package flashx.textLayout.elements
 		/** @private */
 		tlf_internal override function canOwnFlowElement(elem:FlowElement):Boolean
 		{// Table cells have no TLF children. Instead it contains its own TextFlow.
-			return false;
+			return (elem is FlowElement);
 		}
 		
 		public function isDamaged():Boolean{

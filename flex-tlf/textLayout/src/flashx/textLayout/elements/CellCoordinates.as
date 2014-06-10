@@ -18,39 +18,69 @@
 ////////////////////////////////////////////////////////////////////////////////
 package flashx.textLayout.elements
 {
+	/**
+	 * Describes the location of table cell by row and column 
+	 **/
 	public class CellCoordinates
 	{
 		private var _column:int;
 		private var _row:int;
-		public function CellCoordinates(row:int,column:int)
+		
+		/**
+		 * @constructor
+		 **/
+		public function CellCoordinates(row:int, column:int)
 		{
 			_row = row;
 			_column = column;
 		}
 
+		/**
+		 * The column the cell belongs to
+		 **/
 		public function get column():int
 			{return _column;}
+		
+		/**
+		 * @private
+		 **/
 		public function set column(value:int):void
 			{_column = value;}
 
+		/**
+		 * The row the cell belongs to
+		 **/
 		public function get row():int
 			{return _row;}
+		
+		/**
+		 * @private
+		 **/
 		public function set row(value:int):void
 			{_row = value;}
 		
-		public static function areEqual(coords1:CellCoordinates,coords2:CellCoordinates):Boolean
+		/**
+		 * Checks if two coordiates are in the same location
+		 **/
+		public static function areEqual(coords1:CellCoordinates, coords2:CellCoordinates):Boolean
 		{
 			return coords1.row == coords2.row && coords1.column == coords2.column;
 		}
 		
+		/**
+		 * Returns true if the column and row are greater than -1
+		 **/
 		public function isValid():Boolean
 		{
 			return column > -1 && row > -1;
 		}
 		
+		/**
+		 * Creates a new CellCoordinates with the same row and column values
+		 **/
 		public function clone():CellCoordinates
 		{
-			return new CellCoordinates(row,column);
+			return new CellCoordinates(row, column);
 		}
 
 	}

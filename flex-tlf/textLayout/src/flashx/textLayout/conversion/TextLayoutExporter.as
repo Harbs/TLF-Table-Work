@@ -47,9 +47,7 @@ package flashx.textLayout.conversion
 	
 	use namespace tlf_internal;
 	
-	[ExcludeClass]
 	/** 
-	 * @private
 	 * Export filter for TextLayout format. 
 	 */
 	internal class TextLayoutExporter extends BaseTextLayoutExporter
@@ -90,8 +88,9 @@ package flashx.textLayout.conversion
 			return replacementXML;	
 		}
 		
-		/** Helper function to export styles (core or user) in the form of xml attributes or xml children
-		 * @private
+		/** 
+		 * Helper function to export styles (core or user) in the form of xml attributes or xml children
+		 * 
 		 */
 		tlf_internal function createStylesFromDescription(styles:Object, description:Object, includeUserStyles:Boolean, exclusions:Array):Array
 		{

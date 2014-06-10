@@ -770,8 +770,10 @@ package flashx.textLayout.elements
 								relStartIdx = beginChildIndex == _numChildren ? textLength : getChildAt(beginChildIndex).parentRelativeStart;
 							}
 						}
-						if (!canOwnFlowElement(newChild))
-							throw ArgumentError(GlobalSettings.resourceStringFunction("invalidChildType"));
+						
+						if (!canOwnFlowElement(newChild)) {
+							throw ArgumentError(GlobalSettings.resourceStringFunction("invalidChildType") + ". " + defaultTypeName + " cannot own " + newChild.defaultTypeName);
+						}
 						
 						// manage as an array or a single child
 						if (childrenToAdd == 0)
