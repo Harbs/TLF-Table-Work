@@ -546,8 +546,12 @@ package flashx.textLayout.elements
 				if(!(child is TableCellElement))
 					continue;
 				var cell:TableCellElement = child as TableCellElement;
-				cell.rowIndex = curRow;
-				cell.colIndex = curColumn;
+				if(cell.rowIndex != curRow || cell.colIndex != curColumn)
+				{
+					cell.rowIndex = curRow;
+					cell.colIndex = curColumn;
+					cell.damage();
+				}
 				
 				// add blocked coords if the cell spans rows or columns
 				var endRow:int = curRow + cell.rowSpan - 1;
@@ -625,6 +629,7 @@ package flashx.textLayout.elements
 		 * Sizes and positions the cells in the table. 
 		 **/
 		public function composeCells():void{
+			normalizeCells();
 			_composedRowIndex = 0;
 			// make sure the height that defines the row height did not change. If it did we might need to change the row height.
 			if(!hasCellDamage)

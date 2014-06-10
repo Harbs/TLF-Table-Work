@@ -23,6 +23,8 @@ package flashx.textLayout.elements
 	import flash.display.Sprite;
 	import flash.events.MouseEvent;
 	import flash.geom.Point;
+	import flash.utils.getDefinitionByName;
+	import flash.utils.getQualifiedClassName;
 	
 	import flashx.textLayout.container.ContainerController;
 	import flashx.textLayout.edit.EditManager;
@@ -135,6 +137,24 @@ package flashx.textLayout.elements
 		
 		public function get textFlow():TextFlow
 		{
+			if(_textFlow == null)
+			{
+				var flow:TextFlow = new TextFlow();
+				if(getTable() && getTable().getTextFlow() && getTable().getTextFlow().interactionManager is IEditManager)
+				{
+					flow.interactionManager = new EditManager(IEditManager(_textFlow.interactionManager).undoManager);
+				}
+				else if(getTable() && getTable().getTextFlow() && getTable().getTextFlow().interactionManager)
+				{
+					var im:Class = getDefinitionByName(getQualifiedClassName(getTable().getTextFlow().interactionManager)) as Class;
+					flow.interactionManager = new im();
+				}
+				else
+					flow.normalize();
+				
+				textFlow = flow;
+
+			}
 			return _textFlow;
 		}
 		
@@ -151,9 +171,7 @@ package flashx.textLayout.elements
 		}
 		
 		private function handleCellDamage(ev:DamageEvent):void{
-			if(getTable())
-				getTable().hasCellDamage = true;
-			_damaged = true;
+			damage();
 		}
 
 		public function get enableIME():Boolean
@@ -259,6 +277,11 @@ package flashx.textLayout.elements
 			container.y = value;
 		}
 
-		
+		public function damage():void
+		{
+			if(getTable())
+				getTable().hasCellDamage = true;
+			_damaged = true;
+		}
 	}
 }
