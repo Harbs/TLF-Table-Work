@@ -68,6 +68,8 @@ package flashx.textLayout.elements
 		private var _tableBlockIndex:uint = 0;
 		private var _tableBlockDict:Dictionary;
 		
+		private var _leaf:TableLeafElement;
+		
 		public function TableElement()
 		{
 			super();
@@ -1133,6 +1135,29 @@ package flashx.textLayout.elements
 			return blocks;
 		}
 
+		/** @private */
+		tlf_internal override function getNextLeafHelper(limitElement:FlowGroupElement,child:FlowElement):FlowLeafElement
+		{
+			return null;
+		}
+		
+		/** @private */
+		tlf_internal override function getPreviousLeafHelper(limitElement:FlowGroupElement,child:FlowElement):FlowLeafElement
+		{
+			return null;
+		}
+
+		private function getLeaf():TableLeafElement
+		{
+			if(_leaf == null)
+				_leaf = new TableLeafElement(this);
+			return _leaf;
+		}
+		
+		public override function findLeaf(relativePosition:int):FlowLeafElement
+		{
+			return getLeaf();
+		}
 	}
 }
 class CellCoords
