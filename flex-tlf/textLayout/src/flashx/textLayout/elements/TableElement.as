@@ -68,6 +68,8 @@ package flashx.textLayout.elements
 		private var _tableBlockIndex:uint = 0;
 		private var _tableBlockDict:Dictionary;
 		
+		private var _leaf:TableLeafElement;
+		
 		public function TableElement()
 		{
 			super();
@@ -612,8 +614,12 @@ package flashx.textLayout.elements
 				if(!(child is TableCellElement))
 					continue;
 				var cell:TableCellElement = child as TableCellElement;
-				cell.rowIndex = curRow;
-				cell.colIndex = curColumn;
+				if(cell.rowIndex != curRow || cell.colIndex != curColumn)
+				{
+					cell.rowIndex = curRow;
+					cell.colIndex = curColumn;
+					cell.damage();
+				}
 				
 				// add blocked coords if the cell spans rows or columns
 				var endRow:int = curRow + cell.rowSpan - 1;
@@ -691,6 +697,7 @@ package flashx.textLayout.elements
 		 * Sizes and positions the cells in the table. 
 		 **/
 		public function composeCells():void{
+			normalizeCells();
 			_composedRowIndex = 0;
 			// make sure the height that defines the row height did not change. If it did we might need to change the row height.
 			if(!hasCellDamage)
@@ -1000,6 +1007,7 @@ package flashx.textLayout.elements
 				_tableBlocks.push(new TextFlowTableBlock(0));
 			_tableBlockIndex = 0;
 			_tableBlocks[0].parentTable = this;
+			
 			return _tableBlocks[0];
 		}
 		
@@ -1014,6 +1022,7 @@ package flashx.textLayout.elements
 				_tableBlocks.push( new TextFlowTableBlock(_tableBlocks.length) );
 			}
 			_tableBlocks[_tableBlockIndex].parentTable = this;
+			
 			return _tableBlocks[_tableBlockIndex];
 		}
 		
@@ -1052,12 +1061,12 @@ package flashx.textLayout.elements
 			var firstCoords:CellCoordinates = anchorCoords.clone();
 			var lastCoords:CellCoordinates = activeCoords.clone();
 			if(
-				activeCoords.row < anchorCoords.row ||
-				(activeCoords.row == anchorCoords.row && activeCoords.column < anchorCoords.column)
+				lastCoords.row < firstCoords.row ||
+				(lastCoords.row == firstCoords.row && lastCoords.column < firstCoords.column)
 			)
 			{
-				firstCoords = activeCoords;
-				lastCoords = anchorCoords;
+				firstCoords = activeCoords.clone();
+				lastCoords = anchorCoords.clone();
 			}
 			
 			// make sure the rectangle is not inversed
@@ -1077,8 +1086,11 @@ package flashx.textLayout.elements
 				var nextCell:TableCellElement = mxmlChildren[idx];
 				if(nextCell.rowIndex > lastCoords.row || (nextCell.rowIndex == lastCoords.row && nextCell.colIndex > lastCoords.column))
 					break;
+				// skip cells outside rectangle
+				if(nextCell.colIndex > lastCoords.column || nextCell.colIndex < firstCoords.column)
+					continue;
 				if(!block || getCellBlock(nextCell) == block)
-					cells.push(nextCell);				
+					cells.push(nextCell);
 			}
 			return cells;
 		}
@@ -1086,7 +1098,7 @@ package flashx.textLayout.elements
 		/**
 		 * Finds the cell at the specified cell coordinates or null if no cell is found. 
 		 **/
-		private function findCell(coords:CellCoordinates):TableCellElement
+		public function findCell(coords:CellCoordinates):TableCellElement
 		{
 			// get a guess of the cell location. If there's no holes (such as spans), it should theoretically pinpoint the index.
 			var idx:int = (coords.row+1) * (coords.column+1) -1;
@@ -1166,30 +1178,53 @@ package flashx.textLayout.elements
 		
 		public function getTableBlocksInRange(start:CellCoordinates,end:CellCoordinates):Vector.<TextFlowTableBlock>
 		{
+			var coords:CellCoordinates = start.clone();
 			if(end.column < start.column)
 			{
-				var temp:CellCoordinates = start;
-				start = end;
-				end = temp;
+				coords = end.clone();
+				end = start.clone();
 			}
 			var blocks:Vector.<TextFlowTableBlock> = new Vector.<TextFlowTableBlock>();
-			var block:TextFlowTableBlock = getCellBlock(findCell(start));
+			var block:TextFlowTableBlock = getCellBlock(findCell(coords));
 			if(block)
 				blocks.push(block);
 			while(block)
 			{
-				start.row++;
-				if(start.row > end.row)
+				coords.row++;
+				if(coords.row > end.row)
 					break;
-				if(getCellBlock(findCell(start)) == block)
+				if(getCellBlock(findCell(coords)) == block)
 					continue;
-				block = getCellBlock(findCell(start));
+				block = getCellBlock(findCell(coords));
 				if(block)
 					blocks.push(block);
 			}
 			return blocks;
 		}
 
+		/** @private */
+		tlf_internal override function getNextLeafHelper(limitElement:FlowGroupElement,child:FlowElement):FlowLeafElement
+		{
+			return null;
+		}
+		
+		/** @private */
+		tlf_internal override function getPreviousLeafHelper(limitElement:FlowGroupElement,child:FlowElement):FlowLeafElement
+		{
+			return null;
+		}
+
+		private function getLeaf():TableLeafElement
+		{
+			if(_leaf == null)
+				_leaf = new TableLeafElement(this);
+			return _leaf;
+		}
+		
+		public override function findLeaf(relativePosition:int):FlowLeafElement
+		{
+			return getLeaf();
+		}
 	}
 }
 class CellCoords

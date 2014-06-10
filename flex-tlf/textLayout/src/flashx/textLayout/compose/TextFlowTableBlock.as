@@ -150,6 +150,19 @@ package flashx.textLayout.compose
 		override public function get height():Number{
 			return _container.height;
 		}
+		/**
+		 * Sets the width of the container 
+		 **/
+		public function set width(value:Number):void{
+			_container.width = value;
+		}
+		
+		/**
+		 * Gets the width of the container 
+		 **/
+		public function get width():Number{
+			return _container.width;
+		}
 		
 		/**
 		 * Sets the x position of the container

@@ -29,7 +29,7 @@ package flashx.textLayout.elements
 		/**
 		 * @constructor
 		 **/
-		public function CellCoordinates(row:int, column:int)
+		public function CellCoordinates(row:int, column:int, table:TableElement = null)
 		{
 			_row = row;
 			_column = column;
@@ -83,5 +83,6 @@ package flashx.textLayout.elements
 			return new CellCoordinates(row, column);
 		}
 
+		public var table:TableElement;
 	}
 }
