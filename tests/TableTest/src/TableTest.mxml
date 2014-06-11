@@ -30,6 +30,7 @@
 				textFlow = new TextFlow();
 				undoManager = new UndoManager();
 				textFlow.interactionManager = new EditManager(undoManager);
+				
 				table = new TableElement();
 				//table.tableWidth = 600;
 				table.columnCount = 4;
@@ -45,7 +46,15 @@
 				span.text = "Let's try a table...";
 				para.addChild(span);
 				textFlow.addChild(para);
-				textFlow.addChild(table);
+				para = new ParagraphElement();
+				para.paragraphStartIndent = 3;
+				para.addChild(table);
+				/*
+				table = new TableElement();
+				table.numColumns = 3;
+				table.insertRow(); // or insertColumn()
+				*/
+				textFlow.addChild(para);
 				controller = new ContainerController(holder,NaN,NaN);
 				textFlow.flowComposer.addController(controller);
 				textFlow.flowComposer.updateAllControllers();

@@ -460,11 +460,6 @@ package flashx.textLayout.compose
 						return false;
 					}
 				}
-				else if (child is TableElement)         // Compose TableElement
-				{
-					if ( ! composeTableElement(child as TableElement, absStart) )
-						return false;
-				}
 				else 
 				{
 					if ( ! composeBlockElement(FlowGroupElement(child),absStart))
@@ -1038,6 +1033,15 @@ package flashx.textLayout.compose
 			if (preProcessILGs(_curElementStart - _curParaStart))
 				firstIndentCharPos = getFirstIndentCharPos(_curParaElement) + _curParaStart;
 
+			// deal with tables as a special case. We're assuming tables are the only child of a paragraph for now.
+			if(_curParaElement.getChildAt(0) is TableElement)
+			{
+				if(_curParaElement.numChildren > 1)
+					throw new Error("TableElements must be the single child a the ParagraphElement");
+				var child:TableElement = _curParaElement.getChildAt(0) as TableElement;
+				return composeTableElement(child as TableElement, _curParaStart);
+
+			}
 			// loop creating lines_curParaStart
 			while (result)
 			{
