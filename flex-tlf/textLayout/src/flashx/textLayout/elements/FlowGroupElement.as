@@ -626,7 +626,7 @@ package flashx.textLayout.elements
 		 */
 		tlf_internal function canOwnFlowElement(elem:FlowElement):Boolean
 		{
-			return !(elem is TextFlow) && !(elem is FlowLeafElement) && !(elem is SubParagraphGroupElementBase) && !(elem is ListItemElement);
+			return !(elem is TextFlow) && !(elem is FlowLeafElement) && !(elem is SubParagraphGroupElementBase) && !(elem is ListItemElement) && !(elem is TableElement);
 		}
 		
 		/** @private */	
