@@ -280,14 +280,27 @@
 				var cellTextFlow:TextFlow;
 				var selectable:Boolean = textFlow.interactionManager is SelectionManager;
 				var editable:Boolean = textFlow.interactionManager is EditManager;
+				var borderColor:String = "#AA0000";
+				var borderWidth:int = 2;
 				
 				for(var columnIndex:int=0;columnIndex<columnCount;columnIndex++){
 					cell = new TableCellElement();
 					
-					cell.colIndex = columnIndex;
-					cell.rowIndex = rowIndex;
-					//cell.textFlow = getTextFlowContent("R " + rowIndex + " C " + cell.colIndex, selectable, editable);
-					cell.textFlow = getTextFlowContent(String(table.numChildren+1), selectable, editable);
+					cell.colIndex 			= columnIndex;
+					cell.rowIndex 			= rowIndex;
+					cell.textFlow 			= getTextFlowContent(String(table.numChildren+1), selectable, editable);
+					
+					cell.borderTopColor 	= borderColor;
+					cell.borderLeftColor 	= borderColor;
+					cell.borderBottomColor 	= borderColor;
+					cell.borderRightColor 	= borderColor;
+					
+					cell.borderTopWidth 	= borderWidth;
+					cell.borderLeftWidth 	= borderWidth;
+					cell.borderBottomWidth 	= borderWidth;
+					cell.borderRightWidth 	= borderWidth;
+					
+					cell.paddingBottom 		= 3;
 					
 					table.addChild(cell);
 				}
@@ -352,6 +365,9 @@
 					updateErrorsText(tableNotCreatedError);
 					return;
 				}
+				
+				//table.removeAllRowsWithContent();
+				//updateAllControllers();
 				
 				textFlow.removeChild(table);
 				

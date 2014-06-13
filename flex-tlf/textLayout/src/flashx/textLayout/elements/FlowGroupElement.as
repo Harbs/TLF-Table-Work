@@ -687,6 +687,7 @@ package flashx.textLayout.elements
 				{
 					child = this.getChildAt(beginChildIndex);
 					this.modelChanged(ModelChange.ELEMENT_REMOVAL, child, child.parentRelativeStart, child.textLength);
+					child.removed();
 					len += child.textLength;
 					
 					child.setParentAndRelativeStart(null,0);

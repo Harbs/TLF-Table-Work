@@ -20,12 +20,12 @@ package flashx.textLayout.elements
 {
 	import flash.utils.Dictionary;
 	
+	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.compose.TextFlowTableBlock;
 	import flashx.textLayout.events.ModelChange;
 	import flashx.textLayout.formats.FormatValue;
 	import flashx.textLayout.formats.ITextLayoutFormat;
 	import flashx.textLayout.formats.TextLayoutFormat;
-	import flashx.textLayout.tlf_internal;
 	
 	use namespace tlf_internal;
 	
@@ -33,7 +33,6 @@ package flashx.textLayout.elements
 	/** 
 	 * The TableElement class is used for grouping together items into a table. 
 	 * A TableElement's children must be of type TableRowElement, TableColElement, TableColGroupElement, TableBodyElement.
-	 * 
 	 * 
 	 * 
 	 * @playerversion Flash 10
@@ -187,6 +186,38 @@ package flashx.textLayout.elements
 		public function set defaultColumnFormat(value:ITextLayoutFormat):void
 		{
 			_defaultColumnFormat = value;
+		}
+		
+		/**
+		 * Adds a table cell element to the table. 
+		 * @inheritDoc
+		 **/
+		override public function addChild(child:FlowElement):FlowElement
+		{
+			
+			if (child is TableFormattedElement) {
+				TableFormattedElement(child).table = this;
+				TableFormattedElement(child).cellSpacing = 10;
+			}
+			
+			super.addChild(child);
+			
+			return child;
+		}
+		
+		/**
+		 * Removes a table cell element from the table. 
+		 * @inheritDoc
+		 **/
+		override public function removeChild(child:FlowElement):FlowElement
+		{
+			super.removeChild(child);
+			
+			if (child is TableFormattedElement) {
+				TableFormattedElement(child).table = null;
+			}
+			
+			return child;
 		}
 		
 		/**
@@ -561,6 +592,16 @@ package flashx.textLayout.elements
 			removeColumnAt(idx);
 
 			return removedCells;
+		}
+		
+		/**
+		 * Remove all cells
+		 * @inheritDoc
+		 **/
+		override tlf_internal function removed():void
+		{
+			hasCellDamage = true;
+			removeAllRowsWithContent();
 		}
 		
 		/**

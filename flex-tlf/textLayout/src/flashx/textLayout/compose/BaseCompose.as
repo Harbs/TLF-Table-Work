@@ -540,6 +540,7 @@ package flashx.textLayout.compose
 			var lineOffset:Number = (_curParaFormat.direction == Direction.LTR) ? _lineSlug.leftMargin : _lineSlug.rightMargin;
 			curTableBlock.initialize(_curParaElement, _lineSlug.width, lineOffset-_parcelList.insideListItemMargin, tableElement.getAbsoluteStart());
 			var blockToAdd:Boolean = true;
+			
 			while(curRow){
 				
 				// I'm ignoring headers and footers for now. We need to add them in later.
@@ -548,8 +549,9 @@ package flashx.textLayout.compose
 				var rowHeight:Number = curRowElem.composedHeight;
 				var minRowHeight:Number = curRowElem.totalHeight;
 				//_parcelList.addTotalDepth(tableElement.getEffectiveMarginBottom());
+				
 				while(
-					!(_parcelList.currentParcel.fitsInHeight(_parcelList.totalDepth,minRowHeight + footerHeight))
+					!(_parcelList.currentParcel.fitsInHeight(_parcelList.totalDepth, minRowHeight + footerHeight))
 				){
 					//TODO: add in footer rows...
 					
@@ -560,7 +562,7 @@ package flashx.textLayout.compose
 					curTableBlock.setController(_parcelList.currentParcel.controller,_parcelList.currentParcel.columnIndex);
 
 //					_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);
-					BackgroundManager.collectTableBlock(_textFlow,curTableBlock, _parcelList.currentParcel.controller);
+					BackgroundManager.collectTableBlock(_textFlow, curTableBlock, _parcelList.currentParcel.controller);
 					blockToAdd = false;
 					
 					_parcelList.next();
@@ -581,22 +583,28 @@ package flashx.textLayout.compose
 						break;
 					}
 				}
+				
 				if(_parcelList.currentParcel == null){
 					blockToAdd = false;
 					break;
 				}
+				
 				// we have a parcel and a row. Let's add the cells.
-				for each(var cell:TableCellElement in curRow){
-					cell.container.y = totalRowHeight;
+				for each(var cell:TableCellElement in curRow) {
+					cell.y = totalRowHeight;
 					var col:TableColElement = tableElement.getColumnAt(cell.colIndex);
-					if(col)
-						cell.container.x =  col.x;
-					tableElement.addCellToBlock(cell,curTableBlock);
-//					curTableBlock.addCell(cell.container);
+					
+					if (col) {
+						cell.x = col.x;
+					}
+					
+					tableElement.addCellToBlock(cell, curTableBlock);
+					//curTableBlock.addCell(cell.container);
 					// add the cells to _parcelList.currentParcel.controller
 					// need to figure out exactly how.
 					
 				}
+				
 				// add the row height
 				// we're assuming normal top to bottom tables -- not Japanese ones...
 				_parcelList.addTotalDepth(rowHeight);
@@ -604,6 +612,7 @@ package flashx.textLayout.compose
 				curRow = tableElement.getNextRow();
 				totalRowHeight += rowHeight;
 			}
+			
 			if(_parcelList.currentParcel && blockToAdd){
 				curTableBlock.setController(_curParcel.controller,_curParcel.columnIndex);
 //				_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);

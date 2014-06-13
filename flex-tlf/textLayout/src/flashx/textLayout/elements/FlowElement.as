@@ -805,6 +805,14 @@ package flashx.textLayout.elements
 		{ setStyle(styleProp,undefined); }
 		
 		/**
+		 * Called when an element is removed. Used for container elements to run any clean up code. 
+		 **/
+		tlf_internal function removed():void
+		{
+			// override in sub classes
+		}
+		
+		/**
 		 * Called whenever the model is modified.  Updates the TextFlow and notifies the selection manager - if it is set.
 		 * This method has to be called while the element is still in the flow
 		 * @param changeType - type of change

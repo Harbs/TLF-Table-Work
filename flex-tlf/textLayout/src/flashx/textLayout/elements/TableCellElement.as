@@ -26,18 +26,18 @@ package flashx.textLayout.elements
 	import flash.utils.getDefinitionByName;
 	import flash.utils.getQualifiedClassName;
 	
+	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.container.ContainerController;
 	import flashx.textLayout.edit.EditManager;
 	import flashx.textLayout.edit.IEditManager;
 	import flashx.textLayout.edit.ISelectionManager;
 	import flashx.textLayout.events.DamageEvent;
-	import flashx.textLayout.tlf_internal;
 	import flashx.undo.UndoManager;
 	
 	use namespace tlf_internal;
 	
 	/** 
-	 * <p> TableCellElement is an item in a TableElement. It most commonly contains one or more ParagraphElement objects.
+	 * TableCellElement is an item in a TableElement. It most commonly contains one or more ParagraphElement objects.
 	 *
 	 * 
 	 * @playerversion Flash 10
@@ -82,16 +82,23 @@ package flashx.textLayout.elements
 			return (elem is FlowElement);
 		}
 		
-		public function isDamaged():Boolean{
+		public function isDamaged():Boolean {
 			return _damaged;
 		}
 		
-		public function compose():Boolean{
-			if(getTable() && getTable().getColumnAt(colIndex))
-				width = getTable().getColumnAt(colIndex).columnWidth;
+		public function compose():Boolean {
+			var table:TableElement = getTable();
+			
+			if (table && table.getColumnAt(colIndex)) {
+				width = table.getColumnAt(colIndex).columnWidth;
+			}
+			
 			_damaged = false;
-			if(_textFlow && _textFlow.flowComposer)
+			
+			if (_textFlow && _textFlow.flowComposer) {
 				return _textFlow.flowComposer.compose();
+			}
+			
 			return false;
 		}
 		
@@ -135,26 +142,27 @@ package flashx.textLayout.elements
 		
 		protected var _textFlow:TextFlow;
 		
-		public function get textFlow():TextFlow
-		{
-			if(_textFlow == null)
-			{
+		public function get textFlow():TextFlow {
+			
+			if (_textFlow == null) {
 				var flow:TextFlow = new TextFlow();
-				if(getTable() && getTable().getTextFlow() && getTable().getTextFlow().interactionManager is IEditManager)
-				{
+				var table:TableElement = getTable();
+				
+				if (table && table.getTextFlow() && table.getTextFlow().interactionManager is IEditManager) {
 					flow.interactionManager = new EditManager(IEditManager(_textFlow.interactionManager).undoManager);
 				}
-				else if(getTable() && getTable().getTextFlow() && getTable().getTextFlow().interactionManager)
-				{
-					var im:Class = getDefinitionByName(getQualifiedClassName(getTable().getTextFlow().interactionManager)) as Class;
+				else if(table && table.getTextFlow() && table.getTextFlow().interactionManager) {
+					var im:Class = getDefinitionByName(getQualifiedClassName(table.getTextFlow().interactionManager)) as Class;
 					flow.interactionManager = new im();
 				}
-				else
+				else {
 					flow.normalize();
+				}
 				
 				textFlow = flow;
 
 			}
+			
 			return _textFlow;
 		}
 		
@@ -193,34 +201,49 @@ package flashx.textLayout.elements
 			return _container;
 		}
 
+		/**
+		 * Gets the width.
+		 **/
 		public function get width():Number
 		{
 			return _width;
 		}
 
+		/**
+		 * @private
+		 **/
 		public function set width(value:Number):void
 		{
 			if(_width != value)
 				_damaged = true;
 			_width = value;
-			_controller.setCompositionSize(value,_controller.compositionHeight);
+			_controller.setCompositionSize(value, _controller.compositionHeight);
 //			_controller.compositionWidth 
 			
 		}
-
+		
+		/**
+		 * Returns the height of the cell. 
+		 **/
 		public function get height():Number
 		{
 			return _height;
 		}
 
+		/**
+		 * @private
+		 **/
 		public function set height(value:Number):void
 		{
-			if(_height != value)
+			if (_height != value) {
 				_damaged = true;
+			}
 				
 			_height = value;
-			_controller.setCompositionSize(_controller.compositionWidth,value);
+			
+			_controller.setCompositionSize(_controller.compositionWidth, value);
 		}
+		
 		public function getComposedHeight():Number
 		{
 			return _controller.getContentBounds().height;
