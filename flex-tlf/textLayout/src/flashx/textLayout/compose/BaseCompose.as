@@ -30,6 +30,7 @@ package flashx.textLayout.compose
 	import flash.text.engine.TextLineValidity;
 	import flash.utils.Dictionary;
 	
+	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.container.ContainerController;
 	import flashx.textLayout.debug.Debugging;
 	import flashx.textLayout.debug.assert;
@@ -69,7 +70,6 @@ package flashx.textLayout.compose
 	import flashx.textLayout.formats.TextLayoutFormat;
 	import flashx.textLayout.formats.VerticalAlign;
 	import flashx.textLayout.property.Property;
-	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.utils.LocaleUtil;
 	import flashx.textLayout.utils.Twips;
 
@@ -308,7 +308,7 @@ package flashx.textLayout.compose
 			if (controllerStartIndex < 0)
 				controllerStartIndex = 0;
 			
-			// this chains through the list - tell it if a "care about" comopseToPosition was specified
+			// this chains through the list - tell it if a "care about" composeToPosition was specified
 			_parcelList.beginCompose(composer, controllerStartIndex, controllerEndIndex, composeToPosition > 0);	
 			
 			_contentLogicalExtent = 0;
@@ -325,10 +325,18 @@ package flashx.textLayout.compose
 			_listItemElement = null;
 		}
 		
-		private function composeBlockElement(elem:FlowGroupElement,absStart:int,isInTable:Boolean=false, startChildIdx:int = -1):Boolean
+		private function composeBlockElement(elem:FlowGroupElement, absStart:int, isInTable:Boolean=false, startChildIdx:int = -1):Boolean
 		{	
 			var child:FlowElement;
 			var rslt:Boolean;	// scratch
+			var isInTableCell:Boolean = elem is TextFlow && TextFlow(elem).parentElement is TableCellElement ? true : false;
+			var cellSpacing:Number = 0;
+			
+			if (isInTableCell) {
+				var tableCell:TableCellElement = TextFlow(elem).parentElement as TableCellElement;
+				var table:TableElement = tableCell.table;
+				cellSpacing = table.cellSpacing!=undefined ? table.cellSpacing : 0;
+			}
 			
 			// Iterate through the children, composing them. If we're starting in the middle of the element,
 			// make sure we advance to the starting child.
@@ -397,6 +405,13 @@ package flashx.textLayout.compose
 					boxRightIndent = child.getEffectivePaddingRight() + child.getEffectiveBorderRightWidth() + child.getEffectiveMarginRight();
 					boxTopIndent = child.getEffectivePaddingTop() + child.getEffectiveBorderTopWidth() + child.getEffectiveMarginTop();
 					boxBottomIndent = child.getEffectivePaddingBottom() + child.getEffectiveBorderBottomWidth() + child.getEffectiveMarginBottom();
+					
+					if (isInTableCell) {
+						boxLeftIndent += cellSpacing;
+						boxRightIndent += cellSpacing;
+						boxTopIndent += cellSpacing;
+						boxBottomIndent += cellSpacing;
+					}
 				}
 				CONFIG::debug { assert(!isNaN(boxLeftIndent) && ! isNaN(boxRightIndent),"BAD indents"); }
 				_parcelList.pushLeftMargin(boxLeftIndent);

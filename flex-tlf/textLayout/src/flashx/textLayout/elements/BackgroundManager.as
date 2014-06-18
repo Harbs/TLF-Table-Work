@@ -128,7 +128,7 @@ package flashx.textLayout.elements
 					bb.addBlockElement(cell);
 
 					var row:TableRowElement = cell.getRow();
-					r = new Rectangle(cell.container.x, cell.container.y + block.y, cell.width, row.composedHeight);
+					r = new Rectangle(cell.x, cell.y + block.y, cell.width, row.composedHeight);
 					bb.addBlockRect(cell, r, controller);
 
 				}

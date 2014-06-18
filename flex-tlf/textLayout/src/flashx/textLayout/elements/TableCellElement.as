@@ -23,6 +23,7 @@ package flashx.textLayout.elements
 	import flash.display.Sprite;
 	import flash.events.MouseEvent;
 	import flash.geom.Point;
+	import flash.text.engine.GraphicElement;
 	import flash.utils.getDefinitionByName;
 	import flash.utils.getQualifiedClassName;
 	
@@ -32,6 +33,9 @@ package flashx.textLayout.elements
 	import flashx.textLayout.edit.IEditManager;
 	import flashx.textLayout.edit.ISelectionManager;
 	import flashx.textLayout.events.DamageEvent;
+	import flashx.textLayout.events.ModelChange;
+	import flashx.textLayout.formats.BlockProgression;
+	import flashx.textLayout.formats.Float;
 	import flashx.undo.UndoManager;
 	
 	use namespace tlf_internal;
@@ -51,6 +55,11 @@ package flashx.textLayout.elements
 		private var _y:Number;
 		private var _width:Number;
 		private var _height:Number;
+		private var _widthWithPadding:Number;
+		private var _heightWithPadding:Number;
+		private var _elementWidth:Number;
+		private var _elementHeight:Number;
+
 		private var _parcelIndex:int;
 		private var _container:CellContainer;
 		private var _enableIME:Boolean = true;
@@ -146,7 +155,6 @@ package flashx.textLayout.elements
 			
 			if (_textFlow == null) {
 				var flow:TextFlow = new TextFlow();
-				var table:TableElement = getTable();
 				
 				if (table && table.getTextFlow() && table.getTextFlow().interactionManager is IEditManager) {
 					flow.interactionManager = new EditManager(IEditManager(_textFlow.interactionManager).undoManager);
@@ -168,14 +176,16 @@ package flashx.textLayout.elements
 		
 		public function set textFlow(value:TextFlow):void
 		{
-			if(_textFlow){
-				_textFlow.removeEventListener(DamageEvent.DAMAGE,handleCellDamage);
+			if (_textFlow) {
+				_textFlow.removeEventListener(DamageEvent.DAMAGE, handleCellDamage);
 				_textFlow.flowComposer.removeAllControllers();
 			}
+			
 			_textFlow = value;
 			_textFlow.parentElement = this;
 			_textFlow.flowComposer.addController(_controller);
-			_textFlow.addEventListener(DamageEvent.DAMAGE,handleCellDamage);
+			_textFlow.addEventListener(DamageEvent.DAMAGE, handleCellDamage);
+			
 		}
 		
 		private function handleCellDamage(ev:DamageEvent):void{
@@ -214,12 +224,15 @@ package flashx.textLayout.elements
 		 **/
 		public function set width(value:Number):void
 		{
-			if(_width != value)
+			if(_width != value) {
 				_damaged = true;
-			_width = value;
-			_controller.setCompositionSize(value, _controller.compositionHeight);
-//			_controller.compositionWidth 
+			}
 			
+			_width = value;
+			_widthWithPadding = _width + getTotalPaddingWidth();
+			_elementWidth = value;
+			
+			_controller.setCompositionSize(_width, _controller.compositionHeight);
 		}
 		
 		/**
@@ -238,10 +251,12 @@ package flashx.textLayout.elements
 			if (_height != value) {
 				_damaged = true;
 			}
-				
-			_height = value;
 			
-			_controller.setCompositionSize(_controller.compositionWidth, value);
+			_height = value;
+			_heightWithPadding = _height + getTotalPaddingHeight();
+			_elementHeight = value;
+			
+			_controller.setCompositionSize(_controller.compositionWidth, _height);
 		}
 		
 		public function getComposedHeight():Number
@@ -302,9 +317,146 @@ package flashx.textLayout.elements
 
 		public function damage():void
 		{
-			if(getTable())
-				getTable().hasCellDamage = true;
+			if (table) {
+				table.hasCellDamage = true;
+			}
+			
 			_damaged = true;
+		}
+		
+		/**
+		 * Adds in the table cell spacing, border stroke width. 
+		 * We may be able to set this value when the format changes. 
+		 * For now we just want to get it to work. 
+		 **/
+		public function getTotalPaddingWidth():Number {
+			var paddingAmount:Number = 0;
+			
+			// no textflow is no padding
+			if (!textFlow) {
+				return 0;
+			}
+			
+			if (table && table.cellSpacing!=undefined) {
+				paddingAmount += table.cellSpacing;
+			}
+			
+			if (textFlow.computedFormat.blockProgression == BlockProgression.RL) {
+				paddingAmount += Math.max(getEffectivePaddingTop() + getEffectivePaddingBottom(), getEffectiveBorderTopWidth() + getEffectiveBorderBottomWidth());
+			}
+			else {
+				paddingAmount += Math.max(getEffectivePaddingLeft() + getEffectivePaddingRight(), getEffectiveBorderLeftWidth() + getEffectiveBorderRightWidth());
+			}
+			
+			return paddingAmount;
+		}
+		
+		/**
+		 * Adds in the table cell spacing, border stroke height. 
+		 * We may be able to set this value when the format changes. 
+		 **/
+		public function getTotalPaddingHeight():Number {
+			var paddingAmount:Number = 0;
+			
+			// no textflow is no padding
+			if (!textFlow) {
+				return 0;
+			}
+			
+			if (table && table.cellSpacing!=undefined) {
+				paddingAmount += table.cellSpacing;
+			}
+			
+			if (textFlow.computedFormat.blockProgression == BlockProgression.RL) {
+				paddingAmount += Math.max(getEffectivePaddingLeft() + getEffectivePaddingRight(), getEffectiveBorderLeftWidth() + getEffectiveBorderRightWidth());
+			}
+			else {
+				paddingAmount += Math.max(getEffectivePaddingTop() + getEffectivePaddingBottom(), getEffectiveBorderTopWidth() + getEffectiveBorderBottomWidth());
+			}
+			
+			return paddingAmount;
+		}
+		
+		
+		/** @private */
+		tlf_internal function elementWidthWithMarginsAndPadding():Number
+		{
+			var paddingAmount:Number = 0;
+			
+			// no textflow is no padding
+			if (!textFlow) {
+				return elementWidth;
+			}
+			
+			if (textFlow.computedFormat.blockProgression == BlockProgression.RL) {
+				paddingAmount = getTotalPaddingWidth();
+			}
+			else {
+				paddingAmount = getTotalPaddingHeight();
+			}
+			
+			return elementWidth + paddingAmount;
+		}
+		
+		/** @private */
+		tlf_internal function elementHeightWithMarginsAndPadding():Number
+		{
+			var paddingAmount:Number;
+			
+			// no textflow is no padding
+			if (!textFlow) {
+				return elementHeight;
+			}
+			
+			if (textFlow.computedFormat.blockProgression == BlockProgression.RL) {
+				paddingAmount = getTotalPaddingHeight();
+			}
+			else {
+				paddingAmount = getTotalPaddingWidth();
+			}
+			
+			return isNaN(elementHeight) ? height + paddingAmount : elementHeight + paddingAmount;
+		}
+		
+		
+		/** 
+		 * Width used by composition for laying out text
+		 * */
+		tlf_internal function get elementWidth():Number
+		{
+			return _elementWidth;           
+		}
+		
+		/** 
+		 * @private 
+		 * */
+		tlf_internal function set elementWidth(value:Number):void
+		{
+			_elementWidth = value;
+			
+			elementWidth = elementWidthWithMarginsAndPadding();
+			
+			modelChanged(ModelChange.ELEMENT_MODIFIED, this, 0, textLength, true, false);
+		}
+		
+		/**
+		 * Height used by composition for laying out text 
+		 * */
+		tlf_internal function get elementHeight():Number
+		{
+			return _elementHeight;          
+		}
+		
+		/** 
+		 * @private 
+		 * */
+		tlf_internal function set elementHeight(value:Number):void
+		{
+			_elementHeight = value;
+			
+			elementHeight = elementHeightWithMarginsAndPadding();    
+			
+			modelChanged(ModelChange.ELEMENT_MODIFIED, this, 0, textLength, true, false);
 		}
 	}
 }

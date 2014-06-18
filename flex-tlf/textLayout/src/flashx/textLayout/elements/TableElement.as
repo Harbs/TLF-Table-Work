@@ -103,6 +103,16 @@ package flashx.textLayout.elements
 			super.modelChanged(changeType,elem,changeStart,changeLen,needNormalize,bumpGeneration);
 		}
 		
+		override public function set cellSpacing(cellSpacingValue:*):void
+		{
+			
+			markCellsDamaged();
+			hasCellDamage = true;
+			normalizeCells();
+			
+			super.cellSpacing = cellSpacingValue;
+		}
+		
 		public function get numRows():int
 		{
 			return rows.length;
@@ -197,7 +207,6 @@ package flashx.textLayout.elements
 			
 			if (child is TableFormattedElement) {
 				TableFormattedElement(child).table = this;
-				TableFormattedElement(child).cellSpacing = 10;
 			}
 			
 			super.addChild(child);
@@ -740,15 +749,18 @@ package flashx.textLayout.elements
 		public function composeCells():void{
 			normalizeCells();
 			_composedRowIndex = 0;
+			
 			// make sure the height that defines the row height did not change. If it did we might need to change the row height.
 			if(!hasCellDamage)
 				return;
 			var damagedCells:Vector.<TableCellElement> = getDamagedCells();
 			var cell:TableCellElement;
+			
 			for each(cell in damagedCells){
 				// recompose the cells while tracking row height if necessary
 				cell.compose();
 			}
+			
 			// set row heights to minimum
 			for each (var row:TableRowElement in rows){
 				var minH:Number = row.computedFormat.minCellHeight;
@@ -760,6 +772,7 @@ package flashx.textLayout.elements
 					row.isMaxHeight = true;
 				
 			}
+			
 			// set column positions...
 			var xPos:Number = 0;
 			for each (var col:TableColElement in columns){
@@ -778,22 +791,24 @@ package flashx.textLayout.elements
 					row = getRowAt(cell.rowIndex);
 					if(!row)
 						throw new Error("this should not happen...");
-					if(row.isMaxHeight)
+					if(row.isMaxHeight) {
 						continue;
+					}
+					
 					var cellHeight:Number = cell.getComposedHeight();
 					if(cell.rowSpan > 1)
 					{
 						// figure out the total height taking into account fixed height rows and the total span.
 						
 						// for now, we're taking the easy way out assuming the rows are not fixed...
-						row.totalHeight = Math.max(row.totalHeight,cellHeight);
+						row.totalHeight = Math.max(row.totalHeight, cellHeight);
 						
 					}
 					else
 					{
-						row.composedHeight = Math.max(row.composedHeight,cellHeight);
-						row.composedHeight = Math.min(row.composedHeight,row.computedFormat.maxCellHeight);
-						row.totalHeight = Math.max(row.composedHeight,row.totalHeight);
+						row.composedHeight = Math.max(row.composedHeight, cellHeight);
+						row.composedHeight = Math.min(row.composedHeight, row.computedFormat.maxCellHeight);
+						row.totalHeight = Math.max(row.composedHeight, row.totalHeight);
 					}
 					if(row.composedHeight == row.computedFormat.maxCellHeight)
 						row.isMaxHeight = true;
@@ -955,6 +970,19 @@ package flashx.textLayout.elements
 					cells.push(cell as TableCellElement);
 			}
 			return cells;
+		}
+		
+		/**
+		 * Marks all of the cells in the table as damaged.
+		 **/
+		private function markCellsDamaged():void {
+			if (!mxmlChildren) return;
+			
+			for each (var cell:* in this.mxmlChildren){
+				if (cell is TableCellElement) {
+					cell.damage();
+				}
+			}
 		}
         
 		/**

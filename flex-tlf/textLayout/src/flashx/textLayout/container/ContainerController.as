@@ -405,7 +405,7 @@ package flashx.textLayout.container
 		/** 
 		 * Sets the width and height allowed for text in the container. Width and height can be specified in pixels or <code>NaN</code> can be used for either value.  <code>NaN</code> indicates measure that value. 
 		 * This can be used to find the widest line and/or the total height of all the content.  When NaN is specified as the width lines are broken with a maximum width of <code>TextLine.MAX_LINE_WIDTH</code>. 
-		 * When <code>NaN</code> is specified as the height the container is assumed to have unlimited height.  The actual measured values can be ready back in <code>getContentBounds</code>.  
+		 * When <code>NaN</code> is specified as the height the container is assumed to have unlimited height.  The actual measured values can be read back in <code>getContentBounds</code>.  
 		 * When the computed <code>blockProgression</code> property of <code>TextFlow</code>
 		 * is <code>BlockProgression.RL</code> the meanings of width and height are exchanged.
 		 *
@@ -423,7 +423,7 @@ package flashx.textLayout.container
 		 * @langversion 3.0
 		 */
 		
-		public function setCompositionSize(w:Number,h:Number):void
+		public function setCompositionSize(w:Number, h:Number):void
 		{
 		//	trace("setCompositionSize(" + w + ", " + h + ")");
 			

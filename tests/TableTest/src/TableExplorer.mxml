@@ -22,7 +22,7 @@
 			paddingRight: 4;
 		}
 		
-		s|NumericStepper {
+		global {
 			focusThickness: 0;
 		}
 		
@@ -223,7 +223,10 @@
 						addRow(table, false);
 					}
 					
-					textFlow.addChild(table);
+					var p:ParagraphElement = new ParagraphElement();
+					p.addChild(table);
+					table.cellSpacing = 8;
+					textFlow.addChild(p);
 				}
 				// insert table rows
 				else if (createTableMethod==2) {
@@ -281,7 +284,9 @@
 				var selectable:Boolean = textFlow.interactionManager is SelectionManager;
 				var editable:Boolean = textFlow.interactionManager is EditManager;
 				var borderColor:String = "#AA0000";
-				var borderWidth:int = 2;
+				var backgroundColor:String = "#FF0000";
+				var borderWidth:int = 1;
+				var backgroundAlpha:Number = .25;
 				
 				for(var columnIndex:int=0;columnIndex<columnCount;columnIndex++){
 					cell = new TableCellElement();
@@ -300,7 +305,10 @@
 					cell.borderBottomWidth 	= borderWidth;
 					cell.borderRightWidth 	= borderWidth;
 					
-					cell.paddingBottom 		= 3;
+					cell.backgroundColor 	= backgroundColor;
+					cell.backgroundAlpha 	= backgroundAlpha;
+					
+					//cell.paddingLeft 		= 20;
 					
 					table.addChild(cell);
 				}
@@ -866,15 +874,17 @@
 				paragraph.backgroundAlpha = 0.2;
 				paragraph.backgroundColor = 0xFF0000;
 				paragraph.addChild(span);
+				var num:int = paragraph.numChildren;
+				
+				textFlowContent.addChild(paragraph);
 				
 				if (editable) {
+					// setting the edit manager adds a default paragraph
 					textFlowContent.interactionManager = new EditManager(new UndoManager);
 				}
 				else if (selectable) {
 					textFlowContent.interactionManager = new SelectionManager();
 				}
-				
-				textFlowContent.addChild(paragraph);
 				
 				return textFlowContent;
 			}
@@ -1108,7 +1118,7 @@
 				}
 			}
 			
-			private function updateTableInformation():void {
+			public function updateTableInformation():void {
 				var table:TableElement = getTable();
 				
 				if (table) {
@@ -1118,6 +1128,7 @@
 					tableCells.text = String(table.numCells);
 					tableRowsStepper.value = table.numRows;
 					tableColumnsStepper.value = table.numColumns;
+					tableCellSpacing.value = table.cellSpacing!=undefined ? table.cellSpacing : 0;
 				}
 				else {
 					tableWidth.text = "";
@@ -1126,6 +1137,7 @@
 					tableCells.text = "";
 					tableRowsStepper.value = 0;
 					tableColumnsStepper.value = 0;
+					tableCellSpacing.value = 0;
 				}
 			}
 			
@@ -1189,11 +1201,26 @@
 				updateAllControllers();
 			}
 			
+			protected function cellSpacing_changeHandler(event:Event):void
+			{
+				var table:TableElement = getTable();
+				
+				if (!table) {
+					updateErrorsText(tableNotCreatedError);
+					return;
+				}
+				
+				table.cellSpacing = Number(tableCellSpacing.value);
+				
+				updateAllControllers();
+				
+			}
+			
 		]]>
 	</fx:Script>
 
 	<s:HGroup width="100%" minHeight="400" top="50" left="10" right="10" styleName="header">
-		<s:VGroup width="60%" height="100%">
+		<s:VGroup width="65%" height="100%">
 			<s:HGroup width="100%" gap="1" >
 				<s:Label text="TextFlow" width="100%" styleName="header"/>
 				<s:Label text="clear" click="clearTextFlow()" 
@@ -1225,13 +1252,22 @@
 								   click="removeColumn(getTable())" />
 				<s:Label text="|" />
 				<s:Image toolTip="Rows" source="assets/images/rowsIcon.png" />
-				<s:NumericStepper id="tableRowsStepper" change="tableRowsStepper_changeHandler(event)"/>
+				<s:NumericStepper id="tableRowsStepper" 
+								  width="50"
+								  change="tableRowsStepper_changeHandler(event)"/>
 				<s:Image toolTip="Columns" source="assets/images/columnsIcon.png" />
-				<s:NumericStepper id="tableColumnsStepper" change="tableColumnStepper_changeHandler(event)"/>
-				<s:Label text="Width:" paddingLeft="10"/>
-				<s:TextInput id="tableWidth" width="50" change="tableWidth_changeHandler(event)"/>
+				<s:NumericStepper id="tableColumnsStepper"
+								  width="50"
+								  change="tableColumnStepper_changeHandler(event)"/>
+				<s:Label text="|" />
+				<s:Label text="Width:" />
+				<s:TextInput id="tableWidth" width="40" change="tableWidth_changeHandler(event)"/>
 				<s:Label text="Height:" />
 				<s:Label id="tableHeight" />
+				<s:Label text="Cell Spacing:" />
+				<s:NumericStepper id="tableCellSpacing" 
+								  width="50" maximum="50"
+								  change="cellSpacing_changeHandler(event)"/>
 				<s:Label text="Total Cells:" />
 				<s:Label id="tableCells" />
 				<s:Label text="Blocks:" />
