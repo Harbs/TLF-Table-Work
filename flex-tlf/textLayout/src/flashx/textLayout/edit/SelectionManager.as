@@ -204,6 +204,7 @@ package flashx.textLayout.edit
 				activeCellPosition.column = -1;
 				activeCellPosition.row = -1;
 			}
+
 		}
 		
 		public function getCellRange():CellRange

@@ -302,7 +302,15 @@ package flashx.textLayout.compose
          	if (minY != TextLine.MAX_LINE_WIDTH && Math.abs(minY-_parcelTop) >= 1)
            		_parcelTop = minY;
  		}
- 				
+ 			
+		protected override function endTableBlock(block:TextFlowTableBlock):void
+		{
+			super.endTableBlock(block);
+			(_flowComposer as StandardFlowComposer).addLine(block,_curLineIndex);
+			
+			commitLastLineState (_curLine);
+			_curLineIndex++;
+		}
 		/** Called when we are finished composing a line. Handler for derived classes to override default behavior.  */
 		override protected function endLine(textLine:TextLine):void
 		{

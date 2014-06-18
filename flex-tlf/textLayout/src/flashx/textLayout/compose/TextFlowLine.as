@@ -1205,6 +1205,8 @@ package flashx.textLayout.compose
 					break;
 				elem = elem.getNextLeaf(_para);
 				CONFIG::debug { assert(elem != null,"bad nextLeaf"); }
+				if(elem == null)
+					break;
 			}
 			return totalLeading;
 		}
@@ -2491,6 +2493,8 @@ package flashx.textLayout.compose
 		/** @private */
 		static tlf_internal function findNumberLine(textLine:TextLine):TextLine
 		{
+			if(textLine == null)
+				return null;
 			// not always going to be a numberLine - listStyleType may be "none"
 			// have to hunt for it because inlinegraphics get pushed at the beginning
 			// risk here is that clients decorate TextLines with other TextLines.

@@ -582,7 +582,7 @@ package flashx.textLayout.elements
 		}
 		
 		/** @private */
-		tlf_internal function createContentAsGroup():GroupElement
+		tlf_internal function createContentAsGroup(pos:int=0):GroupElement
 		{
 			CONFIG::debug { assert(false,"invalid call to createContentAsGroup"); }
 			return null;

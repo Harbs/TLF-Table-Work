@@ -56,12 +56,12 @@ package flashx.textLayout.elements
 		
 		public override function getNextLeaf(limitElement:FlowGroupElement=null):FlowLeafElement
 		{
-			return null;
+			return _table.getNextLeafHelper(limitElement,this);
 		}
 		
 		public override function getPreviousLeaf(limitElement:FlowGroupElement=null):FlowLeafElement
 		{
-			return null;
+			return _table.getPreviousLeafHelper(limitElement,this);
 		}
 		/** @private */
 		public override function getCharAtPosition(relativePosition:int):String
@@ -71,6 +71,10 @@ package flashx.textLayout.elements
 		public override function get computedFormat():ITextLayoutFormat
 		{
 			return _table.computedFormat;
+		}
+		public override function get textLength():int
+		{
+			return _table.textLength;
 		}
 
 	}

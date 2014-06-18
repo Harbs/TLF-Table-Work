@@ -18,6 +18,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 package flashx.textLayout.elements
 {
+	import flash.display.Sprite;
+	import flash.text.engine.ContentElement;
+	import flash.text.engine.GraphicElement;
 	import flash.utils.Dictionary;
 	
 	import flashx.textLayout.compose.TextFlowTableBlock;
@@ -1205,13 +1208,13 @@ package flashx.textLayout.elements
 		/** @private */
 		tlf_internal override function getNextLeafHelper(limitElement:FlowGroupElement,child:FlowElement):FlowLeafElement
 		{
-			return null;
+			return parent.getNextLeafHelper(limitElement,this);
 		}
 		
 		/** @private */
 		tlf_internal override function getPreviousLeafHelper(limitElement:FlowGroupElement,child:FlowElement):FlowLeafElement
 		{
-			return null;
+			return parent.getPreviousLeafHelper(limitElement,this);
 		}
 
 		private function getLeaf():TableLeafElement
@@ -1225,6 +1228,21 @@ package flashx.textLayout.elements
 		{
 			return getLeaf();
 		}
+		public override function getLastLeaf(): FlowLeafElement
+		{
+			return getLeaf();
+		}
+		public override function getFirstLeaf():FlowLeafElement
+		{
+			return getLeaf();
+		}
+
+		tlf_internal override function createContentElement():void{}
+		/** @private 
+		 * Release the FTE data structure that corresponds to the FlowElement, so it can be gc'ed
+		 */
+		tlf_internal override function releaseContentElement():void{}
+
 	}
 }
 class CellCoords
