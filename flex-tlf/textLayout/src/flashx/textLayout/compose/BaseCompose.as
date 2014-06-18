@@ -569,10 +569,12 @@ package flashx.textLayout.compose
 					
 					if(!haveRealRows)
 						curTableBlock.clear();
-					curTableBlock.setController(_parcelList.currentParcel.controller,_parcelList.currentParcel.columnIndex);
+					
+					endTableBlock(curTableBlock);
+//					curTableBlock.setController(_parcelList.currentParcel.controller,_parcelList.currentParcel.columnIndex);
 
 //					_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);
-					BackgroundManager.collectTableBlock(_textFlow, curTableBlock, _parcelList.currentParcel.controller);
+//					BackgroundManager.collectTableBlock(_textFlow,curTableBlock, _parcelList.currentParcel.controller);
 					blockToAdd = false;
 					
 					_parcelList.next();
@@ -624,9 +626,10 @@ package flashx.textLayout.compose
 			}
 			
 			if(_parcelList.currentParcel && blockToAdd){
-				curTableBlock.setController(_curParcel.controller,_curParcel.columnIndex);
+				endTableBlock(curTableBlock);
+//				curTableBlock.setController(_curParcel.controller,_curParcel.columnIndex);
 //				_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);
-				BackgroundManager.collectTableBlock(_textFlow,curTableBlock, _parcelList.currentParcel.controller);
+//				BackgroundManager.collectTableBlock(_textFlow,curTableBlock, _parcelList.currentParcel.controller);
 			}
 			//reference ComposeState.composeNextLine() which creates the the TextLine.
 			// We don't need getLineSlug() because tables can extend beyond the container width
@@ -638,6 +641,29 @@ package flashx.textLayout.compose
 			
 			return true;
 		}
+		/** Called when we are finished composing a line, and it is committed. Handler for derived classes to override default behavior.  */
+		protected function endTableBlock(block:TextFlowTableBlock):void
+		{
+			block.setController(_curParcel.controller, _curParcel.columnIndex);
+			//				_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);
+			BackgroundManager.collectTableBlock(_textFlow, block, _parcelList.currentParcel.controller);
+
+			_contentCommittedExtent = Math.max(_contentCommittedExtent, _workingContentExtent);
+			_contentCommittedHeight = Math.max(_contentCommittedHeight, _workingContentHeight);
+			_contentLogicalExtent = Math.max(_contentLogicalExtent, _workingContentLogicalExtent);
+			
+			// if not measuring than contentLogicalExtent needs to match contentCommitedExtent so restarting composition in the middle gets the right extent
+			// don't need contentLogicalExtent to exclude things pushing beyond the right margin as alignment is happening as we go
+			if (!_measuring)
+				_contentLogicalExtent = _contentCommittedExtent;
+			if (_pushInFloats)
+				_pushInFloats.length = 0;	// zero it out for the next line
+			_atColumnStart = false;
+			_linePass = 0;
+			if (!isNaN(_workingParcelLogicalTop))
+				_parcelLogicalTop = _workingParcelLogicalTop;
+		}		
+
 		
 		/**
 		 * Compose the flow into the text container. Starts at the root element,
@@ -1057,15 +1083,6 @@ package flashx.textLayout.compose
 			if (preProcessILGs(_curElementStart - _curParaStart))
 				firstIndentCharPos = getFirstIndentCharPos(_curParaElement) + _curParaStart;
 
-			// deal with tables as a special case. We're assuming tables are the only child of a paragraph for now.
-			if(_curParaElement.getChildAt(0) is TableElement)
-			{
-				if(_curParaElement.numChildren > 1)
-					throw new Error("TableElements must be the single child a the ParagraphElement");
-				var child:TableElement = _curParaElement.getChildAt(0) as TableElement;
-				return composeTableElement(child as TableElement, _curParaStart);
-
-			}
 			// loop creating lines_curParaStart
 			while (result)
 			{
@@ -1089,6 +1106,27 @@ package flashx.textLayout.compose
 					break;
 				}
 
+				// do table here?
+				//_curElementStart == _curParaStart
+				//			var startCompose:int = _curElementStart + _curElementOffset - _curParaStart;
+				var c1:Object = _curParaElement.findChildIndexAtPosition(_curElementOffset);
+				var c2:Object = _curParaElement.findChildIndexAtPosition(_curElementStart);
+				var curChild:FlowElement = _curParaElement.getChildAt(_curParaElement.findChildIndexAtPosition(_curElementStart - _curParaStart));
+				if(curChild is TableElement)
+				{
+					if(!composeTableElement(curChild as TableElement, _curElementStart))
+						return false;
+					
+					_curElementOffset -= _curElement.textLength;
+					_curElementStart  += _curElement.textLength;
+					_curElement = _curElement.getNextLeaf();
+
+					// if the next span is the terminator bail out...
+					// assuming it is for now.
+					
+					break;
+					//return true;
+				}
 				// Get the next line
 				textLine = composeNextLine();
 				if (textLine ==  null)
