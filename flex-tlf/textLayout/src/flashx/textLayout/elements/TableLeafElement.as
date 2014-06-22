@@ -1,5 +1,7 @@
 package flashx.textLayout.elements
 {
+	import flash.text.engine.TextLine;
+	
 	import flashx.textLayout.formats.ITextLayoutFormat;
 	import flashx.textLayout.tlf_internal;
 	
@@ -76,6 +78,11 @@ package flashx.textLayout.elements
 		{
 			return _table.textLength;
 		}
+		tlf_internal override function updateAdornments(tLine:TextLine, blockProgression:String):int
+		{
+			return 0;
+		}
+
 
 	}
 }

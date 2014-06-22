@@ -126,10 +126,10 @@ package flashx.textLayout.compose
 		
 		// added to support TextFlowLine when TextLine not available
 
-		private var _ascent:Number;
-		private var _descent:Number;
+		protected var _ascent:Number;
+		protected var _descent:Number;
 		private var _targetWidth:Number;
-		private var _lineOffset:Number;
+		protected var _lineOffset:Number;
 		private var _lineExtent:Number;	// content bounds logical width for the line
 		private var _accumulatedLineExtent:Number;
 		private var _accumulatedMinimumStart:Number;

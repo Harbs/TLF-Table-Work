@@ -453,7 +453,7 @@ package flashx.textLayout.compose
 			if (_damageAbsoluteStart == newLine.absoluteStart)
 				_damageAbsoluteStart = newLine.absoluteStart + newLine.textLength;
 				
-			if (workLine == null)
+			if (workLine == null || (workLine is TextFlowTableBlock))
 				lines.push(newLine);				
 			else if (workLine.absoluteStart != newLine.absoluteStart)
 			{
