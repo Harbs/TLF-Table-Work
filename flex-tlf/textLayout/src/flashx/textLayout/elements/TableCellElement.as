@@ -290,9 +290,29 @@ package flashx.textLayout.elements
 			_controller.updateCompositionShapes();
 		}
 		
+		/**
+		 * Return the row that this cell is part of or null 
+		 * if not part of a row.
+		 **/
 		public function getRow():TableRowElement
 		{
-			return getTable().getRowAt(rowIndex);
+			return table ? table.getRowAt(rowIndex) : null;
+		}
+		
+		/**
+		 * Returns the next cell in the table or null if not part of a
+		 * table or no cells exist after this cell.
+		 **/
+		public function getNextCell():TableCellElement {
+			return table ? table.getNextCell(this) : null;
+		}
+		
+		/**
+		 * Returns the previous cell in the table or null if not part of a
+		 * table or no cells exist before this cell.
+		 **/
+		public function getPreviousCell():TableCellElement {
+			return table ? table.getPreviousCell(this) : null;
 		}
 
 		public function get x():Number

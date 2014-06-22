@@ -42,6 +42,7 @@ package flashx.textLayout.edit
     import flash.ui.MouseCursor;
     import flash.utils.getQualifiedClassName;
     
+    import flashx.textLayout.tlf_internal;
     import flashx.textLayout.compose.IFlowComposer;
     import flashx.textLayout.compose.TextFlowLine;
     import flashx.textLayout.compose.TextFlowTableBlock;
@@ -60,6 +61,7 @@ package flashx.textLayout.edit
     import flashx.textLayout.elements.InlineGraphicElement;
     import flashx.textLayout.elements.ParagraphElement;
     import flashx.textLayout.elements.TableCellElement;
+    import flashx.textLayout.elements.TableColElement;
     import flashx.textLayout.elements.TableElement;
     import flashx.textLayout.elements.TableRowElement;
     import flashx.textLayout.elements.TextFlow;
@@ -74,7 +76,6 @@ package flashx.textLayout.edit
     import flashx.textLayout.operations.CopyOperation;
     import flashx.textLayout.operations.FlowOperation;
     import flashx.textLayout.property.Property;
-    import flashx.textLayout.tlf_internal;
     import flashx.textLayout.utils.NavigationUtil;
     
     use namespace tlf_internal;
@@ -168,32 +169,108 @@ package flashx.textLayout.edit
 			return true;
 		}
 		
-		public function selectCellRange(anchorCoords:CellCoordinates,activeCoords:CellCoordinates):void
+		/**
+		 * Select a table cell. 
+		 **/
+		public function selectCell(cell:TableCellElement):void {
+			var coordinates:CellCoordinates;
+			
+			if (cell) {
+				coordinates = new CellCoordinates(cell.rowIndex, cell.colIndex);
+				
+				if (coordinates.isValid()) {
+					selectCellRange(coordinates, coordinates);
+				}
+			}
+		}
+		
+		/**
+		 * Select table cells at the specified index.
+		 **/
+		public function selectCellAt(index:int):void {
+			// todo
+		}
+		
+		/**
+		 * Select table cells at the specified index
+		 **/
+		public function selectCells(cells:Array):void {
+			// todo
+		}
+		
+		/**
+		 * Select the specified table row. 
+		 **/
+		public function selectRow(row:TableRowElement):void {
+			// todo
+		}
+		
+		/**
+		 * Select a table row at the specified index
+		 **/
+		public function selectRowAt(index:TableRowElement):void {
+			// todo
+		}
+		/**
+		 * Select table rows at the specified indices. 
+		 **/
+		public function selectRows(rows:Array):void {
+			// todo
+		}
+		
+		/**
+		 * Select a table column. 
+		 **/
+		public function selectColumn(column:TableColElement):void {
+			// todo
+		}
+		
+		/**
+		 * Select a table column at the specified index 
+		 **/
+		public function selectColumnAt(index:int):void {
+			// todo
+		}
+		
+		/**
+		 * Select table columns at the specified indices
+		 **/
+		public function selectColumns(columns:Array):void {
+			// todo
+		}
+		
+		/**
+		 * Select a range of table cells. 
+		 **/
+		public function selectCellRange(anchorCoords:CellCoordinates, activeCoords:CellCoordinates):void
 		{
 			var blocks:Vector.<TextFlowTableBlock>;
 			var block:TextFlowTableBlock;
 			var controller:ContainerController;
-			if(selectionType == SelectionType.TEXT)
+			
+			if (selectionType == SelectionType.TEXT) {
 				clear();
-			if(_cellRange)
-			{
-				blocks = _currentTable.getTableBlocksInRange(_cellRange.anchorCoordinates,_cellRange.activeCoordinates);
-				for each(block in blocks)
-				{
-					if(controller != block.controller)
+			}
+			
+			if (_cellRange) {
+				blocks = _currentTable.getTableBlocksInRange(_cellRange.anchorCoordinates, _cellRange.activeCoordinates);
+				
+				for each (block in blocks) {
+					if (controller != block.controller) {
 						block.controller.clearSelectionShapes();
+					}
 					
 					controller = block.controller;
 				}
 				
 			}
-			if(anchorCoords && activeCoords)
-			{
-				_cellRange = new CellRange(_currentTable,anchorCoords,activeCoords);
+			
+			if (anchorCoords && activeCoords) {
+				_cellRange = new CellRange(_currentTable, anchorCoords, activeCoords);
 				activeCellPosition = activeCoords;
-				blocks = _currentTable.getTableBlocksInRange(anchorCoords,activeCoords);
-				for each(block in blocks)
-				{
+				blocks = _currentTable.getTableBlocksInRange(anchorCoords, activeCoords);
+				
+				for each(block in blocks) {
 					block.controller.clearSelectionShapes();
 					block.controller.addCellSelectionShapes(currentCellSelectionFormat.rangeColor, block, anchorCoords, activeCoords);
 				}
@@ -809,7 +886,7 @@ package flashx.textLayout.edit
         }
         
         /** 
-         *  @copy ISelectionManager#selectRange
+         * @copy ISelectionManager#selectRange
          * 
          * @includeExample examples\SelectionManager_selectRange.as -noswf
          * 
@@ -832,11 +909,39 @@ package flashx.textLayout.edit
                 internalSetSelection(_textFlow, anchorPosition, activePosition);
                 
                 // selection changed
-                selectionChanged();     
+                selectionChanged();
                 
                 allowOperationMerge = false;
             }
         }
+		
+		/** 
+		 * @copy ISelectionManager#selectFirstPosition
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 * 
+		 * @see flashx.textLayout.compose.IFlowComposer
+		 */
+		public function selectFirstPosition():void
+		{
+			selectRange(0, 0);
+		}
+		
+		/** 
+		 * @copy ISelectionManager#selectLastPosition
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 * 
+		 * @see flashx.textLayout.compose.IFlowComposer
+		 */
+		public function selectLastPosition():void
+		{
+			selectRange(int.MAX_VALUE, int.MAX_VALUE);
+		}
         
         private function internalSetSelection(root:TextFlow,anchorPosition:int,activePosition:int,format:ITextLayoutFormat = null) : void
         {

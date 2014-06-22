@@ -900,6 +900,87 @@ package flashx.textLayout.elements
 		}
 		
 		/**
+		 * Returns the next table cell after the supplied table cell
+		 **/
+		public function getNextCell(tableCell:TableCellElement):TableCellElement {
+			var cell:TableCellElement;
+			
+			for each (var element:FlowElement in mxmlChildren) {
+				cell = element as TableCellElement;
+				
+				if (cell) {
+					
+					// get next cell in same row 
+					if (cell.rowIndex==tableCell.rowIndex && cell.colIndex-1==tableCell.colIndex) {
+						return cell;
+					}
+					
+					// get first cell in next row
+					if (cell.rowIndex-1==tableCell.rowIndex && cell.colIndex==0) {
+						return cell;
+					}
+					
+				}
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Returns the previous table cell after the supplied table cell
+		 **/
+		public function getPreviousCell(tableCell:TableCellElement):TableCellElement {
+			var cell:TableCellElement;
+			var highestCellIndex:int = -1;
+			var rowIndex:int = -1;
+			
+			for each (var element:FlowElement in mxmlChildren) {
+				cell = element as TableCellElement;
+				
+				if (cell) {
+					
+					// get previous cell in same row 
+					if (cell.rowIndex==tableCell.rowIndex && cell.colIndex+1==tableCell.colIndex) {
+						return cell;
+					}
+					
+					// get last cell in previous row
+					if (cell.rowIndex+1==tableCell.rowIndex) {
+						rowIndex = cell.rowIndex;
+						
+						if (highestCellIndex<cell.colIndex) {
+							highestCellIndex = cell.colIndex;
+						}
+					}
+					
+				}
+			}
+			
+			if (rowIndex>-1 && highestCellIndex>-1) {
+				return getCellAt(rowIndex, highestCellIndex);
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Returns the table cell at the row and column specified.
+		 **/
+		public function getCellAt(rowIndex:int, columnIndex:int):TableCellElement {
+			var cell:TableCellElement;
+			
+			for each (var element:FlowElement in mxmlChildren) {
+				cell = element as TableCellElement;
+				
+				if (cell && cell.rowIndex==rowIndex && cell.colIndex==columnIndex) {
+					return cell;
+				}
+			}
+			
+			return null;
+		}
+		
+		/**
 		 * Computed height of the header cells
 		 **/
 		public function getHeaderHeight():Number{

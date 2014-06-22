@@ -5,7 +5,9 @@
 			 xmlns:local="*"
 			 
 			 minWidth="955" minHeight="600" 
-			 applicationComplete="importApplicationCompleteHandler(event)">
+			 applicationComplete="importApplicationCompleteHandler(event)"
+			 uncaughtError="uncaughtErrorHandler(event)" 
+			 error="errorHandler(event)">
 	
 	<fx:Style>
 		@namespace s "library://ns.adobe.com/flex/spark";
@@ -225,7 +227,7 @@
 					
 					var p:ParagraphElement = new ParagraphElement();
 					p.addChild(table);
-					table.cellSpacing = 8;
+					//table.cellSpacing = 8;
 					textFlow.addChild(p);
 				}
 				// insert table rows
@@ -288,8 +290,8 @@
 				var borderWidth:int = 1;
 				var backgroundAlpha:Number = .25;
 				
-				for(var columnIndex:int=0;columnIndex<columnCount;columnIndex++){
-					cell = new TableCellElement();
+				for(var columnIndex:int;columnIndex<columnCount;columnIndex++){
+					cell 					= new TableCellElement();
 					
 					cell.colIndex 			= columnIndex;
 					cell.rowIndex 			= rowIndex;
@@ -442,16 +444,60 @@
 			}
 			
 			/**
+			 * Selects the text flow content of a table cell
+			 **/
+			public function selectCellContent():TableElement {
+				var table:TableElement = getTable();
+				
+				if (table) {
+					var cell:TableCellElement = table.getCellAt(0,0);
+					var selectionManager:SelectionManager = cell ? cell.textFlow.interactionManager as SelectionManager : null;
+					
+					if (selectionManager) {
+						// should not need to do this in final version
+						selectionManager.currentTable = table;
+						//selectionManager.selectRange(-1,-1);
+						selectionManager.selectAll();
+						selectionManager.setFocus();
+					}
+				}
+				else {
+					updateErrorsText(tableNotCreatedError);
+				}
+				
+				return null;
+			}
+			
+			/**
 			 * Selects the cell the cursor is in or the first cell in the table
 			 **/
 			public function selectCell():TableElement {
 				var table:TableElement = getTable();
 				
 				if (table) {
+					var cell:TableCellElement = table.getCellAt(0,0);
+					var selectionManager:SelectionManager = cell ? cell.textFlow.interactionManager as SelectionManager : null;
 					
+					if (selectionManager && selectionManager.superManager) {
+						// i don't think we should need to do this in final version
+						//selectionManager.currentTable = table;
+						//selectionManager.selectCell(cell);
+						
+						selectionManager.superManager.currentTable = table;
+						Object(selectionManager.superManager).selectCell(cell);
+					}
+					else if (selectionManager) {
+						// i don't think we should need to do this in final version
+						//selectionManager.currentTable = table;
+						//selectionManager.selectCell(cell);
+						
+						selectionManager.currentTable = table;
+						selectionManager.selectCell(cell);
+					}
 				}
-				
-				updateErrorsText(notImplementedMessage);
+				else {
+					updateErrorsText(tableNotCreatedError);
+				}
 				
 				return null;
 			}
@@ -463,7 +509,13 @@
 				var table:TableElement = getTable();
 				
 				if (table) {
+					var cell:TableCellElement = table.getCellAt(0,0);
+					var cell2:TableCellElement = table.getCellAt(0,1);
+					var selectionManager:SelectionManager = cell ? cell.textFlow.interactionManager as SelectionManager : null;
 					
+					if (selectionManager) {
+						selectionManager.selectCells([cell, cells]);
+					}
 				}
 				
 				updateErrorsText(notImplementedMessage);
@@ -771,6 +823,52 @@
 				interactionManager.selectRange(10, 22); // this is not working? 
 			}
 			
+			/**
+			 * Get next cell
+			 **/
+			public function getNextCell():void {
+				var table:TableElement = getTable();
+				
+				if (table) {
+					var cell:TableCellElement = table.getCellAt(0, 2);
+					var nextCell:TableCellElement = table.getNextCell(cell);
+					var prevCell:TableCellElement = table.getPreviousCell(cell);
+				}
+			}
+			
+			/**
+			 * Get previous cell
+			 **/
+			public function getPreviousCell():void {
+				var table:TableElement = getTable();
+				var cell:TableCellElement;
+				var prevCell:TableCellElement;
+				
+				if (table) {
+					cell = table.getCellAt(1, 0);
+					prevCell = table.getPreviousCell(cell);
+					
+					if (prevCell.rowIndex==0 && prevCell.colIndex==2) {
+						//trace("OK");
+					}
+					
+					cell = table.getCellAt(0, 2);
+					prevCell = table.getPreviousCell(cell);
+					
+					if (prevCell.rowIndex==0 && prevCell.colIndex==1) {
+						//trace("OK");
+					}
+					
+					cell = table.getCellAt(0, 0);
+					prevCell = table.getPreviousCell(cell);
+					
+					if (prevCell==null) {
+						//trace("OK");
+					}
+					
+				}
+			}
+			
 			/******************************************************
 			 * Misc
 			 *****************************************************/
@@ -860,7 +958,9 @@
 			 * Creates a text flow from the text value passed in. Used for table cell text flows.
 			 **/
 			public function getTextFlowContent(text:String = null, selectable:Boolean = false, editable:Boolean = false):TextFlow {
-				var textFlowContent:TextFlow = new TextFlow();
+				var config:Configuration= new Configuration();
+				config.manageTabKey = true;
+				var textFlow:TextFlow = new TextFlow(config);
 				var paragraph:ParagraphElement = new ParagraphElement();
 				var span:SpanElement = new SpanElement();
 				
@@ -874,19 +974,22 @@
 				paragraph.backgroundAlpha = 0.2;
 				paragraph.backgroundColor = 0xFF0000;
 				paragraph.addChild(span);
-				var num:int = paragraph.numChildren;
 				
-				textFlowContent.addChild(paragraph);
+				/*textFlow.paddingLeft = 10;
+				textFlow.paddingRight = 10;
+				textFlow.paddingTop = 10;
+				textFlow.paddingBottom = 10;*/
+				textFlow.addChild(paragraph);
 				
 				if (editable) {
 					// setting the edit manager adds a default paragraph
-					textFlowContent.interactionManager = new EditManager(new UndoManager);
+					textFlow.interactionManager = new EditManager(new UndoManager);
 				}
 				else if (selectable) {
-					textFlowContent.interactionManager = new SelectionManager();
+					textFlow.interactionManager = new SelectionManager();
 				}
 				
-				return textFlowContent;
+				return textFlow;
 			}
 			
 			/**
@@ -1111,7 +1214,10 @@
 					textFlowMarkupErrors.text = errors ? errors.join("\n") : null;
 				}
 				else if (errors is String) {
-					textFlowMarkupErrors.text = errors;
+					textFlowMarkupErrors.text = String(errors);
+				}
+				else if (errors is Object) {
+					textFlowMarkupErrors.text = Object(errors).toString();
 				}
 				else {
 					textFlowMarkupErrors.text = "";
@@ -1128,7 +1234,7 @@
 					tableCells.text = String(table.numCells);
 					tableRowsStepper.value = table.numRows;
 					tableColumnsStepper.value = table.numColumns;
-					tableCellSpacing.value = table.cellSpacing!=undefined ? table.cellSpacing : 0;
+					//tableCellSpacing.value = table.cellSpacing!=undefined ? table.cellSpacing : 0;
 				}
 				else {
 					tableWidth.text = "";
@@ -1137,7 +1243,7 @@
 					tableCells.text = "";
 					tableRowsStepper.value = 0;
 					tableColumnsStepper.value = 0;
-					tableCellSpacing.value = 0;
+					//tableCellSpacing.value = 0;
 				}
 			}
 			
@@ -1210,10 +1316,26 @@
 					return;
 				}
 				
-				table.cellSpacing = Number(tableCellSpacing.value);
+				//table.cellSpacing = Number(tableCellSpacing.value);
 				
 				updateAllControllers();
 				
+			}
+			
+			protected function uncaughtErrorHandler(event:UncaughtErrorEvent):void
+			{
+				if (event.error is TypeError) {
+					var message:String = TypeError(event.error).message;
+					updateErrorsText(message);
+				}
+				else {
+					updateErrorsText(Object(event.error).toString());
+				}
+			}
+			
+			protected function errorHandler(event:ErrorEvent):void
+			{
+				updateErrorsText(event.text);
 			}
 			
 		]]>
@@ -1253,21 +1375,21 @@
 				<s:Label text="|" />
 				<s:Image toolTip="Rows" source="assets/images/rowsIcon.png" />
 				<s:NumericStepper id="tableRowsStepper" 
-								  width="50"
+								  width="50" maximum="250"
 								  change="tableRowsStepper_changeHandler(event)"/>
 				<s:Image toolTip="Columns" source="assets/images/columnsIcon.png" />
 				<s:NumericStepper id="tableColumnsStepper"
-								  width="50"
+								  width="50" maximum="50"
 								  change="tableColumnStepper_changeHandler(event)"/>
 				<s:Label text="|" />
 				<s:Label text="Width:" />
 				<s:TextInput id="tableWidth" width="40" change="tableWidth_changeHandler(event)"/>
 				<s:Label text="Height:" />
 				<s:Label id="tableHeight" />
-				<s:Label text="Cell Spacing:" />
+				<!--<s:Label text="Cell Spacing:" />
 				<s:NumericStepper id="tableCellSpacing" 
 								  width="50" maximum="50"
-								  change="cellSpacing_changeHandler(event)"/>
+								  change="cellSpacing_changeHandler(event)"/>-->
 				<s:Label text="Total Cells:" />
 				<s:Label id="tableCells" />
 				<s:Label text="Blocks:" />
@@ -1285,9 +1407,9 @@
 		<s:VGroup width="40%" height="100%" >
 			<s:Label text="Elements" width="100%" styleName="header"/>
 			<s:HGroup styleName="buttonGroup">
-				<mx:LinkButton label="Add Table" click="addTable(3, 3)"/>
-				<mx:LinkButton label="Add Selectable Table" click="addTable(3, 3, true)"/>
 				<mx:LinkButton label="Add Editable Table" click="addTable(3, 3, false, true)"/>
+				<mx:LinkButton label="Add Selectable Table" click="addTable(3, 3, true)"/>
+				<mx:LinkButton label="Add Table" click="addTable(3, 3)"/>
 				<mx:LinkButton label="Remove Table" click="removeTable(getTable())"/>
 				<mx:LinkButton label="Remove All Rows" click="removeAllRows(getTable())"/>
 			</s:HGroup>
@@ -1302,13 +1424,18 @@
 				<mx:LinkButton label="Select Table" click="selectTable()"/>
 				<mx:LinkButton label="Select Row" click="selectRow()"/>
 				<mx:LinkButton label="Select Column" click="selectColumn()"/>
+				<mx:LinkButton label="Select Text Range" click="selectRange()"/>
+			</s:HGroup>
+			<s:HGroup>
 				<mx:LinkButton label="Select Cell" click="selectCell()"/>
+				<mx:LinkButton label="Select Cell Content" click="selectCellContent()"/>
 				<mx:LinkButton label="Select Cells" click="selectCells()"/>
 			</s:HGroup>
 			<s:Label text="Misc" width="100%" styleName="header"/>
 			<s:HGroup>
 				<mx:LinkButton label="Join Cells" click="joinCells()"/>
-				<mx:LinkButton label="Select Range" click="selectRange()"/>
+				<mx:LinkButton label="Get next cell" click="getNextCell()"/>
+				<mx:LinkButton label="Get previous cell" click="getPreviousCell()"/>
 				<mx:LinkButton label="Update all controllers" click="updateAllControllers()"/>
 			</s:HGroup>
 			<s:Label text="Boundaries" width="100%" styleName="header"/>

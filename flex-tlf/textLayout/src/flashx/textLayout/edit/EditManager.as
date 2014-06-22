@@ -35,6 +35,7 @@ package flashx.textLayout.edit
 	import flash.ui.Keyboard;
 	import flash.utils.getQualifiedClassName;
 	
+	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.compose.IFlowComposer;
 	import flashx.textLayout.container.ContainerController;
 	import flashx.textLayout.debug.Debugging;
@@ -86,7 +87,6 @@ package flashx.textLayout.edit
 	import flashx.textLayout.operations.SplitElementOperation;
 	import flashx.textLayout.operations.SplitParagraphOperation;
 	import flashx.textLayout.operations.UndoOperation;
-	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.utils.CharacterUtil;
 	import flashx.textLayout.utils.GeometryUtil;
 	import flashx.textLayout.utils.NavigationUtil;
@@ -465,6 +465,22 @@ package flashx.textLayout.edit
 									element = listItem.parent;
 								
 								doOperation(new CreateListOperation(new SelectionState(textFlow, element.getAbsoluteStart(), element.getAbsoluteStart() + element.textLength), listItem.parent));
+							}
+						}
+						else if (textFlow.nestedInTable()) {
+							var cell:TableCellElement;
+							
+							if (event.shiftKey) {
+								cell = (textFlow.parentElement as TableCellElement).getPreviousCell();
+							}
+							else {
+								cell = (textFlow.parentElement as TableCellElement).getNextCell();
+							}
+							
+							// select next cell in table
+							if (cell && cell.textFlow && cell.textFlow.interactionManager is EditManager) {
+								cell.textFlow.interactionManager.selectLastPosition();
+								cell.textFlow.interactionManager.setFocus();
 							}
 						}
 						else

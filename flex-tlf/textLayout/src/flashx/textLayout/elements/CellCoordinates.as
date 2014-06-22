@@ -33,6 +33,7 @@ package flashx.textLayout.elements
 		{
 			_row = row;
 			_column = column;
+			this.table = table;
 		}
 
 		/**

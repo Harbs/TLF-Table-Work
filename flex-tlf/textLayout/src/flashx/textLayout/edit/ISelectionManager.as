@@ -133,6 +133,24 @@ package flashx.textLayout.edit
 		 */
 		function selectAll() : void
 		
+		/**
+		 * Selects the last position in the entire flow.
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+ 		 * @langversion 3.0
+		 */
+		function selectLastPosition() : void
+		
+		/**
+		 * Selects the first position in the entire flow.
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+ 		 * @langversion 3.0
+		 */
+		function selectFirstPosition() : void
+		
 		/** 
 		 * The anchor point of the selection. 
 		 * 
