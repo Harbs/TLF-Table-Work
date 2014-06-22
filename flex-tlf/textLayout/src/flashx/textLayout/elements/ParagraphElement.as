@@ -720,7 +720,27 @@ package flashx.textLayout.elements
 		/** @private */
 		public override function getCharAtPosition(relativePosition:int):String
 		{
-			return getTextBlockAtPosition(relativePosition).content.rawText.charAt(relativePosition);
+			var foundTB:TextBlock = getTextBlockAtPosition(relativePosition);
+			if(!foundTB)
+				return "\u0016";
+			var tables:Vector.<TableElement> = getTables();
+			var pos:int = relativePosition;
+			for each(var table:TableElement in tables)
+			{
+				if(table.getElementRelativeStart(this) < pos)
+					relativePosition--;
+			}
+			var tbs:Vector.<TextBlock> = getTextBlocks();
+			for each(var tb:TextBlock in tbs)
+			{
+				if(foundTB == tb)
+					break;
+				if(tb)
+					relativePosition -= tb.content.rawText.length;
+				else
+					relativePosition -= 1;
+			}
+			return foundTB.content.rawText.charAt(relativePosition);
 		} 
 
 		/** 

@@ -4954,7 +4954,8 @@ package flashx.textLayout.container
 			var idx:int = _tableBlocksInView.indexOf(block);
 			if(idx >= 0)
 				_tableBlocksInView.splice(idx,1);
-			_tableBlocksInView.push(block);
+			else
+				_tableBlocksInView.push(block);
 		}
 
 		/** @private Return the array. Client code may add lines to the array. */
@@ -4962,7 +4963,9 @@ package flashx.textLayout.container
 		{
 			if (!_linesInView)
 				_linesInView = [];
-			return _linesInView;
+			var arr:Array = _linesInView.slice();
+			intersperseTableBlocks(arr);
+			return arr;
 		}
 		
 		/** @private Empty out the linesInView, starting from the supplied text index. */
@@ -4978,7 +4981,15 @@ package flashx.textLayout.container
 			}
 			_linesInView.length = index;
 			
-			//TODO: clear composed table blocks
+			index = 0;
+			for each (var tbc:TableBlockContainer in _tableBlocksInView)
+			{
+				var tftb:TextFlowTableBlock = tbc.userData;
+				if(tbc.userData.absoluteStart >= pos)
+					break;
+				index++;
+			}
+			_tableBlocksInView.length = index;
 			
 			_updateStart = Math.min(_updateStart, pos);
 		}

@@ -21,6 +21,8 @@ package flashx.textLayout.compose
 	public class TextFlowTableBlock extends TextFlowLine
 	{
 		
+		private var _textHeight:Number;
+		
 		/** Constructor - creates a new TextFlowTableBlock instance. 
 		 *  <p><strong>Note</strong>: No client should call this. It's exposed for writing your own composer.</p>
 		 *
@@ -39,6 +41,8 @@ package flashx.textLayout.compose
 		override tlf_internal function initialize(paragraph:ParagraphElement, outerTargetWidth:Number = 0, lineOffset:Number = 0, absoluteStart:int = 0, numChars:int = 0, textLine:TextLine = null):void
 		{
 			_container.userData = this;
+			_lineOffset = lineOffset;
+
 			super.initialize(paragraph, outerTargetWidth, lineOffset, absoluteStart, numChars, textLine);
 		}
 		override tlf_internal function setController(cont:ContainerController,colNumber:int):void
@@ -141,14 +145,15 @@ package flashx.textLayout.compose
 		 * Sets the height of the container 
 		 **/
 		public function set height(value:Number):void{
-			_container.height = value;
+			//_container.height = value;
+			_textHeight = value;
 		}
 		
 		/**
 		 * @inheritDoc
 		 **/
 		override public function get height():Number{
-			return _container.height;
+			return _textHeight;
 		}
 		/**
 		 * Sets the width of the container 
@@ -198,6 +203,11 @@ package flashx.textLayout.compose
 			}
 			
 			return tCells;
+		}
+
+		public override function get textHeight():Number
+		{
+			return _textHeight;
 		}
 
 	}

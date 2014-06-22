@@ -548,7 +548,7 @@ package flashx.textLayout.compose
 			curTableBlock.y = _parcelList.totalDepth;
 			curTableBlock.x = _lineSlug.leftMargin;
 			var lineOffset:Number = (_curParaFormat.direction == Direction.LTR) ? _lineSlug.leftMargin : _lineSlug.rightMargin;
-			curTableBlock.initialize(_curParaElement, _lineSlug.width, lineOffset-_parcelList.insideListItemMargin, tableElement.getAbsoluteStart());
+			curTableBlock.initialize(_curParaElement, _lineSlug.width, lineOffset-_parcelList.insideListItemMargin, tableElement.getAbsoluteStart(),1);
 			var blockToAdd:Boolean = true;
 			
 			while(curRow){
@@ -584,7 +584,7 @@ package flashx.textLayout.compose
 					curTableBlock.clear();
 					curTableBlock.y = _parcelList.totalDepth;
 					curTableBlock.x = _lineSlug.leftMargin;
-					curTableBlock.initialize(_curParaElement, _lineSlug.width, lineOffset-_parcelList.insideListItemMargin, tableElement.getAbsoluteStart());
+					curTableBlock.initialize(_curParaElement, _lineSlug.width, lineOffset-_parcelList.insideListItemMargin, tableElement.getAbsoluteStart(),1);
 					totalRowHeight = 0;
 					//TODO: remove any old existing cells in the _parcelList.currentParcel.controller
 					
@@ -626,6 +626,7 @@ package flashx.textLayout.compose
 			}
 			
 			if(_parcelList.currentParcel && blockToAdd){
+				curTableBlock.height = totalRowHeight;
 				endTableBlock(curTableBlock);
 //				curTableBlock.setController(_curParcel.controller,_curParcel.columnIndex);
 //				_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);
@@ -644,6 +645,7 @@ package flashx.textLayout.compose
 		/** Called when we are finished composing a line, and it is committed. Handler for derived classes to override default behavior.  */
 		protected function endTableBlock(block:TextFlowTableBlock):void
 		{
+			_curLine = block;
 			block.setController(_curParcel.controller, _curParcel.columnIndex);
 			//				_parcelList.currentParcel.controller.addComposedTableBlock(curTableBlock.container);
 			BackgroundManager.collectTableBlock(_textFlow, block, _parcelList.currentParcel.controller);
@@ -1122,9 +1124,15 @@ package flashx.textLayout.compose
 					_curElement = _curElement.getNextLeaf();
 
 					// if the next span is the terminator bail out...
-					// assuming it is for now.
+					if(_curElement is SpanElement && SpanElement(_curElement).hasParagraphTerminator && _curElement.textLength == 1)
+					{
+						_curElementOffset = 0;
+						_curElementStart  += _curElement.textLength;
+						_curElement = _curElement.getNextLeaf();
+						return true;
+					}
 					
-					break;
+					//break;
 					//return true;
 				}
 				// Get the next line
