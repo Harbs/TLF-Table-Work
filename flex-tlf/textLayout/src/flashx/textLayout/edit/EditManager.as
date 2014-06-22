@@ -479,7 +479,8 @@ package flashx.textLayout.edit
 							
 							// select next cell in table
 							if (cell && cell.textFlow && cell.textFlow.interactionManager is EditManager) {
-								cell.textFlow.interactionManager.selectLastPosition();
+								//cell.textFlow.interactionManager.selectLastPosition();
+								cell.textFlow.interactionManager.selectAll();
 								cell.textFlow.interactionManager.setFocus();
 							}
 						}
