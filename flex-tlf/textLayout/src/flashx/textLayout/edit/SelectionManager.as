@@ -305,14 +305,14 @@ package flashx.textLayout.edit
 		}
 		
 		/**
-		 * Select table rows at the specified indices. 
+		 * Selects the table rows provided
 		 **/
 		public function selectRows(rows:Array):void {
 			var cells:Array = [];
 			var table:TableElement;
 			var rowCells:Array;
 			
-			if (rows) {
+			if (rows && rows.length) {
 				
 				for (var i:int;i<rows.length;i++) 
 				{
@@ -322,7 +322,7 @@ package flashx.textLayout.edit
 						rowCells = row.cells;
 					}
 					
-					cells.concat(rowCells);
+					cells = cells.concat(rowCells);
 				}
 				
 				selectCells(cells);
@@ -352,10 +352,27 @@ package flashx.textLayout.edit
 		}
 		
 		/**
-		 * Select table columns at the specified indices
+		 * Selects the table columns provided
 		 **/
 		public function selectColumns(columns:Array):void {
-			// todo
+			var cells:Array = [];
+			var columnCells:Array;
+			
+			if (columns && columns.length) {
+				
+				for (var i:int;i<columns.length;i++) 
+				{
+					var column:TableColElement = columns[i] as TableColElement;
+					
+					if (column) {
+						columnCells = column.cells;
+					}
+					
+					cells = cells.concat(columnCells);
+				}
+				
+				selectCells(cells);
+			}
 		}
 		
 		/**

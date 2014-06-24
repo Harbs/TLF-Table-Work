@@ -66,6 +66,29 @@ package flashx.textLayout.elements
 		{
 			super.modelChanged(changeType,elem,changeStart,changeLen,needNormalize,bumpGeneration);
 		}
-
+		
+		/**
+		 * Get an array of cells or null if the column contains no cells
+		 **/
+		public function get cells():Array {
+			
+			if (!table) {
+				return null;
+			}
+			
+			return table.getCellsForColumn(this);
+		}
+		
+		/**
+		 * Returns the number of cells in this column. 
+		 **/
+		public function get numCells():int {
+			
+			if (!table) {
+				return 0;
+			}
+			
+			return table.getCellsForColumn(this).length;
+		}
 	}
 }

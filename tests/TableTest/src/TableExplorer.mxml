@@ -587,6 +587,33 @@
 			}
 			
 			/**
+			 * Selects columns in the table
+			 **/
+			public function selectColumns(columns:Array = null):TableElement {
+				var table:TableElement = getTable();
+				
+				if (table) {
+					if (!columns) {
+						//columns = getRandomColumns(table);
+						columns = [];
+						columns.push(table.getColumnAt(0));
+						columns.push(table.getColumnAt(1));
+					}
+					
+					var selectionManager:SelectionManager = textFlow.interactionManager as SelectionManager;
+					
+					if (selectionManager) {
+						selectionManager.currentTable = table;
+						selectionManager.selectColumns(columns);
+					}
+				}
+				
+				updateErrorsText(null);
+				
+				return null;
+			}
+			
+			/**
 			 * Selects the table
 			 **/
 			public function selectTable(rowIndex:int = 0):TableElement {
@@ -626,6 +653,37 @@
 					if (selectionManager) {
 						selectionManager.currentTable = table;
 						selectionManager.selectRow(row);
+					}
+				}
+				else {
+					updateErrorsText(tableNotCreatedError);
+				}
+				
+				
+				return null;
+			}
+			
+			/**
+			 * Selects rows in the table
+			 **/
+			public function selectRows(rows:Array = null):TableElement {
+				var selectionManager:SelectionManager;
+				var table:TableElement = getTable();
+				var row:TableRowElement;
+				
+				if (table) {
+					
+					if (!row) {
+						rows = [];
+						rows.push(table.getRowAt(0));
+						rows.push(table.getRowAt(1));
+					}
+					
+					selectionManager = textFlow.interactionManager is ISelectionManager ? textFlow.interactionManager as SelectionManager : null;
+					
+					if (selectionManager) {
+						selectionManager.currentTable = table;
+						selectionManager.selectRows(rows);
 					}
 				}
 				else {
@@ -1598,14 +1656,18 @@
 			<s:HGroup>
 				<mx:LinkButton label="Select Table" click="selectTable()"/>
 				<mx:LinkButton label="Select Row" click="selectRow()"/>
+				<mx:LinkButton label="Select Rows" click="selectRows()"/>
 				<mx:LinkButton label="Select Column" click="selectColumn()"/>
-				<mx:LinkButton label="Select Text Range" click="selectRange()"/>
+				<mx:LinkButton label="Select Columns" click="selectColumns()"/>
 			</s:HGroup>
 			<s:HGroup>
 				<mx:LinkButton label="Select Cell" click="selectCell()"/>
-				<mx:LinkButton label="Select Cell Content" click="selectCellContent()"/>
 				<mx:LinkButton label="Select Cells" click="selectCells()"/>
+				<mx:LinkButton label="Select Cell Content" click="selectCellContent()"/>
 				<mx:LinkButton label="Clear Selection" click="clearSelection()"/>
+			</s:HGroup>
+			<s:HGroup>
+				<mx:LinkButton label="Select Text Range" click="selectRange()"/>
 			</s:HGroup>
 			<s:Label text="Misc" width="100%" styleName="header"/>
 			<s:HGroup>
