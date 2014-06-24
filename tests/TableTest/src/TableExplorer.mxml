@@ -446,11 +446,14 @@
 			/**
 			 * Selects the text flow content of a table cell
 			 **/
-			public function selectCellContent():TableElement {
+			public function selectCellContent(cell:TableCellElement = null):TableElement {
 				var table:TableElement = getTable();
 				
 				if (table) {
-					var cell:TableCellElement = table.getCellAt(0,0);
+					if (!cell) {
+						cell = getRandomCell(table);
+					}
+					
 					var selectionManager:SelectionManager = cell ? cell.textFlow.interactionManager as SelectionManager : null;
 					
 					if (selectionManager) {
@@ -472,27 +475,22 @@
 			/**
 			 * Selects the cell the cursor is in or the first cell in the table
 			 **/
-			public function selectCell():TableElement {
+			public function selectCell(cell:TableCellElement = null):TableElement {
 				var table:TableElement = getTable();
 				
 				if (table) {
-					var cell:TableCellElement = table.getCellAt(0,0);
+					
+					if (!cell) {
+						cell = getRandomCell(table);
+					}
+					
 					//var selectionManager:SelectionManager = textFlow ? textFlow.interactionManager as SelectionManager : null;
 					var selectionManager:SelectionManager = cell ? cell.textFlow.interactionManager as SelectionManager : null;
 					
-					if (selectionManager && selectionManager.superManager) {
+					if (selectionManager) {
 						// i don't think we should need to do this in final version
 						//selectionManager.currentTable = table;
-						//selectionManager.selectCell(cell);
-						
-						selectionManager.superManager.currentTable = table;
-						Object(selectionManager.superManager).selectCell(cell);
-					}
-					else if (selectionManager) {
-						// i don't think we should need to do this in final version
-						//selectionManager.currentTable = table;
-						//selectionManager.selectCell(cell);
-						var selFormat:SelectionFormat = new SelectionFormat();
+						//var selFormat:SelectionFormat = new SelectionFormat();
 						//selectionManager.unfocusedSelectionFormat = selFormat;
 						//selectionManager.focusedSelectionFormat = selFormat;
 						//cell.textFlow.interactionManager.focusedSelectionFormat = selFormat;
@@ -539,17 +537,17 @@
 			 **/
 			public function selectCells(cells:Array = null):TableElement {
 				var table:TableElement = getTable();
+				var selectedCells:Array = [];
 				
 				if (table) {
-					var cells:Array = table.getCellsArray();
-					var selectedCells:Array = [];
 					
-					for (var i:int = 0; i < cells.length; i++) {
-						
-						if (i%2==0) {
-							selectedCells.push(cells[i]);
-						}
+					if (cells==null || cells.length==0) {
+						selectedCells = getRandomCells(table);
 					}
+					else {
+						selectedCells.concat(cells);
+					}
+					
 					
 					var selectionManager:SelectionManager = textFlow.interactionManager as SelectionManager;
 					
@@ -567,15 +565,19 @@
 			/**
 			 * Selects a column in the table
 			 **/
-			public function selectColumn():TableElement {
+			public function selectColumn(column:TableColElement = null):TableElement {
 				var table:TableElement = getTable();
 				
 				if (table) {
+					if (!column) {
+						column = getRandomColumn(table);
+					}
+					
 					var selectionManager:SelectionManager = textFlow.interactionManager as SelectionManager;
 					
 					if (selectionManager) {
 						selectionManager.currentTable = table;
-						selectionManager.selectColumnAt(table, 2);
+						selectionManager.selectColumn(column);
 					}
 				}
 				
@@ -608,12 +610,17 @@
 			/**
 			 * Selects a row in the table
 			 **/
-			public function selectRow(rowIndex:int = 0):TableElement {
+			public function selectRow(row:TableRowElement = null):TableElement {
 				var selectionManager:SelectionManager;
 				var table:TableElement = getTable();
-				var row:TableRowElement = table ? table.getRowAt(rowIndex) : null;
+				var row:TableRowElement;
 				
-				if (table && row) {
+				if (table) {
+					
+					if (!row) {
+						row = getRandomRow(table);
+					}
+					
 					selectionManager = textFlow.interactionManager is ISelectionManager ? textFlow.interactionManager as SelectionManager : null;
 					
 					if (selectionManager) {
@@ -933,6 +940,85 @@
 			/******************************************************
 			 * Misc
 			 *****************************************************/
+			
+			/**
+			 * Gets a random cell from the table
+			 */
+			public function getRandomCell(table:TableElement):TableCellElement {
+				var cell:TableCellElement;
+				
+				var rowIndex:int = Math.floor(Math.random() * table.numRows);
+				var columnIndex:int = Math.floor(Math.random() * table.numColumns);
+				
+				cell = table.getCellAt(rowIndex, columnIndex);
+				
+				if (!random) {
+					cell = table.getCellAt(0, 0);
+				}
+				
+				return cell;
+			}
+			
+			/**
+			 * Gets a random cells from the table
+			 */
+			public function getRandomCells(table:TableElement):Array {
+				var cell:TableCellElement;
+				var m:int = Math.floor(Math.random()*2);
+				var cells:Array = table.getCellsArray();
+				var selectedCells:Array = [];
+				
+				for (var i:int = 0; i < cells.length; i++) {
+					var v1:Number = Math.random()*2;
+					var v:int = Math.floor(v1);
+					if (v==0) {
+						selectedCells.push(cells[i]);
+					}
+				}
+				
+				if (!random) {
+					selectedCells = [];
+					selectedCells.push(table.getCellAt(0, 0));
+					selectedCells.push(table.getCellAt(1, 1));
+					selectedCells.push(table.getCellAt(2, 2));
+				}
+				
+				return selectedCells;
+			}
+			
+			/**
+			 * Gets a random row from the table
+			 */
+			public function getRandomRow(table:TableElement):TableRowElement {
+				var row:TableRowElement;
+				
+				var rowIndex:int = Math.floor(Math.random() * table.numRows);
+				
+				row = table.getRowAt(rowIndex);
+				
+				if (!random) {
+					row = table.getRowAt(0);
+				}
+				
+				return row;
+			}
+			
+			/**
+			 * Gets a random column from the table
+			 */
+			public function getRandomColumn(table:TableElement):TableColElement {
+				var column:TableColElement;
+				
+				var columnIndex:int = Math.floor(Math.random() * table.numColumns);
+				
+				column = table.getColumnAt(columnIndex);
+				
+				if (!random) {
+					column = table.getColumnAt(0);
+				}
+				
+				return column;
+			}
 			
 			/**
 			 * Updates all controllers. Call after the text flow is modified in any way.
@@ -1309,6 +1395,19 @@
 				}
 			}
 			
+			public var random:Boolean;
+			
+			/**
+			 * Switches between random and non random selection 
+			 **/
+			public function randomizeSelection():void {
+				random = !random;
+				randomCheckMark.visible = random;
+				randomCheckMark.includeInLayout = random;
+				randomCheckMarkSpacer.visible = random;
+				randomCheckMarkSpacer.includeInLayout = random;
+			}
+			
 			protected function tableRowsStepper_changeHandler(event:Event):void
 			{
 				var table:TableElement = getTable();
@@ -1481,7 +1580,21 @@
 				<mx:LinkButton label="Remove Shapes" click="removeShapes()"/>
 				<mx:LinkButton label="Remove All" click="clearTextFlow()"/>
 			</s:HGroup>
-			<s:Label text="Selection" width="100%" styleName="header"/>
+			<s:HGroup width="100%" gap="1" >
+				<s:Label text="Selection" width="100%" styleName="header"/>
+				
+				<s:Label id="randomCheckMark" text="✓"  
+						 styleName="header"
+						 visible="false"
+						 includeInLayout="false"
+						 />
+				<s:Spacer id="randomCheckMarkSpacer" width="-2" />
+				<s:Label text="Random" click="randomizeSelection()" 
+						 styleName="header" 
+						 useHandCursor="true" 
+						 buttonMode="true"
+						 />
+			</s:HGroup>
 			<s:HGroup>
 				<mx:LinkButton label="Select Table" click="selectTable()"/>
 				<mx:LinkButton label="Select Row" click="selectRow()"/>

@@ -25,6 +25,7 @@ package flashx.textLayout.elements
 	
 	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.compose.TextFlowTableBlock;
+	import flashx.textLayout.edit.SelectionFormat;
 	import flashx.textLayout.events.ModelChange;
 	import flashx.textLayout.formats.FormatValue;
 	import flashx.textLayout.formats.ITextLayoutFormat;
@@ -146,8 +147,9 @@ package flashx.textLayout.elements
 				rows.pop();
 			}
 			var num:int = numRows;
-			for(var i:int = num;i<value;i++){
-				rows.push(new TableRowElement(defaultRowFormat));
+			for(var i:int = num;i<value;i++) {
+				var row:TableRowElement = createRowElement(i, defaultRowFormat);
+				rows.push(row);
 			}
 		}
 
@@ -164,9 +166,7 @@ package flashx.textLayout.elements
 			}
 			var num:int = numColumns;
 			for(var i:int = num;i<value;i++) {
-				var column:TableColElement = new TableColElement(defaultColumnFormat);
-				column.colIndex = i;
-				column.table = this;
+				var column:TableColElement = createColumnElement(i, defaultColumnFormat);
 				columns.push(column);
 			}
 		}
@@ -256,8 +256,8 @@ package flashx.textLayout.elements
 			if(idx < 0 || idx > rows.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
 			
-			var row:TableRowElement = new TableRowElement(format);
-			rows.splice(idx,0,row);
+			var row:TableRowElement = createRowElement(idx, format);
+			rows.splice(idx, 0, row);
 			row.composedHeight = row.computedFormat.minCellHeight;
 			row.isMaxHeight = row.computedFormat.minCellHeight == row.computedFormat.maxCellHeight;
 			row.setParentAndRelativeStartOnly(this, 1);
@@ -286,9 +286,7 @@ package flashx.textLayout.elements
 			if(!format) {
 				format = defaultColumnFormat;
 			}
-			var column:TableColElement = new TableColElement(format);
-			column.colIndex = idx;
-			column.table = this;
+			var column:TableColElement = createColumnElement(idx, format);
 			
 			columns.splice(idx, 0, column);
 		}
@@ -438,13 +436,15 @@ package flashx.textLayout.elements
 		 * @see insertColumn
 		 **/
 		public function insertColumnAt(idx:int,column:TableColElement=null,cells:Array = null):Boolean{
-			if(idx < 0 || idx > columns.length)
+			
+			if (idx < 0 || idx > columns.length) {
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
-			if(!column) {
-				column = new TableColElement(defaultColumnFormat);
 			}
-			column.colIndex = idx;
-			column.table = this;
+			
+			if (!column) {
+				column = createColumnElement(idx, defaultColumnFormat);
+			}
+			
 			columns.splice(idx,0,column);
 			
 			var blockedCoords:Vector.<CellCoords> = getBlockedCoords(-1,idx);
@@ -456,6 +456,7 @@ package flashx.textLayout.elements
 			while(cells.length < numRows){
 				cells.push(new TableCellElement());
 			}
+			
 			for each(var cell:TableCellElement in cells){
 				while(blockedCoords.length && blockedCoords[0].row == rowIdx){
 					rowIdx++;
@@ -485,10 +486,14 @@ package flashx.textLayout.elements
 		 * based on the number of columns in the table. 
 		 **/
 		public function insertRowAt(idx:int,row:TableRowElement=null,cells:Array = null):Boolean{
-			if(idx < 0 || idx > rows.length)
+			if (idx < 0 || idx > rows.length) {
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
-			if(!row)
-				row = new TableRowElement(defaultRowFormat);
+			}
+			
+			if (!row) {
+				row = createRowElement(idx, defaultRowFormat);
+			}
+			
 			rows.splice(idx,0,row);
 			row.composedHeight = row.computedFormat.minCellHeight;
 			row.isMaxHeight = row.computedFormat.minCellHeight == row.computedFormat.maxCellHeight;
@@ -1487,6 +1492,25 @@ package flashx.textLayout.elements
 		 */
 		tlf_internal override function releaseContentElement():void{}
 
+		/**
+		 * Creates and returns a default row 
+		 **/
+		tlf_internal function createRowElement(index:int, defaultRowFormat:ITextLayoutFormat):TableRowElement {
+			var row:TableRowElement = new TableRowElement(defaultRowFormat);
+			row.rowIndex = index;
+			row.table = this;
+			return row;
+		}
+
+		/**
+		 * Creates and returns a default column 
+		 **/
+		tlf_internal function createColumnElement(index:int, defaultColumnFormat:ITextLayoutFormat):TableColElement {
+			var column:TableColElement = new TableColElement(defaultColumnFormat);
+			column.colIndex = index;
+			column.table = this;
+			return column;
+		}
 	}
 }
 class CellCoords
