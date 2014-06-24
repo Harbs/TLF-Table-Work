@@ -267,6 +267,14 @@ package flashx.textLayout.edit
 		 */	
 		function refreshSelection():void;
 
+		/** 
+		 * Clears the selection shapes. 
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+ 		 * @langversion 3.0
+		 */	
+		function clearSelection():void;
 
 		/** 
 		 * Gives the focus to the first container in the selection.

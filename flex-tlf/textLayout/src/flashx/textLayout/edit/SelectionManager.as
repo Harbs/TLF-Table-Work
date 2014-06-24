@@ -40,6 +40,7 @@ package flashx.textLayout.edit
     import flash.ui.Keyboard;
     import flash.ui.Mouse;
     import flash.ui.MouseCursor;
+    import flash.utils.Dictionary;
     import flash.utils.getQualifiedClassName;
     
     import flashx.textLayout.tlf_internal;
@@ -161,25 +162,51 @@ package flashx.textLayout.edit
 		
 		public function hasCellRangeSelection():Boolean
 		{
-			if(!_currentTable)
+			if (!_currentTable) {
 				return false;
+			}
+			
 			//we should really check the anchorCellPosition and activeCellPosition instead
-			if(!_cellRange)
+			if (!_cellRange) {
 				return false;
+			}
+			
 			return true;
+		}
+		
+		/**
+		 * Select a table cell text flow
+		 **/
+		public function selectCellTextFlow(cell:TableCellElement):void {
+			
+			if (cell && cell.table) {
+				var selectionManager:SelectionManager = cell.textFlow.interactionManager as SelectionManager;
+				
+				clear();
+				
+				if (selectionManager) {
+					selectionManager.currentTable = cell.table;
+					selectionManager.selectAll();
+					
+					// this seems to be required to work but it should not be
+					selectionManager.setFocus(); 
+				}
+			}
 		}
 		
 		/**
 		 * Select a table cell. 
 		 **/
 		public function selectCell(cell:TableCellElement):void {
-			var coordinates:CellCoordinates;
+			var beginCoordinates:CellCoordinates;
+			var endCoordinates:CellCoordinates;
 			
 			if (cell) {
-				coordinates = new CellCoordinates(cell.rowIndex, cell.colIndex);
+				beginCoordinates = new CellCoordinates(cell.rowIndex, cell.colIndex);
+				endCoordinates = new CellCoordinates(cell.rowIndex, cell.colIndex);
 				
-				if (coordinates.isValid()) {
-					selectCellRange(coordinates, coordinates);
+				if (beginCoordinates.isValid()) {
+					selectCellRange(beginCoordinates, endCoordinates);
 				}
 			}
 		}
@@ -187,49 +214,141 @@ package flashx.textLayout.edit
 		/**
 		 * Select table cells at the specified index.
 		 **/
-		public function selectCellAt(index:int):void {
-			// todo
+		public function selectCellAt(table:TableElement, rowIndex:int, colIndex:int):void {
+			var cell:TableCellElement = table.getCellAt(rowIndex, colIndex);
+			
+			if (cell) {
+				selectCell(cell);
+			}
 		}
 		
 		/**
 		 * Select table cells at the specified index
 		 **/
 		public function selectCells(cells:Array):void {
-			// todo
+			var blockSet:Vector.<TextFlowTableBlock> = new Vector.<TextFlowTableBlock>();
+			var blocks:Vector.<TextFlowTableBlock>;
+			var block:TextFlowTableBlock;
+			var beginCoordinates:CellCoordinates;
+			var endCoordinates:CellCoordinates;
+			var cell:TableCellElement;
+			var controller:ContainerController;
+			var dictionary:Dictionary = new Dictionary(true);
+			var clearedBlocks:Array = [];
+			
+			// loop through cells and gather into cells by block
+			for (var i:int; i<cells.length;i++) {
+				cell = cells[i] as TableCellElement;
+				block = _currentTable.getCellBlock(cell);
+				
+				// clear the block selection shapes as we go
+				if (clearedBlocks.indexOf(block)==-1) {
+					block.controller.clearSelectionShapes();
+					clearedBlocks.push(block);
+				}
+				
+				if (dictionary[block] == null) {
+					dictionary[block] = [];
+				}
+				
+				(dictionary[block] as Array).push(cell);
+				
+			}
+			
+			if (selectionType == SelectionType.TEXT) {
+				clear();
+			}
+			
+			if (clearedBlocks.length>0) {
+				
+				for (var j:int; j<clearedBlocks.length; j++) {
+					block = clearedBlocks[j];
+					cells = dictionary[block];
+					block.controller.addCellSelections(cells, currentCellSelectionFormat.rangeColor, block);
+				}
+				
+				anchorCellPosition = new CellCoordinates(0, 0);
+			}
+			else {
+				_cellRange = null;
+				activeCellPosition.column = -1;
+				activeCellPosition.row = -1;
+			}
 		}
 		
 		/**
 		 * Select the specified table row. 
 		 **/
 		public function selectRow(row:TableRowElement):void {
-			// todo
+			var beginCoordinates:CellCoordinates;
+			var endCoordinates:CellCoordinates;
+			
+			if (row) {
+				beginCoordinates = new CellCoordinates(row.rowIndex, 0);
+				endCoordinates = new CellCoordinates(row.rowIndex, row.numCells);
+				
+				if (beginCoordinates.isValid() && endCoordinates.isValid()) {
+					selectCellRange(beginCoordinates, endCoordinates);
+				}
+			}
 		}
 		
 		/**
 		 * Select a table row at the specified index
 		 **/
-		public function selectRowAt(index:TableRowElement):void {
-			// todo
+		public function selectRowAt(table:TableElement, index:int):void {
+			var row:TableRowElement = table ? table.getRowAt(index) : null;
+			
+			if (row) {
+				selectRow(row);
+			}
 		}
+		
 		/**
 		 * Select table rows at the specified indices. 
 		 **/
 		public function selectRows(rows:Array):void {
-			// todo
+			var cells:Array = [];
+			var table:TableElement;
+			var rowCells:Array;
+			
+			if (rows) {
+				
+				for (var i:int;i<rows.length;i++) 
+				{
+					var row:TableRowElement = rows[i] as TableRowElement;
+					
+					if (row) {
+						rowCells = row.cells;
+					}
+					
+					cells.concat(rowCells);
+				}
+				
+				selectCells(cells);
+			}
 		}
 		
 		/**
 		 * Select a table column. 
 		 **/
 		public function selectColumn(column:TableColElement):void {
-			// todo
+			var table:TableElement = column.table;
+			
+			if (column && table) {
+				selectCells(table.getCellsForColumn(column));
+			}
 		}
 		
 		/**
 		 * Select a table column at the specified index 
 		 **/
-		public function selectColumnAt(index:int):void {
-			// todo
+		public function selectColumnAt(table:TableElement, index:int):void {
+			var column:TableColElement = table.getColumnAt(index);
+			
+			if (column && table) {
+				return selectColumn(column);
+			}
 		}
 		
 		/**
@@ -237,6 +356,18 @@ package flashx.textLayout.edit
 		 **/
 		public function selectColumns(columns:Array):void {
 			// todo
+		}
+		
+		/**
+		 * Select all cells in a table. 
+		 **/
+		public function selectTable(table:TableElement):void {
+			
+			if (table) {
+				var cells:Array = table.getCellsArray();
+				selectCells(cells);
+			}
+			
 		}
 		
 		/**
@@ -971,7 +1102,8 @@ package flashx.textLayout.edit
         //  trace("Selection ", anchorMark, "to", activeMark.position);
         }       
         
-        /** Clear any active selections.
+        /** 
+		 * Clear any active selections.
          */
         private function clear(): void
         {
@@ -1019,22 +1151,37 @@ package flashx.textLayout.edit
                 }
             }
         }
-        
-        /** 
-         *  @copy ISelectionManager#refreshSelection()
-         * 
-         * @playerversion Flash 10
-         * @playerversion AIR 1.5
-         * @langversion 3.0
-        */
-        public function refreshSelection(): void
-        {
-            if (hasAnySelection())
-            {
-                clearSelectionShapes();
-                addSelectionShapes();
-            }
-        }
+		
+		/** 
+		 *  @copy ISelectionManager#refreshSelection()
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		public function refreshSelection(): void
+		{
+			if (hasAnySelection())
+			{
+				clearSelectionShapes();
+				addSelectionShapes();
+			}
+		}
+		
+		/** 
+		 *  @copy ISelectionManager#clearSelection()
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		public function clearSelection(): void
+		{
+			if (hasAnySelection())
+			{
+				clearSelectionShapes();
+			}
+		}
         
         /** Verifies that the selection is in a legal state. @private */
         CONFIG::debug public function debugCheckSelectionManager():int
@@ -1755,18 +1902,21 @@ package flashx.textLayout.edit
          * @playerversion AIR 1.5
          * @langversion 3.0
          */ 
-        public function mouseMoveHandler(event:MouseEvent):void
-        {
+        public function mouseMoveHandler(event:MouseEvent):void {
             var wmode:String = textFlow.computedFormat.blockProgression;            
-            if (wmode != BlockProgression.RL) 
-                setMouseCursor(MouseCursor.IBEAM);          
+            
+			if (wmode != BlockProgression.RL) {
+                setMouseCursor(MouseCursor.IBEAM);
+			}
+			
             if (event.buttonDown)
 			{
 				var cell:TableCellElement = _textFlow.parentElement as TableCellElement;
+				
 				// if the event is owned by a cell, we need to check if the mouse is now above another cell to select a cell range.
-				if(cell)
-				{
-					do{
+				if (cell) {
+					
+					do {
 						var cellCoords:CellCoordinates = new CellCoordinates(cell.rowIndex,cell.colIndex,cell.getTable());
 						var coords:CellCoordinates = computeCellCoordinates(cell.getTextFlow(),event.target,event.currentTarget,event.localX, event.localY);
 						if(!coords)

@@ -37,6 +37,7 @@ package flashx.textLayout.elements
 	{		
 		//public var height:Number;
 		public var x:Number;
+		public var colIndex:int;
 		
 		public function TableColElement(format:ITextLayoutFormat=null)
 		{

@@ -2832,10 +2832,27 @@ package flashx.textLayout.container
 			for each( var cell:TableCellElement in cells)
 			{
 				var row:TableRowElement = cell.getRow();
-				var r:Rectangle = new Rectangle(cell.container.x, cell.container.y + tableBlock.y, cell.width, row.composedHeight);
+				var r:Rectangle = new Rectangle(cell.x, cell.y + tableBlock.y, cell.width, row.composedHeight);
 				selObj.graphics.drawRect(r.x,r.y,r.width,r.height);
 			}
 			addSelectionChild(selObj);
+		}
+		
+		/** 
+		 * Add cell selection shapes to the displaylist.
+		 * */
+		tlf_internal function addCellSelections(cells:Array, color:uint, tableBlock:TextFlowTableBlock): void
+		{
+			var shape:Shape = new Shape();
+			shape.graphics.beginFill(color);
+			
+			for each(var cell:TableCellElement in cells) {
+				var row:TableRowElement = cell.getRow();
+				var rectangle:Rectangle = new Rectangle(cell.x, cell.y + tableBlock.y, cell.width, row.composedHeight);
+				shape.graphics.drawRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+			}
+			
+			addSelectionChild(shape);
 		}
 		
 		/** Add selection shapes to the displaylist. @private */
@@ -2930,7 +2947,7 @@ package flashx.textLayout.container
 		{
 			// If there's no selectionSprite on this controller, we use the parent's.
 			// That means we have to translate the coordinates.
-			// TODO: this only supports one level of ntesting
+			// TODO: this only supports one level of nesting
 			var selectionSprite:DisplayObjectContainer = getSelectionSprite(true);
 			
 			if (selectionSprite == null)
@@ -2945,7 +2962,7 @@ package flashx.textLayout.container
 				selectionSprite.blendMode = curBlendMode;
 			
 			if (selectionSprite.alpha != curAlpha)
-				selectionSprite.alpha = curAlpha;
+				selectionSprite.alpha = 1;//curAlpha; testing remove this 
 			
 			if (selectionSprite.numChildren == 0)
 				addSelectionContainer(selectionSprite);

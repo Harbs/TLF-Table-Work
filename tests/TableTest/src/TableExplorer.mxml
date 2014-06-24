@@ -457,8 +457,9 @@
 						// should not need to do this in final version
 						selectionManager.currentTable = table;
 						//selectionManager.selectRange(-1,-1);
-						selectionManager.selectAll();
-						selectionManager.setFocus();
+						/*selectionManager.selectAll();
+						selectionManager.setFocus();*/
+						selectionManager.selectCellTextFlow(cell);
 					}
 				}
 				else {
@@ -476,6 +477,7 @@
 				
 				if (table) {
 					var cell:TableCellElement = table.getCellAt(0,0);
+					//var selectionManager:SelectionManager = textFlow ? textFlow.interactionManager as SelectionManager : null;
 					var selectionManager:SelectionManager = cell ? cell.textFlow.interactionManager as SelectionManager : null;
 					
 					if (selectionManager && selectionManager.superManager) {
@@ -490,7 +492,17 @@
 						// i don't think we should need to do this in final version
 						//selectionManager.currentTable = table;
 						//selectionManager.selectCell(cell);
+						var selFormat:SelectionFormat = new SelectionFormat();
+						//selectionManager.unfocusedSelectionFormat = selFormat;
+						//selectionManager.focusedSelectionFormat = selFormat;
+						//cell.textFlow.interactionManager.focusedSelectionFormat = selFormat;
+						//cell.textFlow.interactionManager.unfocusedSelectionFormat = selFormat;
+						/*selectionManager.unfocusedSelectionFormat = selFormat;
+						selectionManager.inactiveSelectionFormat = selFormat;*/
 						
+						// In ContainerController in addSelectionChild 
+						// the selection format alpha is 0 so cell selection is not showing up
+						// manually setting the alpha to 1 in addSelectionChild for testing 
 						selectionManager.currentTable = table;
 						selectionManager.selectCell(cell);
 					}
@@ -503,22 +515,51 @@
 			}
 			
 			/**
+			 * Clears the selection of cells
+			 **/
+			public function clearSelection(cells:Array = null):TableElement {
+				var table:TableElement = getTable();
+				
+				if (table) {
+					var selectionManager:SelectionManager = textFlow.interactionManager as SelectionManager;
+					
+					if (selectionManager) {
+						selectionManager.currentTable = table;
+						selectionManager.clearSelection();
+					}
+				}
+				
+				updateErrorsText(null);
+				
+				return null;
+			}
+			
+			/**
 			 * Selects the specified cells
 			 **/
 			public function selectCells(cells:Array = null):TableElement {
 				var table:TableElement = getTable();
 				
 				if (table) {
-					var cell:TableCellElement = table.getCellAt(0,0);
-					var cell2:TableCellElement = table.getCellAt(0,1);
-					var selectionManager:SelectionManager = cell ? cell.textFlow.interactionManager as SelectionManager : null;
+					var cells:Array = table.getCellsArray();
+					var selectedCells:Array = [];
+					
+					for (var i:int = 0; i < cells.length; i++) {
+						
+						if (i%2==0) {
+							selectedCells.push(cells[i]);
+						}
+					}
+					
+					var selectionManager:SelectionManager = textFlow.interactionManager as SelectionManager;
 					
 					if (selectionManager) {
-						selectionManager.selectCells([cell, cells]);
+						selectionManager.currentTable = table;
+						selectionManager.selectCells(selectedCells);
 					}
 				}
 				
-				updateErrorsText(notImplementedMessage);
+				updateErrorsText(null);
 				
 				return null;
 			}
@@ -530,10 +571,15 @@
 				var table:TableElement = getTable();
 				
 				if (table) {
+					var selectionManager:SelectionManager = textFlow.interactionManager as SelectionManager;
 					
+					if (selectionManager) {
+						selectionManager.currentTable = table;
+						selectionManager.selectColumnAt(table, 2);
+					}
 				}
 				
-				updateErrorsText(notImplementedMessage);
+				updateErrorsText(null);
 				
 				return null;
 			}
@@ -545,10 +591,16 @@
 				var table:TableElement = getTable();
 				
 				if (table) {
+					var selectionManager:SelectionManager = textFlow ? textFlow.interactionManager as SelectionManager : null;
 					
+					if (selectionManager) {
+						selectionManager.currentTable = table;
+						selectionManager.selectTable(table);
+					}
 				}
-				
-				updateErrorsText(notImplementedMessage);
+				else {
+					updateErrorsText(tableNotCreatedError);
+				}
 				
 				return null;
 			}
@@ -557,13 +609,22 @@
 			 * Selects a row in the table
 			 **/
 			public function selectRow(rowIndex:int = 0):TableElement {
+				var selectionManager:SelectionManager;
 				var table:TableElement = getTable();
+				var row:TableRowElement = table ? table.getRowAt(rowIndex) : null;
 				
-				if (table) {
+				if (table && row) {
+					selectionManager = textFlow.interactionManager is ISelectionManager ? textFlow.interactionManager as SelectionManager : null;
 					
+					if (selectionManager) {
+						selectionManager.currentTable = table;
+						selectionManager.selectRow(row);
+					}
+				}
+				else {
+					updateErrorsText(tableNotCreatedError);
 				}
 				
-				updateErrorsText(notImplementedMessage);
 				
 				return null;
 			}
@@ -983,6 +1044,7 @@
 				
 				if (editable) {
 					// setting the edit manager adds a default paragraph
+					//textFlow.interactionManager = textFlow.interactionManager;
 					textFlow.interactionManager = new EditManager(new UndoManager);
 				}
 				else if (selectable) {
@@ -1229,7 +1291,7 @@
 				
 				if (table) {
 					tableWidth.text = String(table.width);
-					tableHeight.text = String(table.getFirstBlock().height);
+					tableHeight.text = String(Number(table.getFirstBlock().height).toFixed(1));
 					tableBlocks.text = table.tableBlocks ? String(table.tableBlocks.length) : "";
 					tableCells.text = String(table.numCells);
 					tableRowsStepper.value = table.numRows;
@@ -1430,6 +1492,7 @@
 				<mx:LinkButton label="Select Cell" click="selectCell()"/>
 				<mx:LinkButton label="Select Cell Content" click="selectCellContent()"/>
 				<mx:LinkButton label="Select Cells" click="selectCells()"/>
+				<mx:LinkButton label="Clear Selection" click="clearSelection()"/>
 			</s:HGroup>
 			<s:Label text="Misc" width="100%" styleName="header"/>
 			<s:HGroup>

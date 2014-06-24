@@ -163,8 +163,11 @@ package flashx.textLayout.elements
 				columns.pop();
 			}
 			var num:int = numColumns;
-			for(var i:int = num;i<value;i++){
-				columns.push(new TableColElement(defaultColumnFormat));
+			for(var i:int = num;i<value;i++) {
+				var column:TableColElement = new TableColElement(defaultColumnFormat);
+				column.colIndex = i;
+				column.table = this;
+				columns.push(column);
 			}
 		}
 		private var _defaultRowFormat:ITextLayoutFormat;
@@ -280,9 +283,14 @@ package flashx.textLayout.elements
 		public function addColumnAt(idx:int, format:ITextLayoutFormat=null):void{
 			if(idx < 0 || idx > columns.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
-			if(!format)
+			if(!format) {
 				format = defaultColumnFormat;
-			columns.splice(idx, 0, new TableColElement(format));
+			}
+			var column:TableColElement = new TableColElement(format);
+			column.colIndex = idx;
+			column.table = this;
+			
+			columns.splice(idx, 0, column);
 		}
 
 		/**
@@ -321,7 +329,23 @@ package flashx.textLayout.elements
 		/**
 		 * Returns a vector of the cells for the row specified. 
 		 **/
-		public function getCellsForRow(index:int):Vector.<TableCellElement>{
+		public function getCellsForRow(row:TableRowElement):Vector.<TableCellElement>{
+			
+			return getCellsForRowAt(row.rowIndex);
+		}
+		
+		/**
+		 * Returns a vector of the cells for the row specified. 
+		 **/
+		public function getCellsForRowArray(row:TableRowElement):Array {
+			
+			return getCellsForRowAtArray(row.rowIndex);
+		}
+		
+		/**
+		 * Returns a vector of the cells for the row at the specified index. 
+		 **/
+		public function getCellsForRowAt(index:int):Vector.<TableCellElement>{
 			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
 			
 			if (index < 0) {
@@ -340,7 +364,7 @@ package flashx.textLayout.elements
 		/**
 		 * Returns an array of the cells for the row specified. 
 		 **/
-		public function getCellsForRowArray(index:int):Array {
+		public function getCellsForRowAtArray(index:int):Array {
 			var cells:Array = [];
 			
 			if (index < 0) {
@@ -349,6 +373,44 @@ package flashx.textLayout.elements
 			
 			for each(var cell:TableCellElement in mxmlChildren){
 				if (cell.rowIndex == index) {
+					cells.push(cell);
+				}
+			}
+			
+			return cells;
+		}
+		
+		/**
+		 * Returns an array of the cells for the column specified. 
+		 **/
+		public function getCellsForColumn(column:TableColElement):Array {
+			var cells:Array = [];
+			
+			if (column.colIndex < 0) {
+				return cells;
+			}
+			
+			for each(var cell:TableCellElement in mxmlChildren){
+				if (cell.colIndex == column.colIndex) {
+					cells.push(cell);
+				}
+			}
+			
+			return cells;
+		}
+		
+		/**
+		 * Returns an array of the cells for the column at the specified index. 
+		 **/
+		public function getCellsForColumnAt(index:int):Array {
+			var cells:Array = [];
+			
+			if (index < 0) {
+				return cells;
+			}
+			
+			for each(var cell:TableCellElement in mxmlChildren){
+				if (cell.colIndex == index) {
 					cells.push(cell);
 				}
 			}
@@ -378,8 +440,11 @@ package flashx.textLayout.elements
 		public function insertColumnAt(idx:int,column:TableColElement=null,cells:Array = null):Boolean{
 			if(idx < 0 || idx > columns.length)
 				throw RangeError(GlobalSettings.resourceStringFunction("badPropertyValue"));
-			if(!column)
+			if(!column) {
 				column = new TableColElement(defaultColumnFormat);
+			}
+			column.colIndex = idx;
+			column.table = this;
 			columns.splice(idx,0,column);
 			
 			var blockedCoords:Vector.<CellCoords> = getBlockedCoords(-1,idx);
@@ -659,16 +724,23 @@ package flashx.textLayout.elements
 			this.numColumns;this.numRows;
 			var i:int;
 			var blockedCoords:Vector.<CellCoords> = new Vector.<CellCoords>();
-			if(!mxmlChildren)
+			
+			if (!mxmlChildren) {
 				return;
+			}
+			
 			var curRow:int = 0;
 			var curColumn:int = 0;
-			for each(var child:* in mxmlChildren){
-				if(!(child is TableCellElement))
+			
+			for each(var child:* in mxmlChildren) {
+				
+				if (!(child is TableCellElement)) {
 					continue;
+				}
+				
 				var cell:TableCellElement = child as TableCellElement;
-				if(cell.rowIndex != curRow || cell.colIndex != curColumn)
-				{
+				
+				if (cell.rowIndex != curRow || cell.colIndex != curColumn) {
 					cell.rowIndex = curRow;
 					cell.colIndex = curColumn;
 					cell.damage();
@@ -677,6 +749,7 @@ package flashx.textLayout.elements
 				// add blocked coords if the cell spans rows or columns
 				var endRow:int = curRow + cell.rowSpan - 1;
 				var endColumn:int = curColumn + cell.columnSpan -1;
+				
 				for(var rowIdx:int = curRow;rowIdx <= endRow;rowIdx++){
 					for(var colIdx:int = curColumn;colIdx <=endColumn;colIdx++){
 						if(rowIdx == curRow && colIdx == curColumn){
@@ -687,25 +760,31 @@ package flashx.textLayout.elements
 				}
 				
 				// advance coordinates while checking blocked ones from spans
-				do{
+				do {
 					curColumn++;
-					if(curColumn >= numColumns){
+					
+					if (curColumn >= numColumns){
 						curColumn = 0;
 						curRow++;
 					}
+					
 					var advanced:Boolean = true;
-					for(i=0;i<blockedCoords.length;i++){
+					
+					for (i=0;i<blockedCoords.length;i++){
 						if(blockedCoords[i].column == curColumn && blockedCoords[i].row == curRow){
 							advanced = false;
 							blockedCoords.splice(i,1);
 						}
 					}
-					if(advanced)
+					
+					if (advanced) {
 						break;
+					}
 					
-				}while(1);
-					
+				} while(1);
+				
 			}
+			
 		}
 		
 		/**
@@ -1068,12 +1147,27 @@ package flashx.textLayout.elements
 				}
 			}
 		}
-        
+		
 		/**
 		 * Returns a vector of all the table cell elements in the table.
 		 **/
 		public function getCells():Vector.<TableCellElement> {
 			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
+			
+			for each (var cell:* in mxmlChildren){
+				if (cell is TableCellElement) {
+					cells.push(cell as TableCellElement);
+				}
+			}
+			
+			return cells;
+		}
+		
+		/**
+		 * Returns an array of all the table cells.
+		 **/
+		public function getCellsArray():Array {
+			var cells:Array = [];
 			
 			for each (var cell:* in mxmlChildren){
 				if (cell is TableCellElement) {

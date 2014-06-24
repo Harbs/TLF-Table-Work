@@ -28,8 +28,8 @@ package flashx.textLayout.elements
 	use namespace tlf_internal;
 	
 	/** 
-	 * <p> TableRowElement is an item in a TableElement. It most commonly contains one or more TableCellElement objects, 
-	 * A TableRowElement always appears within a TableElement, TableBodyElement.</p>
+	 * TableRowElement is an item in a TableElement. It most commonly contains one or more TableCellElement objects, 
+	 * A TableRowElement always appears within a TableElement, TableBodyElement.
 	 *
 	 * 
 	 * @playerversion Flash 10
@@ -57,8 +57,10 @@ package flashx.textLayout.elements
 		public function TableRowElement(format:ITextLayoutFormat=null)
 		{
 			super();
-			if(format)
+			
+			if (format) {
 				this.format = format;
+			}
 		}
 
 		
@@ -93,7 +95,7 @@ package flashx.textLayout.elements
 				return null;
 			}
 			
-			return table.getCellsForRow(table.getRowIndex(this));
+			return table.getCellsForRow(this);
 		}
 		
 		/**
@@ -107,7 +109,7 @@ package flashx.textLayout.elements
 				return null;
 			}
 			
-			return table.getCellsForRowArray(table.getRowIndex(this));
+			return table.getCellsForRowArray(this);
 		}
 		
 		/**
@@ -121,7 +123,7 @@ package flashx.textLayout.elements
 				return 0;
 			}
 			
-			return table.getCellsForRow(table.getRowIndex(this)).length;
+			return table.getCellsForRow(this).length;
 		}
 		
 		/**
