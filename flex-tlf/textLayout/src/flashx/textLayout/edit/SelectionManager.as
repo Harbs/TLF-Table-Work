@@ -20,8 +20,10 @@ package flashx.textLayout.edit
 {
     import flash.desktop.Clipboard;
     import flash.desktop.ClipboardFormats;
+    import flash.display.BitmapData;
     import flash.display.DisplayObject;
     import flash.display.InteractiveObject;
+    import flash.display.Shape;
     import flash.display.Stage;
     import flash.errors.IllegalOperationError;
     import flash.events.ContextMenuEvent;
@@ -31,6 +33,7 @@ package flashx.textLayout.edit
     import flash.events.KeyboardEvent;
     import flash.events.MouseEvent;
     import flash.events.TextEvent;
+    import flash.geom.Matrix;
     import flash.geom.Point;
     import flash.geom.Rectangle;
     import flash.text.engine.TextLine;
@@ -40,6 +43,7 @@ package flashx.textLayout.edit
     import flash.ui.Keyboard;
     import flash.ui.Mouse;
     import flash.ui.MouseCursor;
+    import flash.ui.MouseCursorData;
     import flash.utils.Dictionary;
     import flash.utils.getQualifiedClassName;
     
@@ -61,6 +65,7 @@ package flashx.textLayout.edit
     import flashx.textLayout.elements.IConfiguration;
     import flashx.textLayout.elements.InlineGraphicElement;
     import flashx.textLayout.elements.ParagraphElement;
+    import flashx.textLayout.elements.TableBlockContainer;
     import flashx.textLayout.elements.TableCellElement;
     import flashx.textLayout.elements.TableColElement;
     import flashx.textLayout.elements.TableElement;
@@ -128,7 +133,23 @@ package flashx.textLayout.edit
      * @langversion 3.0
      */
     public class SelectionManager implements ISelectionManager
-    {       
+    {
+		
+		/**
+		 * Cursor for selection of table
+		 **/
+		public static var SelectTable:String = "selectTable";
+		
+		/**
+		 * Cursor for selection of table row
+		 **/
+		public static var SelectTableRow:String = "selectTableRow";
+		
+		/**
+		 * Cursor for selection of table column
+		 **/
+		public static var SelectTableColumn:String = "selectTableColumn";
+		
         private var _focusedSelectionFormat:SelectionFormat;
         private var _unfocusedSelectionFormat:SelectionFormat;
         private var _inactiveSelectionFormat:SelectionFormat;
@@ -512,7 +533,12 @@ package flashx.textLayout.edit
                 this.id = smCount.toString();
                 smCount++;
             }
+			
+			Mouse.registerCursor(SelectTable, createSelectTableCursor());
+			Mouse.registerCursor(SelectTableRow, createSelectTableRowCursor());
+			Mouse.registerCursor(SelectTableColumn, createSelectTableColumnCursor());
         }
+		
         /**
          * @copy ISelectionManager#getSelectionState()
          * 
@@ -1774,7 +1800,7 @@ package flashx.textLayout.edit
 
 		}
 		/** @private - given a target and location compute the CellCoordinates */
-		static tlf_internal function computeCellCoordinates(textFlow:TextFlow, target:Object, currentTarget:Object, localX:Number,localY:Number):CellCoordinates
+		static tlf_internal function computeCellCoordinates(textFlow:TextFlow, target:Object, currentTarget:Object, localX:Number, localY:Number):CellCoordinates
 		{
 			var rslt:CellCoordinates;
 			var containerPoint:Point; // scratch
@@ -1785,9 +1811,9 @@ package flashx.textLayout.edit
 			if(target is CellContainer)
 			{
 				var cell:TableCellElement = (target as CellContainer).element;
-				return new CellCoordinates(cell.rowIndex,cell.colIndex,cell.getTable());
+				return new CellCoordinates(cell.rowIndex, cell.colIndex, cell.getTable());
 			}
-			var localPoint:Point = new Point(localX,localY);
+			var localPoint:Point = new Point(localX, localY);
 			var controller:ContainerController = findController(textFlow, target, currentTarget, localPoint);
 			if(!controller)
 				return null;
@@ -1921,10 +1947,11 @@ package flashx.textLayout.edit
          */ 
         public function mouseMoveHandler(event:MouseEvent):void {
             var wmode:String = textFlow.computedFormat.blockProgression;            
-            
+			
 			if (wmode != BlockProgression.RL) {
                 setMouseCursor(MouseCursor.IBEAM);
 			}
+			
 			
             if (event.buttonDown)
 			{
@@ -1934,12 +1961,12 @@ package flashx.textLayout.edit
 				if (cell) {
 					
 					do {
-						var cellCoords:CellCoordinates = new CellCoordinates(cell.rowIndex,cell.colIndex,cell.getTable());
-						var coords:CellCoordinates = computeCellCoordinates(cell.getTextFlow(),event.target,event.currentTarget,event.localX, event.localY);
+						var cellCoords:CellCoordinates = new CellCoordinates(cell.rowIndex, cell.colIndex, cell.getTable());
+						var coords:CellCoordinates = computeCellCoordinates(cell.getTextFlow(), event.target, event.currentTarget, event.localX, event.localY);
 						if(!coords)
 							break;
-						if(CellCoordinates.areEqual(cellCoords,coords) &&
-							(!superManager.activeCellPosition.isValid() || CellCoordinates.areEqual(coords,superManager.activeCellPosition))
+						if(CellCoordinates.areEqual(cellCoords, coords) &&
+							(!superManager.activeCellPosition.isValid() || CellCoordinates.areEqual(coords, superManager.activeCellPosition))
 						)
 							break;
 						if(coords.table != cellCoords.table)
@@ -1947,9 +1974,9 @@ package flashx.textLayout.edit
 						
 						superManager = cell.getTextFlow().interactionManager;
 						if(
-							!CellCoordinates.areEqual(coords,superManager.activeCellPosition)
+							!CellCoordinates.areEqual(coords, superManager.activeCellPosition)
 						){
-							superManager.selectCellRange(superManager.anchorCellPosition,coords);
+							superManager.selectCellRange(superManager.anchorCellPosition, coords);
 							superManager.subManager = null;
 							allowOperationMerge = false;
 							event.stopPropagation();
@@ -1959,7 +1986,8 @@ package flashx.textLayout.edit
 						
 					}while(0);
 				}
-				handleMouseEventForSelection(event, true,_textFlow.parentElement != null);
+				
+				handleMouseEventForSelection(event, true, _textFlow.parentElement != null);
 
 			}
         }
@@ -2088,10 +2116,51 @@ package flashx.textLayout.edit
         {
             _mouseOverSelectionArea = true;
             var wmode:String = textFlow.computedFormat.blockProgression;
-            if (wmode != BlockProgression.RL) 
-                setMouseCursor(MouseCursor.IBEAM);  
-            else 
-                setMouseCursor(MouseCursor.AUTO);                               
+			
+            if (wmode != BlockProgression.RL) {
+				var cell:TableCellElement = _textFlow.parentElement as TableCellElement;
+				
+				// set the cursor if around the edge of the table
+				if (cell) {
+					var leftEdge:int = 5;
+					var topEdge:int = 5;
+					var globalPoint:Point = new Point(event.stageX, event.stageY);
+					var cellContainer:CellContainer = event.currentTarget as CellContainer;
+					var point:Point;
+					
+					if (cellContainer) {
+						var cellContainerPoint:Point = cellContainer.localToGlobal(new Point);
+						point = globalPoint.subtract(cellContainerPoint);
+					}
+					
+					// set cursor for row, table or column
+					if (cell.colIndex==0 && point.x<leftEdge && point.y>topEdge) {
+						event.stopPropagation();
+						event.stopImmediatePropagation();
+						setMouseCursor(SelectTableRow);
+					}
+					else if (cell.rowIndex==0 && cell.colIndex==0 &&
+							point.x<leftEdge && point.y<topEdge) {
+						event.stopPropagation();
+						event.stopImmediatePropagation();
+						setMouseCursor(SelectTable);
+					}
+					else if (cell.rowIndex==0 && point.x>leftEdge && point.y<topEdge) {
+						event.stopPropagation();
+						event.stopImmediatePropagation();
+						setMouseCursor(SelectTableColumn);
+					}
+					else {
+						setMouseCursor(MouseCursor.IBEAM);
+					}
+				}
+				else {
+                	setMouseCursor(MouseCursor.IBEAM);
+				}
+			}
+            else {
+                setMouseCursor(MouseCursor.AUTO);
+			}
         }
 
         /** 
@@ -2810,7 +2879,83 @@ package flashx.textLayout.edit
 		{
 			_activeCellPosition = value;
 		}
-
+		
+		public var selectTableCursorPoints:Vector.<Number> = new <Number>[1,3, 11,3, 11,0, 12,0, 16,4, 12,8, 11,8, 11,5, 1,5, 1,3];
+		public var selectTableCursorDrawCommands:Vector.<int> = new <int>[1,2,2,2,2,2,2,2,2,2];
+		
+		
+		/**
+		 * Create a select table cursor
+		 */
+		public function createSelectTableCursor():MouseCursorData {
+			var cursorData:Vector.<BitmapData> = new Vector.<BitmapData>();
+			var cursorShape:Shape = new Shape();
+			cursorShape.graphics.beginFill(0x0, 1);
+			cursorShape.graphics.lineStyle(0, 0xFFFFFF, 1, true);
+			cursorShape.graphics.drawPath( selectTableCursorDrawCommands, selectTableCursorPoints);
+			cursorShape.graphics.endFill();
+			var transformer:Matrix = new Matrix();
+			var cursorFrame:BitmapData = new BitmapData(32, 32, true, 0);
+			var angle:int = 8;
+			var rotation:Number = 0.785398163;
+			transformer.translate(-angle,-angle);
+			transformer.rotate(rotation);
+			transformer.translate(angle, angle);
+			cursorFrame.draw(cursorShape, transformer);
+			cursorData.push(cursorFrame);
+			var mouseCursorData:MouseCursorData = new MouseCursorData();
+			mouseCursorData.data = cursorData;
+			mouseCursorData.hotSpot = new Point(16, 10);
+			mouseCursorData.frameRate = 1;
+			return mouseCursorData;
+		}
+		
+		/**
+		 * Create a select row cursor
+		 */
+		public function createSelectTableRowCursor():MouseCursorData {
+			var cursorData:Vector.<BitmapData> = new Vector.<BitmapData>();
+			var cursorShape:Shape = new Shape();
+			cursorShape.graphics.beginFill(0x0, 1);
+			cursorShape.graphics.lineStyle(0, 0xFFFFFF, 1, true);
+			cursorShape.graphics.drawPath(selectTableCursorDrawCommands, selectTableCursorPoints);
+			cursorShape.graphics.endFill();
+			var transformer:Matrix = new Matrix();
+			var cursorFrame:BitmapData = new BitmapData(32, 32, true, 0);
+			cursorFrame.draw(cursorShape, transformer);
+			cursorData.push(cursorFrame);
+			var mouseCursorData:MouseCursorData = new MouseCursorData();
+			mouseCursorData.data = cursorData;
+			mouseCursorData.hotSpot = new Point(16, 4);
+			mouseCursorData.frameRate = 1;
+			return mouseCursorData;
+		}
+		
+		/**
+		 * Create a select table column cursor
+		 */
+		public function createSelectTableColumnCursor():MouseCursorData {
+			var cursorData:Vector.<BitmapData> = new Vector.<BitmapData>();
+			var cursorShape:Shape = new Shape();
+			cursorShape.graphics.beginFill(0x0, 1 );
+			cursorShape.graphics.lineStyle(0, 0xFFFFFF, 1, true );
+			cursorShape.graphics.drawPath(selectTableCursorDrawCommands, selectTableCursorPoints);
+			cursorShape.graphics.endFill();
+			var transformer:Matrix = new Matrix();
+			var cursorFrame:BitmapData = new BitmapData(32, 32, true, 0);
+			var angle:int = 16;
+			var rotation:Number = 0.785398163;
+			transformer.translate(-angle,-angle);
+			transformer.rotate(rotation * 2);
+			transformer.translate(angle, angle);
+			cursorFrame.draw(cursorShape, transformer);
+			cursorData.push(cursorFrame);
+			var mouseCursorData:MouseCursorData = new MouseCursorData();
+			mouseCursorData.data = cursorData;
+			mouseCursorData.hotSpot = new Point(28, 16);
+			mouseCursorData.frameRate = 1;
+			return mouseCursorData;
+		}
 
     }
 }

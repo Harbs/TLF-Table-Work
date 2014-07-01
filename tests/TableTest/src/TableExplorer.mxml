@@ -23,6 +23,16 @@
 			paddingLeft: 4;
 			paddingRight: 4;
 		}
+		.header2 {
+			fontSize: 12;
+			fontWeight: normal;
+			backgroundColor: #FF0000;
+			color: #565656;
+			paddingTop: 6;
+			paddingBottom: 4;
+			paddingLeft: 4;
+			paddingRight: 4;
+		}
 		
 		global {
 			focusThickness: 0;
@@ -116,6 +126,7 @@
 			import flash.text.engine.TextLine;
 			import flash.utils.ByteArray;
 			
+			import mx.core.BitmapAsset;
 			import mx.core.mx_internal;
 			
 			import flashx.textLayout.TextLayoutVersion;
@@ -179,11 +190,10 @@
 			
 			protected function importApplicationCompleteHandler(event:FlexEvent):void {
 				var tableByte:ByteArray = new TableExample();
-				complexTableData = tableByte.readMultiByte(tableByte.length,"utf-8");
+				complexTableData = tableByte.readMultiByte(tableByte.length, "utf-8");
 				
 				//textFlow = importer.importToFlow(tableData);
 				importToFlow(simpleTextMarkup);
-				
 				
 				clearTextFlow();
 				
@@ -995,6 +1005,27 @@
 				}
 			}
 			
+			/**
+			 * Show cursor used to select table
+			 **/
+			public function showSelectTableCursor():void {
+				Mouse.cursor = SelectionManager.SelectTable;
+			}
+			
+			/**
+			 * Show cursor used to select row
+			 **/
+			public function showSelectRowCursor():void {
+				Mouse.cursor = SelectionManager.SelectTableRow;
+			}
+			
+			/**
+			 * Show cursor used to select column
+			 **/
+			public function showSelectColumnCursor():void {
+				Mouse.cursor = SelectionManager.SelectTableColumn;
+			}
+			
 			/******************************************************
 			 * Misc
 			 *****************************************************/
@@ -1564,8 +1595,11 @@
 		<s:VGroup width="65%" height="100%">
 			<s:HGroup width="100%" gap="1" >
 				<s:Label text="TextFlow" width="100%" styleName="header"/>
-				<s:Label text="clear" click="clearTextFlow()" 
+				<s:Label text="clear" 
+						 click="clearTextFlow()" 
 						 styleName="header" 
+						 rollOver="event.currentTarget.styleName='header2'"
+						 rollOut="event.currentTarget.styleName='header'"
 						 useHandCursor="true" buttonMode="true"
 						 />
 			</s:HGroup>
@@ -1675,6 +1709,11 @@
 				<mx:LinkButton label="Get next cell" click="getNextCell()"/>
 				<mx:LinkButton label="Get previous cell" click="getPreviousCell()"/>
 				<mx:LinkButton label="Update all controllers" click="updateAllControllers()"/>
+			</s:HGroup>
+			<s:HGroup>
+				<mx:LinkButton label="Show Row Cursor" click="showSelectRowCursor()"/>
+				<mx:LinkButton label="Show Column Cursor" click="showSelectColumnCursor()"/>
+				<mx:LinkButton label="Show Table Cursor" click="showSelectTableCursor()"/>
 			</s:HGroup>
 			<s:Label text="Boundaries" width="100%" styleName="header"/>
 			<s:HGroup>

@@ -55,10 +55,6 @@ package flashx.textLayout.elements
 		private var _y:Number;
 		private var _width:Number;
 		private var _height:Number;
-		private var _widthWithPadding:Number;
-		private var _heightWithPadding:Number;
-		private var _elementWidth:Number;
-		private var _elementHeight:Number;
 
 		private var _parcelIndex:int;
 		private var _container:CellContainer;
@@ -188,6 +184,10 @@ package flashx.textLayout.elements
 			
 		}
 		
+		public function get controller():ContainerController {
+			return _controller;
+		}
+		
 		private function handleCellDamage(ev:DamageEvent):void{
 			damage();
 		}
@@ -229,8 +229,6 @@ package flashx.textLayout.elements
 			}
 			
 			_width = value;
-			_widthWithPadding = _width + getTotalPaddingWidth();
-			_elementWidth = value;
 			
 			_controller.setCompositionSize(_width, _controller.compositionHeight);
 		}
@@ -240,6 +238,7 @@ package flashx.textLayout.elements
 		 **/
 		public function get height():Number
 		{
+			//return getRowHeight(); not sure if we should always use row height
 			return _height;
 		}
 
@@ -253,8 +252,6 @@ package flashx.textLayout.elements
 			}
 			
 			_height = value;
-			_heightWithPadding = _height + getTotalPaddingHeight();
-			_elementHeight = value;
 			
 			_controller.setCompositionSize(_controller.compositionWidth, _height);
 		}
@@ -262,6 +259,11 @@ package flashx.textLayout.elements
 		public function getComposedHeight():Number
 		{
 			return _controller.getContentBounds().height;
+		}
+		
+		public function getRowHeight():Number
+		{
+			return getRow() ? getRow().composedHeight : NaN;
 		}
 
 		public function get rowSpan():uint
@@ -397,86 +399,5 @@ package flashx.textLayout.elements
 			return paddingAmount;
 		}
 		
-		
-		/** @private */
-		tlf_internal function elementWidthWithMarginsAndPadding():Number
-		{
-			var paddingAmount:Number = 0;
-			
-			// no textflow is no padding
-			if (!textFlow) {
-				return elementWidth;
-			}
-			
-			if (textFlow.computedFormat.blockProgression == BlockProgression.RL) {
-				paddingAmount = getTotalPaddingWidth();
-			}
-			else {
-				paddingAmount = getTotalPaddingHeight();
-			}
-			
-			return elementWidth + paddingAmount;
-		}
-		
-		/** @private */
-		tlf_internal function elementHeightWithMarginsAndPadding():Number
-		{
-			var paddingAmount:Number;
-			
-			// no textflow is no padding
-			if (!textFlow) {
-				return elementHeight;
-			}
-			
-			if (textFlow.computedFormat.blockProgression == BlockProgression.RL) {
-				paddingAmount = getTotalPaddingHeight();
-			}
-			else {
-				paddingAmount = getTotalPaddingWidth();
-			}
-			
-			return isNaN(elementHeight) ? height + paddingAmount : elementHeight + paddingAmount;
-		}
-		
-		
-		/** 
-		 * Width used by composition for laying out text
-		 * */
-		tlf_internal function get elementWidth():Number
-		{
-			return _elementWidth;           
-		}
-		
-		/** 
-		 * @private 
-		 * */
-		tlf_internal function set elementWidth(value:Number):void
-		{
-			_elementWidth = value;
-			
-			elementWidth = elementWidthWithMarginsAndPadding();
-			
-			modelChanged(ModelChange.ELEMENT_MODIFIED, this, 0, textLength, true, false);
-		}
-		
-		/**
-		 * Height used by composition for laying out text 
-		 * */
-		tlf_internal function get elementHeight():Number
-		{
-			return _elementHeight;          
-		}
-		
-		/** 
-		 * @private 
-		 * */
-		tlf_internal function set elementHeight(value:Number):void
-		{
-			_elementHeight = value;
-			
-			elementHeight = elementHeightWithMarginsAndPadding();    
-			
-			modelChanged(ModelChange.ELEMENT_MODIFIED, this, 0, textLength, true, false);
-		}
 	}
 }
