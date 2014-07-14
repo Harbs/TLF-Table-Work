@@ -48,7 +48,8 @@ package flashx.textLayout.compose
 		override tlf_internal function setController(cont:ContainerController,colNumber:int):void
 		{
 			super.setController(cont, colNumber);
-			controller.addComposedTableBlock(container);
+			if(cont)
+				controller.addComposedTableBlock(container);
 		}
 
 		

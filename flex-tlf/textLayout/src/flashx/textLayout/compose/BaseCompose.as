@@ -1060,6 +1060,8 @@ package flashx.textLayout.compose
 		 */
 		protected function composeParagraphElementIntoLines():Boolean
 		{
+			// make sure TextBlocks are normalized
+			_curParaElement.createContentElement();
 			var result:Boolean = true;
 			var textLine:TextLine;
 			

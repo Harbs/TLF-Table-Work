@@ -464,7 +464,7 @@ package flashx.textLayout.elements
 				{
 					// optimized version leverages player APIs
 					// TODO: Jeff to add split on TextElement so we don't have to go find a group every time
-					var group:GroupElement = parent.createContentAsGroup();
+					var group:GroupElement = parent.createContentAsGroup(relativePosition);
 					
 					var elementIndex:int = group.getElementIndex(_blockElement);
 					

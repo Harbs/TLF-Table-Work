@@ -797,15 +797,16 @@ package flashx.textLayout.compose
 				return null;
 						
 			// Look it up in the textBlock
-			var textBlock:TextBlock = paragraph.peekTextBlock();
-			if (textBlock)
+			var textBlocks:Vector.<TextBlock> = paragraph.getTextBlocks();
+			for each(var textBlock:TextBlock in textBlocks)
 			{
 				for (textLine = textBlock.firstLine; textLine; textLine = textLine.nextLine)
 				{
 					if (textLine.userData == this) // found it
 						return textLine;
-					}
 				}
+				
+			}
 			return null;
 		}
 		

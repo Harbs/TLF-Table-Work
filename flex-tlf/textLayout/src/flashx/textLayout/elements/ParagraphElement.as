@@ -107,20 +107,28 @@ package flashx.textLayout.elements
 			CONFIG::debug { assert(_textBlock == null,"createTextBlock called when there is already a textblock"); }
 			computedFormat;	// recreate the format BEFORE the _textBlock is created
 			var tbs:Vector.<TextBlock> = getTextBlocks();
-			tbs.length = 0;
+			//tbs.length = 0;
+			var tableCount:int = 0;
 			var tb:TextBlock = new TextBlock();
-			if( !(getChildAt(0) is TableElement) )
-				tbs.push(tb);
+			if(tbs.length == 0 && !(getChildAt(0) is TableElement) )
+				tbs.push(new TextBlock());
 			//getTextBlocks()[0] = new TextBlock();
 			CONFIG::debug { Debugging.traceFTECall(_textBlock,null,"new TextBlock()"); }
 			for (var i:int = 0; i < numChildren; i++)
 			{
 				var child:FlowElement = getChildAt(i);
 				if(child is TableElement)
-					tbs.push(new TextBlock());
+					tableCount++;
+//					tbs.push(new TextBlock());
 				else
+				{
+					//child.releaseContentElement();
 					child.createContentElement();
+				}
 			}
+			while(tableCount >= tbs.length)
+				tbs.push(new TextBlock());
+			tbs.length = tableCount + 1;
 			updateTextBlock();
 		}
 		
@@ -197,6 +205,9 @@ package flashx.textLayout.elements
 			var curPos:int = 0;
 			var posShift:int = 0;
 			var tables:Vector.<TableElement> = getTables();
+			if(!tables.length)
+				return getTextBlock();
+			
 			for each(var table:TableElement in tables)
 			{
 				if(table.getElementRelativeStart(this) < pos)
@@ -284,7 +295,9 @@ package flashx.textLayout.elements
 			var tb:TextBlock = getTextBlockAtPosition(child.getElementRelativeStart(this));
 			if(!tb)
 				tb = getTextBlock();
-					
+			
+			if(tb.content == null)
+				return;
 			if (numChildren == 1)
 			{
 				if (block is GroupElement)
@@ -306,6 +319,8 @@ package flashx.textLayout.elements
 				var group:GroupElement = GroupElement(tb.content);
 				CONFIG::debug { assert(group.elementCount == numChildren,"Mismatched group and elementCount"); }
 				group.replaceElements(idx,idx+1,null);
+				if(group.elementCount == 0)
+					return;
 				CONFIG::debug { Debugging.traceFTECall(null,group,"replaceElements",idx,idx+1,null); }
 				if (numChildren == 2)	// its going to be one so ungroup
 				{
@@ -339,7 +354,8 @@ package flashx.textLayout.elements
 		/** @private */
 		tlf_internal override function insertBlockElement(child:FlowElement, block:ContentElement):void
 		{
-			var tb:TextBlock = getTextBlockAtPosition(child.getElementRelativeStart(this));
+			var relativeStart:int = child.getElementRelativeStart(this);
+			var tb:TextBlock = getTextBlockAtPosition(relativeStart);
 			if (getTextBlocks().length == 0 || !tb)
 			{
 				child.releaseContentElement();
@@ -348,7 +364,7 @@ package flashx.textLayout.elements
 			}
 			var gc:Vector.<ContentElement>;	// scratch var
 			var group:GroupElement;			// scratch
-			if (numChildren == 1)
+			if (numChildren == 1)// This check should probabbly be more complex to handle TableElements
 			{
 				if (block is GroupElement)
 				{
@@ -370,7 +386,7 @@ package flashx.textLayout.elements
 			}
 			else
 			{
-				group = createContentAsGroup();
+				group = createContentAsGroup(relativeStart);
 				var idx:int = getChildIndexInBlock(child);
 				gc = new Vector.<ContentElement>();
 				CONFIG::debug { Debugging.traceFTECall(gc,null,"new Vector.<ContentElement>") }
@@ -408,20 +424,51 @@ package flashx.textLayout.elements
 		public override function replaceChildren(beginChildIndex:int,endChildIndex:int,...rest):void
 		{
 			var applyParams:Array;
-			
-			// makes a measurable difference - rest.length zero and one are the common cases
-			if (rest.length == 1)
-				applyParams = [beginChildIndex, endChildIndex, rest[0]];
-			else
-			{
-				applyParams = [beginChildIndex, endChildIndex];
-				if (rest.length != 0)
-					applyParams = applyParams.concat.apply(applyParams, rest);
-			}
 
-			super.replaceChildren.apply(this, applyParams);
+			do{
+				if(_terminatorSpan)
+				{
+					var termIdx:int = getChildIndex(_terminatorSpan);
+					if(termIdx !=0 && _terminatorSpan.textLength == 1)
+					{
+						super.replaceChildren(termIdx, termIdx+1);
+						_terminatorSpan = null;
+						if(beginChildIndex >= termIdx)
+						{
+							beginChildIndex--;
+							if(rest.length == 0) // delete of terminator was already done.
+								break;
+						}
+						if(endChildIndex >= termIdx)
+							endChildIndex--;
+					}
+				}
+				
+				// makes a measurable difference - rest.length zero and one are the common cases
+				if (rest.length == 1)
+					applyParams = [beginChildIndex, endChildIndex, rest[0]];
+				else
+				{
+					applyParams = [beginChildIndex, endChildIndex];
+					if (rest.length != 0)
+						applyParams = applyParams.concat.apply(applyParams, rest);
+				}
+				
+				super.replaceChildren.apply(this, applyParams);
+				
+			}while(false);
 			
 			ensureTerminatorAfterReplace();
+			
+			// ensure correct text blocks
+			createTextBlock();
+		}
+		
+		public override function splitAtPosition(relativePosition:int):FlowElement
+		{
+			// need to handle multiple TextBlocks
+			// maybe not. It might be handled in replaceChildren().
+			return super.splitAtPosition(relativePosition);
 		}
 		/** @private */
 		tlf_internal function ensureTerminatorAfterReplace():void
@@ -481,7 +528,7 @@ package flashx.textLayout.elements
 						child.bindableElement = true;
 					
 					// Note: calling super.replaceChildren because we don't want to transfer para terminator each time
-					super.replaceChildren(numChildren, numChildren, child as FlowElement); 
+					super.replaceChildren(numChildren, numChildren, child as FlowElement);
 				}
 				else if (child is String)
 				{
@@ -498,6 +545,9 @@ package flashx.textLayout.elements
 			
 			// Now ensure para terminator
 			ensureTerminatorAfterReplace();
+			
+			// recreate text blocks to handle possible TableElement changes
+			createTextBlock();
 		}
 		
 		/** @private
