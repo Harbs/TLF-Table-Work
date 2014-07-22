@@ -30,7 +30,6 @@ package flashx.textLayout.compose
 	import flash.text.engine.TextLineValidity;
 	import flash.utils.Dictionary;
 	
-	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.container.ContainerController;
 	import flashx.textLayout.debug.Debugging;
 	import flashx.textLayout.debug.assert;
@@ -70,6 +69,7 @@ package flashx.textLayout.compose
 	import flashx.textLayout.formats.TextLayoutFormat;
 	import flashx.textLayout.formats.VerticalAlign;
 	import flashx.textLayout.property.Property;
+	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.utils.LocaleUtil;
 	import flashx.textLayout.utils.Twips;
 
@@ -1008,25 +1008,28 @@ package flashx.textLayout.compose
 			{
 				// Lines that are now composed that would not be visible on update, might still be in the display list from
 				// a previous update. Don't release in that case.
-				var textBlock:TextBlock = elem.getTextBlock();
+				var textBlocks:Vector.<TextBlock> = elem.getTextBlocks();
 				var textLine:TextLine;
-				for (textLine = textBlock.lastLine; textLine && okToRelease; textLine = textLine.previousLine) 
+				for each(var textBlock:TextBlock in textBlocks)
 				{
-					if (textLine.parent)
-						okToRelease = false;
-				}
-				if (okToRelease)	// no textlines were in view, go ahead and release them all, starting at the end and working to the start
-				{
-					for (textLine = textBlock.lastLine; textLine; )
+					for (textLine = textBlock.lastLine; textLine && okToRelease; textLine = textLine.previousLine) 
 					{
-						textBlock.releaseLines(textLine, textLine);
-						textLine.userData = null;
-						TextLineRecycler.addLineForReuse(textLine);
-						if (_textFlow.backgroundManager)
-							_textFlow.backgroundManager.removeLineFromCache(textLine);
-						textLine = textBlock.lastLine;
+						if (textLine.parent)
+							okToRelease = false;
 					}
-					elem.releaseTextBlock();
+					if (okToRelease)	// no textlines were in view, go ahead and release them all, starting at the end and working to the start
+					{
+						for (textLine = textBlock.lastLine; textLine; )
+						{
+							textBlock.releaseLines(textLine, textLine);
+							textLine.userData = null;
+							TextLineRecycler.addLineForReuse(textLine);
+							if (_textFlow.backgroundManager)
+								_textFlow.backgroundManager.removeLineFromCache(textLine);
+							textLine = textBlock.lastLine;
+						}
+						elem.releaseTextBlock(textBlock);
+					}
 				}
 			}
 
@@ -1121,9 +1124,10 @@ package flashx.textLayout.compose
 					if(!composeTableElement(curChild as TableElement, _curElementStart))
 						return false;
 					
-					_curElementOffset -= _curElement.textLength;
+					_curElementOffset = 0;
 					_curElementStart  += _curElement.textLength;
 					_curElement = _curElement.getNextLeaf();
+					_previousLine = null;
 
 					// if the next span is the terminator bail out...
 					if(_curElement is SpanElement && SpanElement(_curElement).hasParagraphTerminator && _curElement.textLength == 1)
@@ -1340,7 +1344,7 @@ package flashx.textLayout.compose
 			
 			var textLine:TextLine = null;
 			textLine = TextLineRecycler.getLineForReuse();
-			var textBlock:TextBlock = _curParaElement.getTextBlock();
+			var textBlock:TextBlock = _curParaElement.getTextBlockAtPosition(_curElement.getElementRelativeStart(_curParaElement));
 			if (textLine)
 			{
 				CONFIG::debug { assert(_textFlow.backgroundManager == null || _textFlow.backgroundManager.getEntry(textLine) === undefined,"createTextLine - Bad TextLine in recycler cache"); }

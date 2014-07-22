@@ -395,6 +395,8 @@ package flashx.textLayout.elements
 					assert(_blockElement.rawText.charAt(_blockElement.rawText.length-1) != SpanElement.kParagraphTerminator,"adding para terminator twice");
 			}
 
+			if(_text && _text.substr(-1) == SpanElement.kParagraphTerminator)// terminator exists. Bail out.
+				return;
 			replaceTextInternal(textLength,textLength,SpanElement.kParagraphTerminator);
 			
 			CONFIG::debug 
@@ -414,6 +416,9 @@ package flashx.textLayout.elements
 				assert(_text && _text.length && _text.charAt(_text.length-1) == SpanElement.kParagraphTerminator,
 					"attempting to remove para terminator when it doesn't exist");
 			}
+			if(!_text || _text.substr(-1) != SpanElement.kParagraphTerminator)// no terminator exists. Bail out.
+				return;
+
 			replaceTextInternal(textLength-1,textLength,"");
 			modelChanged(ModelChange.TEXT_DELETED,this,textLength > 0 ? textLength-1 : 0,1);
 		}

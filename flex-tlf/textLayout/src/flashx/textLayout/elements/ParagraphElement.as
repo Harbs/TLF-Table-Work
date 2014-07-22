@@ -31,6 +31,7 @@ package flashx.textLayout.elements
 	import flash.text.engine.TextLine;
 	import flash.text.engine.TextLineValidity;
 	import flash.text.engine.TextRotation;
+	import flash.utils.Dictionary;
 	import flash.utils.getQualifiedClassName;
 	
 	import flashx.textLayout.compose.TextFlowLine;
@@ -80,6 +81,7 @@ package flashx.textLayout.elements
 	public final class ParagraphElement extends ParagraphFormattedElement
 	{
 		//private var _textBlock:TextBlock;
+		private var _textBlockChildren:Dictionary;
 		private var _terminatorSpan:SpanElement;
 		
 		private var _interactiveChildrenCount:int;
@@ -95,6 +97,7 @@ package flashx.textLayout.elements
 			super();
 			_terminatorSpan = null;
 			_interactiveChildrenCount = 0 ;
+			_textBlockChildren = new Dictionary();
 		}
 		tlf_internal function get interactiveChildrenCount():int
 		{
@@ -109,7 +112,6 @@ package flashx.textLayout.elements
 			var tbs:Vector.<TextBlock> = getTextBlocks();
 			//tbs.length = 0;
 			var tableCount:int = 0;
-			var tb:TextBlock = new TextBlock();
 			if(tbs.length == 0 && !(getChildAt(0) is TableElement) )
 				tbs.push(new TextBlock());
 			//getTextBlocks()[0] = new TextBlock();
@@ -123,53 +125,99 @@ package flashx.textLayout.elements
 				else
 				{
 					//child.releaseContentElement();
-					child.createContentElement();
+					//child.createContentElement();
 				}
 			}
 			while(tableCount >= tbs.length)
 				tbs.push(new TextBlock());
+			
+			for (i = 0; i < numChildren; i++)
+			{
+				child = getChildAt(i);
+				child.createContentElement();
+			}
 			tbs.length = tableCount + 1;
 			updateTextBlock();
 		}
-		
-		/** @private */
-		
-		tlf_internal function releaseTextBlock():void
+		private function updateTextBlockDict():void
 		{
+			var tbs:Vector.<TextBlock> = getTextBlocks();
+			var tbIdx:int = 0;
+			var tb:TextBlock = tbs[tbIdx];
+			var items:Array = [];
+			var child:FlowElement;
+			for (var i:int = 0; i < numChildren; i++)
+			{
+				child = getChildAt(i);
+				if(child is TableElement)
+				{
+					_textBlockChildren.tb = items;
+					tb = tbs[++tbIdx];
+					items = [];
+					continue;
+				}
+				items.push(child);
+			}
+			_textBlockChildren.tb = items;
+		}
+		private function removeTextBlock(tb:TextBlock):void
+		{
+			var tbs:Vector.<TextBlock> = getTextBlocks();
+			if(tbs)
+			{
+				var idx:int = getTextBlocks().indexOf(tb);
+				if(idx > -1)
+					tbs.splice(idx,1);
+			}
+		}
+		private function releaseTextBlockInternal(tb:TextBlock):void
+		{
+			if (!tb)
+				return;
+			
+			if (tb.firstLine)	// A TextBlock may have no firstLine if it has previously been released.
+			{
+				for (var textLineTest:TextLine = tb.firstLine; textLineTest != null; textLineTest = textLineTest.nextLine)
+				{	
+					if(textLineTest.numChildren != 0)
+					{	
+						//if the number of adornments added does not match the number of children on the textLine
+						//then a third party has added adornments.  Don't recycle the line or the adornment will be
+						//lost.
+						var tfl:TextFlowLine = textLineTest.userData as TextFlowLine;
+						if(tfl.adornCount != textLineTest.numChildren)
+							return;
+					}
+				}
+				
+				CONFIG::debug { Debugging.traceFTECall(null,tb,"releaseLines",tb.firstLine, tb.lastLine); }				
+				tb.releaseLines(tb.firstLine, tb.lastLine);	
+			}	
+			var items:Array = _textBlockChildren[tb];
+			var len:int = items.length;
+			for (var i:int = 0; i < len; i++)
+			{
+				var child:FlowElement = items[i];
+				child.releaseContentElement();
+			}
+			items.length = 0;
+			tb.content = null;
+			removeTextBlock(tb);
+		}
+		/** @private */
+		tlf_internal function releaseTextBlock(tb:TextBlock=null):void
+		{
+			updateTextBlockDict();
+			if(tb)
+			{
+				releaseTextBlockInternal(tb);
+				return;
+			}
 			var tbs:Vector.<TextBlock> = getTextBlocks();
 			for each(var tb:TextBlock in tbs)
 			{
-				if (!tb)
-					continue;
-				
-				if (tb.firstLine)	// A TextBlock may have no firstLine if it has previously been released.
-				{
-					for (var textLineTest:TextLine = tb.firstLine; textLineTest != null; textLineTest = textLineTest.nextLine)
-					{	
-						if(textLineTest.numChildren != 0)
-						{	
-							//if the number of adornments added does not match the number of children on the textLine
-							//then a third party has added adornments.  Don't recycle the line or the adornment will be
-							//lost.
-							var tfl:TextFlowLine = textLineTest.userData as TextFlowLine;
-							if(tfl.adornCount != textLineTest.numChildren)
-								return;
-						}
-					}
-					
-					CONFIG::debug { Debugging.traceFTECall(null,tb,"releaseLines",tb.firstLine, tb.lastLine); }				
-					tb.releaseLines(tb.firstLine, tb.lastLine);	
-				}	
-				
-				tb.content = null;
+				releaseTextBlockInternal(tb);
 			}
-
-			for (var i:int = 0; i < numChildren; i++)
-			{
-				var child:FlowElement = getChildAt(i);
-				child.releaseContentElement();
-			}
-			tbs.length = 0;
 			//_textBlock = null;
 			if (_computedFormat)
 				_computedFormat = null;
@@ -219,7 +267,7 @@ package flashx.textLayout.elements
 				if(tb.content == null)
 					return tb;
 				curPos += tb.content.rawText.length;
-				if(curPos + posShift >= pos)
+				if(curPos + posShift > pos)
 					return tb;
 			}
 			return null;
@@ -298,7 +346,9 @@ package flashx.textLayout.elements
 			
 			if(tb.content == null)
 				return;
-			if (numChildren == 1)
+			var relativeStart:int = child.getElementRelativeStart(this);
+
+			if (getChildrenInTextBlock(relativeStart).length < 2)
 			{
 				if (block is GroupElement)
 				{
@@ -352,6 +402,37 @@ package flashx.textLayout.elements
 		}
 		
 		/** @private */
+		private function getChildrenInTextBlock(pos:int):Array
+		{
+			var retVal:Array = [];
+			if(numChildren == 0)
+				return retVal;
+			if(numChildren == 1)
+			{
+				retVal.push(getChildAt(0));
+				return retVal
+			}
+			var chldrn:Array = mxmlChildren.slice();
+			for(var i:int = 0; i<chldrn.length;i++)
+			{
+				if(chldrn[i] is TableElement)
+				{
+					if(chldrn[i].parentRelativeStart == pos)
+						return [chldrn[i]];
+					if(chldrn[i].parentRelativeStart < pos)
+					{
+						retVal.length = 0;
+						continue;
+					}
+					if(chldrn[i].parentRelativeStart > pos)
+						break;
+				}
+				retVal.push(chldrn[i]);		
+			}
+			return retVal;
+		}
+		
+		/** @private */
 		tlf_internal override function insertBlockElement(child:FlowElement, block:ContentElement):void
 		{
 			var relativeStart:int = child.getElementRelativeStart(this);
@@ -364,7 +445,7 @@ package flashx.textLayout.elements
 			}
 			var gc:Vector.<ContentElement>;	// scratch var
 			var group:GroupElement;			// scratch
-			if (numChildren == 1)// This check should probabbly be more complex to handle TableElements
+			if (getChildrenInTextBlock(relativeStart).length < 2)
 			{
 				if (block is GroupElement)
 				{
@@ -458,10 +539,11 @@ package flashx.textLayout.elements
 				
 			}while(false);
 			
-			ensureTerminatorAfterReplace();
 			
 			// ensure correct text blocks
 			createTextBlock();
+			
+			ensureTerminatorAfterReplace();
 		}
 		
 		public override function splitAtPosition(relativePosition:int):FlowElement
@@ -476,7 +558,7 @@ package flashx.textLayout.elements
 			var newLastLeaf:FlowLeafElement = getLastLeaf();
 			if (_terminatorSpan != newLastLeaf)
 			{
-				if (_terminatorSpan)
+				if (newLastLeaf && _terminatorSpan)
 				{
 					_terminatorSpan.removeParaTerminator();
 					if(_terminatorSpan.textLength == 0)
@@ -487,21 +569,18 @@ package flashx.textLayout.elements
 					this._terminatorSpan = null;
 				}
 				
-				if (newLastLeaf)
+				if (newLastLeaf is SpanElement)
 				{
-					if (newLastLeaf is SpanElement)
-					{
-						(newLastLeaf as SpanElement).addParaTerminator();
-						this._terminatorSpan = newLastLeaf as SpanElement;
-					}
-					else
-					{
-						var s:SpanElement = new SpanElement();
-						super.replaceChildren(numChildren,numChildren,s);
-						s.format = newLastLeaf.format;
-						s.addParaTerminator();
-						this._terminatorSpan = s;
-					}
+					(newLastLeaf as SpanElement).addParaTerminator();
+					this._terminatorSpan = newLastLeaf as SpanElement;
+				}
+				else
+				{
+					var s:SpanElement = new SpanElement();
+					super.replaceChildren(numChildren,numChildren,s);
+					s.format = newLastLeaf ? newLastLeaf.format : _terminatorSpan.format;
+					s.addParaTerminator();
+					this._terminatorSpan = s;
 				}
 			}
 		}
@@ -788,7 +867,7 @@ package flashx.textLayout.elements
 				if(tb)
 					relativePosition -= tb.content.rawText.length;
 				else
-					relativePosition -= 1;
+					relativePosition -= 1;this.getText()
 			}
 			return foundTB.content.rawText.charAt(relativePosition);
 		} 
