@@ -48,12 +48,30 @@
 				textFlow.addChild(para);
 				para = new ParagraphElement();
 				para.paragraphStartIndent = 3;
+				span = new SpanElement();
+				span.text = "before the table";
+				para.addChild(span);
+				
 				para.addChild(table);
+				span = new SpanElement();
+				span.text = "after the table";
+				para.addChild(span);
 				/*
 				table = new TableElement();
 				table.numColumns = 3;
 				table.insertRow(); // or insertColumn()
 				*/
+				/*
+				para = new ParagraphElement();
+				span = new SpanElement();
+				span.text = "after the table...";
+				para.addChild(span);
+				*/
+				textFlow.addChild(para);
+				para = new ParagraphElement();
+				span = new SpanElement();
+				span.text = "another para";
+				para.addChild(span);
 				textFlow.addChild(para);
 				controller = new ContainerController(holder,NaN,NaN);
 				textFlow.flowComposer.addController(controller);

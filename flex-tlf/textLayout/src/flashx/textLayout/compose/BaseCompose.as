@@ -126,6 +126,8 @@ package flashx.textLayout.compose
 		protected var _curParaFormat:ITextLayoutFormat;
 		/** Absolute start position of _curParaElement */
 		protected var _curParaStart:int;
+		/** Absolute start position of the current line */
+		protected var _curLineStart:int;
 		/** leading model for the current line's para (set when line is being composed and committed to _lastLineLeadingModel when line is finalized) */
 		private var _curLineLeadingModel:String = "";
 		/** leading factor calculated when composing the current line (committed to _lastLineLeading when line is finalized)
@@ -990,6 +992,7 @@ package flashx.textLayout.compose
 		{
 			_curParaElement  = elem;
 			_curParaStart    = absStart;
+			_curLineStart    = absStart;
 			_curParaFormat = elem.computedFormat;
 			
 			CONFIG::debug { assert(_curParaStart == elem.getAbsoluteStart(),"composeParagraphElement: bad start"); }
@@ -1127,6 +1130,7 @@ package flashx.textLayout.compose
 					_curElementOffset = 0;
 					_curElementStart  += _curElement.textLength;
 					_curElement = _curElement.getNextLeaf();
+					_curLineStart++;
 					_previousLine = null;
 
 					// if the next span is the terminator bail out...
@@ -1364,9 +1368,10 @@ package flashx.textLayout.compose
 
 			CONFIG::debug { assert(_curParaStart == _curParaElement.getAbsoluteStart(),"bad _curParaStart"); }
 
-			_curLine.initialize(_curParaElement, targetWidth, lineOffset-_parcelList.insideListItemMargin, textLine.textBlockBeginIndex + _curParaStart, textLine.rawTextLength, textLine);
+			_curLine.initialize(_curParaElement, targetWidth, lineOffset-_parcelList.insideListItemMargin, _curLineStart, textLine.rawTextLength, textLine);
 			CONFIG::debug { assert(_curLine.targetWidth == targetWidth,"Bad targetWidth"); }
 
+			_curLineStart += _curLine.textLength;
 			return textLine;
 		}
 		
