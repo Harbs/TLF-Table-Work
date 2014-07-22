@@ -142,6 +142,8 @@ package flashx.textLayout.elements
 		private function updateTextBlockDict():void
 		{
 			var tbs:Vector.<TextBlock> = getTextBlocks();
+			if(tbs.length == 0)
+				return;//nothing to do
 			var tbIdx:int = 0;
 			var tb:TextBlock = tbs[tbIdx];
 			var items:Array = [];
@@ -151,14 +153,14 @@ package flashx.textLayout.elements
 				child = getChildAt(i);
 				if(child is TableElement)
 				{
-					_textBlockChildren.tb = items;
+					_textBlockChildren[tb] = items;
 					tb = tbs[++tbIdx];
 					items = [];
 					continue;
 				}
 				items.push(child);
 			}
-			_textBlockChildren.tb = items;
+			_textBlockChildren[tb] = items;
 		}
 		private function removeTextBlock(tb:TextBlock):void
 		{
@@ -167,7 +169,10 @@ package flashx.textLayout.elements
 			{
 				var idx:int = getTextBlocks().indexOf(tb);
 				if(idx > -1)
+				{
 					tbs.splice(idx,1);
+					delete _textBlockChildren[tb];
+				}
 			}
 		}
 		private function releaseTextBlockInternal(tb:TextBlock):void
