@@ -278,6 +278,40 @@ package flashx.textLayout.elements
 			return null;
 		}
 		
+		tlf_internal function getTextBlockAbsoluteStart(tb:TextBlock):int
+		{
+			var start:int = getTextBlockStart(tb);
+			if(start < 0)
+				start = 0;
+			return getAbsoluteStart() + start;
+		}
+		tlf_internal function getTextBlockStart(tb:TextBlock):int
+		{
+			var i:int;
+			var curPos:int = 0;
+			var tbs:Vector.<TextBlock> = getTextBlocks();
+			if(tbs.length == 0)
+				return -1;
+			var tables:Vector.<TableElement> = getTables();
+			for each(var curTB:TextBlock in tbs)
+			{
+				for each(var table:TableElement in tables)
+				{
+					if(table.getElementRelativeStart(this) < curPos)
+					{
+						curPos++;
+						tables.splice(tables.indexOf(table),1);
+					}
+				}
+				if(tb == curTB)
+					return curPos;
+				if(tb.content)
+					curPos += curTB.content.rawText.length;
+			}
+			
+			return -1;
+		}
+		
 		private function getTables():Vector.<TableElement>
 		{
 			var tables:Vector.<TableElement> = new Vector.<TableElement>();
@@ -368,7 +402,7 @@ package flashx.textLayout.elements
 				tb.content = null;
 				CONFIG::debug { Debugging.traceFTEAssign(_textBlock,"content",null); }
 			}
-			else
+			else if(block.groupElement)
 			{
 				var idx:int = getChildIndexInBlock(child);
 				var group:GroupElement = GroupElement(tb.content);
@@ -390,6 +424,10 @@ package flashx.textLayout.elements
 						CONFIG::debug { Debugging.traceFTEAssign(tb,"content",elem); }
 					}
 				}
+			}
+			else {
+				//trace("1");
+				//tb.content = null;
 			}
 		}
 		
@@ -466,6 +504,10 @@ package flashx.textLayout.elements
 				}
 				else
 				{
+					if(block.groupElement)
+					{
+						block.groupElement.elementCount;
+					}
 					tb.content = block;
 					CONFIG::debug { Debugging.traceFTEAssign(_textBlock,"content",block);  }
 				}
@@ -907,7 +949,13 @@ package flashx.textLayout.elements
 				}
 				return relativePosition;
 			}
-			return getTextBlock().findPreviousWordBoundary(relativePosition);
+			var block:TextBlock = getTextBlockAtPosition(relativePosition);
+			if(block == null)
+				return getTextBlock().findPreviousWordBoundary(relativePosition);
+			var pos:int = getTextBlockStart(block);
+			if(pos < 0)
+				pos = 0;
+			return block.findPreviousWordBoundary(relativePosition - pos);
 		}
 
 		/** 
@@ -940,7 +988,13 @@ package flashx.textLayout.elements
 				}
 				return relativePosition;
 			}
-			return getTextBlock().findNextWordBoundary(relativePosition);
+			var block:TextBlock = getTextBlockAtPosition(relativePosition);
+			if(block == null)
+				return getTextBlock().findNextWordBoundary(relativePosition);
+			var pos:int = getTextBlockStart(block);
+			if(pos < 0)
+				pos = 0;
+			return block.findNextWordBoundary(relativePosition - pos);
 		}
 		
 		static private var _defaultTabStops:Vector.<TabStop>;

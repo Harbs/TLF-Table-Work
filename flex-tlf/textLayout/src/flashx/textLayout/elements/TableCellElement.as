@@ -86,7 +86,7 @@ package flashx.textLayout.elements
 		{// Table cells have no TLF children. Instead it contains its own TextFlow.
 			return (elem is FlowElement);
 		}
-		
+
 		public function isDamaged():Boolean {
 			return _damaged;
 		}
@@ -99,6 +99,10 @@ package flashx.textLayout.elements
 			}
 			
 			_damaged = false;
+			//_textFlow.paddingTop = getEffectivePaddingTop();
+			//_textFlow.paddingBottom = getEffectivePaddingBottom();
+			//_textFlow.paddingLeft = getEffectivePaddingLeft();
+			//_textFlow.paddingRight = getEffectivePaddingRight();
 			
 			if (_textFlow && _textFlow.flowComposer) {
 				return _textFlow.flowComposer.compose();

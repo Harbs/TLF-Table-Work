@@ -68,9 +68,9 @@ package flashx.textLayout.elements
 		}
 		
 		/**
-		 * Get an array of cells or null if the column contains no cells
+		 * Get a Vector of cells or null if the column contains no cells
 		 **/
-		public function get cells():Array {
+		public function get cells():Vector.<TableCellElement> {
 			
 			if (!table) {
 				return null;

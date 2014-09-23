@@ -745,13 +745,19 @@ package flashx.textLayout.container
 				var curLine:TextFlowLine;
 				var textLine:TextLine;
 				var lineIndex:int;
+				var testRslt:*;
 				
 				//Use binary search when there is one single column
 				if(columnCount == 1)
 				{
 					// First just test the firstLine - normal unscrolled case
-					curLine = flowComposer.getLineAt(firstLine);	
-					textLine = testLineVisible(wmode, scrollAdjustXTW, scrollAdjustYTW, scrollAdjustWidthTW, scrollAdjustHeightTW, curLine, null) as TextLine;
+					var testPos:int = firstLine;
+					curLine = flowComposer.getLineAt(testPos++);
+					while(curLine && curLine is TextFlowTableBlock)
+						curLine = flowComposer.getLineAt(testPos++);
+					
+					testRslt = testLineVisible(wmode, scrollAdjustXTW, scrollAdjustYTW, scrollAdjustWidthTW, scrollAdjustHeightTW, curLine, null)
+					textLine = testRslt as TextLine;
 					firstLine++;	// its been tested
 					if (textLine)
 					{
@@ -767,10 +773,11 @@ package flashx.textLayout.container
 							var mid:int = (firstLine+hi)/2;
 							CONFIG::debug { assert(mid != 0,"ContainerController:gatherVisibleLines: bad mid"); }
 							curLine = flowComposer.getLineAt(mid);
-							var testRslt:* = testLineVisible(wmode, scrollAdjustXTW, scrollAdjustYTW, scrollAdjustWidthTW, scrollAdjustHeightTW, curLine, null);
-							textLine = testRslt as TextLine;
-							if (textLine)
+							testRslt = testLineVisible(wmode, scrollAdjustXTW, scrollAdjustYTW, scrollAdjustWidthTW, scrollAdjustHeightTW, curLine, null);
+							
+							if (testRslt && testRslt is TextLine)
 							{
+								textLine = testRslt as TextLine;
 								// note that we tested firstLine above so going to mid-1 is always valid
 								var tempLine:TextFlowLine = flowComposer.getLineAt(mid-1);
 								if (!(testLineVisible(wmode, scrollAdjustXTW, scrollAdjustYTW, scrollAdjustWidthTW, scrollAdjustHeightTW, tempLine, null) is TextLine))
@@ -784,6 +791,8 @@ package flashx.textLayout.container
 								}
 								testRslt = -1;	// past the start
 							}
+							// need to deal with TextFlowTableBlocks
+							
 							if (testRslt < 0 || testRslt == 2)
 								hi = mid-1;
 							else
@@ -793,8 +802,12 @@ package flashx.textLayout.container
 					
 					for (lineIndex = firstLine; lineIndex <= lastLine; lineIndex++)
 					{
-						curLine = flowComposer.getLineAt(lineIndex);	
-						textLine = testLineVisible(wmode, scrollAdjustXTW, scrollAdjustYTW, scrollAdjustWidthTW, scrollAdjustHeightTW, curLine, null) as TextLine;
+						curLine = flowComposer.getLineAt(lineIndex);
+						testRslt = testLineVisible(wmode, scrollAdjustXTW, scrollAdjustYTW, scrollAdjustWidthTW, scrollAdjustHeightTW, curLine, null);
+						
+						if(testRslt is TableBlockContainer)
+							continue;
+						textLine = testRslt as TextLine;
 						if (!textLine)
 							break;
 		
@@ -2899,6 +2912,7 @@ package flashx.textLayout.container
 				{
 					nextLine = idx != flowComposer.numLines - 1 ? flowComposer.getLineAt(idx+1) : null;
 					
+					// 9-1-14 Harbs Do we draw a selection rect for tables? If yes, this needs special handling in TextFlowTableBlock
 					line.hiliteBlockSelection(selObj, selFormat, this._container,
 						selectionAbsoluteStart < line.absoluteStart ? line.absoluteStart : selectionAbsoluteStart,
 						selectionAbsoluteEnd > line.absoluteStart+line.textLength ? line.absoluteStart+line.textLength : selectionAbsoluteEnd, prevLine, nextLine);
@@ -4164,6 +4178,10 @@ package flashx.textLayout.container
 				{
 					break;
 				}
+				
+				if(_container.getChildAt(firstTextLine) is TableBlockContainer)
+					break;
+				
 			}
 			return firstTextLine;
 		}
@@ -4729,6 +4747,13 @@ package flashx.textLayout.container
 			// bounds than the getBounds. I've left the old code here for verification.
 			CONFIG::debug { assert(textFlowLine != null,"testLineVisible"); }
 			
+			if(textFlowLine is TextFlowTableBlock)
+			{
+				if(textFlowLine.controller == this)
+					return TextFlowTableBlock(textFlowLine).container;
+				return null;
+			}
+			
 			//Bug #2988852, scrolling in the application causes all text to disappear. When auto-size images make the line "after visible"
 			//It's "after visible", but it cannot return 1. Because if it were 1, the binary-search in gatherVisibleLines() would make all the lines invisible.
 			if(textFlowLine.controller == null)
@@ -4796,6 +4821,10 @@ package flashx.textLayout.container
 			// about the children, and also the bounds of visible glyphs. We decided that the logical bounds is close enough,
 			// and is much faster to obtain. However, there may be some lines, that get a different result using the logical 
 			// bounds than the getBounds. I've left the old code here for verification.
+			
+			if(textFlowLine is TextFlowTableBlock)
+				return null;
+
 			if (!textFlowLine.hasLineBounds())
 			{
 				if (!textLine)

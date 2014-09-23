@@ -36,6 +36,7 @@ package flashx.textLayout.edit
     import flash.geom.Matrix;
     import flash.geom.Point;
     import flash.geom.Rectangle;
+    import flash.text.engine.TextBlock;
     import flash.text.engine.TextLine;
     import flash.text.engine.TextLineValidity;
     import flash.text.engine.TextRotation;
@@ -47,7 +48,6 @@ package flashx.textLayout.edit
     import flash.utils.Dictionary;
     import flash.utils.getQualifiedClassName;
     
-    import flashx.textLayout.tlf_internal;
     import flashx.textLayout.compose.IFlowComposer;
     import flashx.textLayout.compose.TextFlowLine;
     import flashx.textLayout.compose.TextFlowTableBlock;
@@ -82,6 +82,7 @@ package flashx.textLayout.edit
     import flashx.textLayout.operations.CopyOperation;
     import flashx.textLayout.operations.FlowOperation;
     import flashx.textLayout.property.Property;
+    import flashx.textLayout.tlf_internal;
     import flashx.textLayout.utils.NavigationUtil;
     
     use namespace tlf_internal;
@@ -246,55 +247,37 @@ package flashx.textLayout.edit
 		/**
 		 * Select table cells at the specified index
 		 **/
-		public function selectCells(cells:Array):void {
-			var blockSet:Vector.<TextFlowTableBlock> = new Vector.<TextFlowTableBlock>();
-			var blocks:Vector.<TextFlowTableBlock>;
-			var block:TextFlowTableBlock;
-			var beginCoordinates:CellCoordinates;
-			var endCoordinates:CellCoordinates;
+		public function selectCells(cells:Vector.<TableCellElement>):void {
+			var startX:int = int.MAX_VALUE;
+			var startY:int = int.MAX_VALUE;
+			var endX:int = int.MIN_VALUE;
+			var endY:int = int.MIN_VALUE;
 			var cell:TableCellElement;
-			var controller:ContainerController;
-			var dictionary:Dictionary = new Dictionary(true);
-			var clearedBlocks:Array = [];
-			
-			// loop through cells and gather into cells by block
-			for (var i:int; i<cells.length;i++) {
-				cell = cells[i] as TableCellElement;
-				block = _currentTable.getCellBlock(cell);
-				
-				// clear the block selection shapes as we go
-				if (clearedBlocks.indexOf(block)==-1) {
-					block.controller.clearSelectionShapes();
-					clearedBlocks.push(block);
+			var table:TableElement;
+			for each(cell in cells)
+			{
+				if(cell)
+				{
+					if(table == null)
+						table = cell.getTable();
+					
+					var col:int = cell.colIndex;
+					var row:int = cell.rowIndex;
+					if(col < startX)
+						startX = col;
+					if(col > endX)
+						endX = col;
+					if(row < startY)
+						startY = row;
+					if(row > endY)
+						endY = row;
 				}
-				
-				if (dictionary[block] == null) {
-					dictionary[block] = [];
-				}
-				
-				(dictionary[block] as Array).push(cell);
-				
 			}
-			
-			if (selectionType == SelectionType.TEXT) {
-				clear();
-			}
-			
-			if (clearedBlocks.length>0) {
-				
-				for (var j:int; j<clearedBlocks.length; j++) {
-					block = clearedBlocks[j];
-					cells = dictionary[block];
-					block.controller.addCellSelections(cells, currentCellSelectionFormat.rangeColor, block);
-				}
-				
-				anchorCellPosition = new CellCoordinates(0, 0);
-			}
-			else {
-				_cellRange = null;
-				activeCellPosition.column = -1;
-				activeCellPosition.row = -1;
-			}
+			if(startX <= endX && startY <= endY)
+				selectCellRange(
+					new CellCoordinates(startY,startX,table),
+					new CellCoordinates(endY,endX,table)
+				);
 		}
 		
 		/**
@@ -329,9 +312,9 @@ package flashx.textLayout.edit
 		 * Selects the table rows provided
 		 **/
 		public function selectRows(rows:Array):void {
-			var cells:Array = [];
+			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
 			var table:TableElement;
-			var rowCells:Array;
+			var cell:TableCellElement;
 			
 			if (rows && rows.length) {
 				
@@ -339,11 +322,11 @@ package flashx.textLayout.edit
 				{
 					var row:TableRowElement = rows[i] as TableRowElement;
 					
-					if (row) {
-						rowCells = row.cells;
+					if (row)
+					{
+						for each(cell in row.cells)
+						cells.push(cell);
 					}
-					
-					cells = cells.concat(rowCells);
 				}
 				
 				selectCells(cells);
@@ -376,8 +359,8 @@ package flashx.textLayout.edit
 		 * Selects the table columns provided
 		 **/
 		public function selectColumns(columns:Array):void {
-			var cells:Array = [];
-			var columnCells:Array;
+			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
+			var cell:TableCellElement;
 			
 			if (columns && columns.length) {
 				
@@ -385,11 +368,12 @@ package flashx.textLayout.edit
 				{
 					var column:TableColElement = columns[i] as TableColElement;
 					
-					if (column) {
-						columnCells = column.cells;
+					if (column)
+					{
+						for each(cell in column.cells)
+							cells.push(cell);
 					}
 					
-					cells = cells.concat(columnCells);
 				}
 				
 				selectCells(cells);
@@ -401,9 +385,11 @@ package flashx.textLayout.edit
 		 **/
 		public function selectTable(table:TableElement):void {
 			
-			if (table) {
-				var cells:Array = table.getCellsArray();
-				selectCells(cells);
+			if (table)
+			{
+				var startCoords:CellCoordinates = new CellCoordinates(0,0,table);
+				var endCoords:CellCoordinates = new CellCoordinates(table.numRows-1,table.numColumns-1,table);
+				selectCellRange(startCoords,endCoords);
 			}
 			
 		}
@@ -420,19 +406,7 @@ package flashx.textLayout.edit
 			if (selectionType == SelectionType.TEXT) {
 				clear();
 			}
-			
-			if (_cellRange) {
-				blocks = _currentTable.getTableBlocksInRange(_cellRange.anchorCoordinates, _cellRange.activeCoordinates);
-				
-				for each (block in blocks) {
-					if (controller != block.controller) {
-						block.controller.clearSelectionShapes();
-					}
-					
-					controller = block.controller;
-				}
-				
-			}
+			clearCellSelections();
 			
 			if (anchorCoords && activeCoords) {
 				_cellRange = new CellRange(_currentTable, anchorCoords, activeCoords);
@@ -450,7 +424,7 @@ package flashx.textLayout.edit
 				activeCellPosition.column = -1;
 				activeCellPosition.row = -1;
 			}
-
+			selectionChanged();
 		}
 		
 		public function getCellRange():CellRange
@@ -552,7 +526,7 @@ package flashx.textLayout.edit
          */
         public function getSelectionState():SelectionState
         {
-            return new SelectionState(_textFlow, anchorMark.position, activeMark.position, pointFormat);
+            return new SelectionState(_textFlow, anchorMark.position, activeMark.position, pointFormat, _cellRange);
         }
                 
         /**
@@ -655,6 +629,7 @@ package flashx.textLayout.edit
                     flushPendingOperations();
                 
                 clear();
+				clearCellSelections();
                 
                 // If we switch into read-only mode, make sure the cursor isn't showing a text selection IBeam
                 if (!value) // see Watson 2637162
@@ -1079,11 +1054,12 @@ package flashx.textLayout.edit
             if (anchorPosition != anchorMark.position || activePosition != activeMark.position)
             {   
                 clearSelectionShapes();
+				clearCellSelections();
                     
-                internalSetSelection(_textFlow, anchorPosition, activePosition);
+                internalSetSelection(_textFlow, anchorPosition, activePosition, _pointFormat);
                 
                 // selection changed
-                selectionChanged();
+                selectionChanged(true,false);
                 
                 allowOperationMerge = false;
             }
@@ -1160,7 +1136,32 @@ package flashx.textLayout.edit
                 allowOperationMerge = false;
             }
         }
-        
+        /**
+		 * Clear any cell selections
+		 * */
+		private function clearCellSelections():void
+		{
+			var blocks:Vector.<TextFlowTableBlock>;
+			var block:TextFlowTableBlock;
+			var controller:ContainerController;
+			
+			if (_cellRange) {
+				blocks = _cellRange.table.getTableBlocksInRange(_cellRange.anchorCoordinates, _cellRange.activeCoordinates);
+				
+				for each (block in blocks) {
+					if (controller != block.controller) {
+						block.controller.clearSelectionShapes();
+					}
+					
+					controller = block.controller;
+				}
+				
+			}
+			if(block)
+				block.controller.clearSelectionShapes();
+			
+			_cellRange = null;
+		}
         private function addSelectionShapes():void
         {
             if (_textFlow.flowComposer)
@@ -1261,7 +1262,12 @@ package flashx.textLayout.edit
                 _pointFormat = null;
             
             if (doDispatchEvent && _textFlow)
-                textFlow.dispatchEvent(new SelectionEvent(SelectionEvent.SELECTION_CHANGE, false, false, hasSelection() ? getSelectionState() : null));
+			{
+				if(textFlow.parentElement && textFlow.parentElement.getTextFlow())
+					textFlow.parentElement.getTextFlow().dispatchEvent(new SelectionEvent(SelectionEvent.SELECTION_CHANGE, false, false, hasSelection() ? getSelectionState() : null));
+				else
+					textFlow.dispatchEvent(new SelectionEvent(SelectionEvent.SELECTION_CHANGE, false, false, hasSelection() ? getSelectionState() : null));
+			}
         }
 
         // TODO: this routine could be much more efficient - instead of iterating over all lines in the TextFlow it should iterate over 
@@ -1416,67 +1422,75 @@ package flashx.textLayout.edit
                 
             //Get a valid textLine -- check to make sure line is valid, regenerate if necessary, make sure it has correct container relative coordinates
             var textFlowLine:TextFlowLine = textFlow.flowComposer.getLineAt(lineIndex);
-            var textLine:TextLine = textFlowLine.getTextLine(true);
-            
-            // adjust localX,localY to be relative to the textLine.  
-            // Can't use localToGlobal/globalToLocal because textLine may not be on the display list due to virtualization
-            // we may need to bring this back if textline's can be rotated or placed by any mechanism other than a translation
-            // but then we'll need to provisionally place a virtualized TextLine in its parent container
-            localX -= textLine.x;
-            localY -= textLine.y;
-            /* var localPoint:Point = DisplayObject(controller.container).localToGlobal(new Point(localX,localY));
-            localPoint = textLine.globalToLocal(localPoint);
-            localX = localPoint.x;
-            localY = localPoint.y; */
-            
-            
-            var startOnNextLineIfNecessary:Boolean = false;
-            
-            var lastAtom:int = -1;
-            if (isDirectionRTL) {
-                lastAtom = textLine.atomCount - 1;
-            } else {
-                if ((textFlowLine.absoluteStart + textFlowLine.textLength) >= textFlowLine.paragraph.getAbsoluteStart() + textFlowLine.paragraph.textLength) {
-                    if (textLine.atomCount > 1) lastAtom = textLine.atomCount - 2;
-                } else {
-                    var lastLinePosInPar:int = textFlowLine.absoluteStart + textFlowLine.textLength - 1;
-                    var lastChar:String = textLine.textBlock.content.rawText.charAt(lastLinePosInPar);
-                    if (lastChar == " ") {
-                        if (textLine.atomCount > 1) lastAtom = textLine.atomCount - 2;
-                    } else {
-                        startOnNextLineIfNecessary = true;
-                        if (textLine.atomCount > 0) lastAtom = textLine.atomCount - 1;
-                    }
-                }
-            }
-            var lastAtomRect:Rectangle = (lastAtom > 0) ? textLine.getAtomBounds(lastAtom) : new Rectangle(0, 0, 0, 0);
-                        
-            if (!isTTB)
-            {
-                if (localX < 0)
-                    localX = 0;
-                else if (localX > (lastAtomRect.x + lastAtomRect.width))
-                {
-                    if (startOnNextLineIfNecessary) 
-                        return textFlowLine.absoluteStart + textFlowLine.textLength - 1;
-                    if (lastAtomRect.x + lastAtomRect.width > 0)
-                        localX = lastAtomRect.x + lastAtomRect.width;
-                }
-            }
-            else
-            {   
-                if (localY < 0) 
-                    localY = 0;
-                else if (localY > (lastAtomRect.y + lastAtomRect.height))
-                {
-                    if (startOnNextLineIfNecessary) 
-                        return textFlowLine.absoluteStart + textFlowLine.textLength - 1;    
-                    if (lastAtomRect.y + lastAtomRect.height > 0)
-                        localY = lastAtomRect.y + lastAtomRect.height;
-                }
-            }
-            
-			result = computeSelectionIndexInLine(textFlow, textLine, localX, localY);
+			if(textFlowLine is TextFlowTableBlock)
+			{
+				result = TextFlowTableBlock(textFlowLine).absoluteStart;
+			}
+			else
+			{
+				var textLine:TextLine = textFlowLine.getTextLine(true);
+				
+				// adjust localX,localY to be relative to the textLine.  
+				// Can't use localToGlobal/globalToLocal because textLine may not be on the display list due to virtualization
+				// we may need to bring this back if textline's can be rotated or placed by any mechanism other than a translation
+				// but then we'll need to provisionally place a virtualized TextLine in its parent container
+				localX -= textLine.x;
+				localY -= textLine.y;
+				/* var localPoint:Point = DisplayObject(controller.container).localToGlobal(new Point(localX,localY));
+				localPoint = textLine.globalToLocal(localPoint);
+				localX = localPoint.x;
+				localY = localPoint.y; */
+				
+				
+				var startOnNextLineIfNecessary:Boolean = false;
+				
+				var lastAtom:int = -1;
+				if (isDirectionRTL) {
+					lastAtom = textLine.atomCount - 1;
+				} else {
+					if ((textFlowLine.absoluteStart + textFlowLine.textLength) >= textFlowLine.paragraph.getAbsoluteStart() + textFlowLine.paragraph.textLength) {
+						if (textLine.atomCount > 1) lastAtom = textLine.atomCount - 2;
+					} else {
+						var lastLinePosInPar:int = textFlowLine.absoluteStart + textFlowLine.textLength - 1;
+						var lastChar:String = textLine.textBlock.content.rawText.charAt(lastLinePosInPar);
+						if (lastChar == " ") {
+							if (textLine.atomCount > 1) lastAtom = textLine.atomCount - 2;
+						} else {
+							startOnNextLineIfNecessary = true;
+							if (textLine.atomCount > 0) lastAtom = textLine.atomCount - 1;
+						}
+					}
+				}
+				var lastAtomRect:Rectangle = (lastAtom > 0) ? textLine.getAtomBounds(lastAtom) : new Rectangle(0, 0, 0, 0);
+				
+				if (!isTTB)
+				{
+					if (localX < 0)
+						localX = 0;
+					else if (localX > (lastAtomRect.x + lastAtomRect.width))
+					{
+						if (startOnNextLineIfNecessary) 
+							return textFlowLine.absoluteStart + textFlowLine.textLength - 1;
+						if (lastAtomRect.x + lastAtomRect.width > 0)
+							localX = lastAtomRect.x + lastAtomRect.width;
+					}
+				}
+				else
+				{   
+					if (localY < 0) 
+						localY = 0;
+					else if (localY > (lastAtomRect.y + lastAtomRect.height))
+					{
+						if (startOnNextLineIfNecessary) 
+							return textFlowLine.absoluteStart + textFlowLine.textLength - 1;    
+						if (lastAtomRect.y + lastAtomRect.height > 0)
+							localY = lastAtomRect.y + lastAtomRect.height;
+					}
+				}
+				
+				result = computeSelectionIndexInLine(textFlow, textLine, localX, localY);
+			}
+
             // trace("computeSelectionIndexInContainer:(",origX,origY,")",textFlow.flowComposer.getControllerIndex(controller).toString(),lineIndex.toString(),result.toString());
             return result != -1 ? result : firstCharVisible + length;   
         }
@@ -1662,9 +1676,8 @@ package flashx.textLayout.edit
             else  // Left to right case, right is "end" unicode
                 paraSelectionIdx = leanRight ? textLine.getAtomTextBlockEndIndex(elemIdx) : textLine.getAtomTextBlockBeginIndex(elemIdx);
 
-            //we again need to do some fixup here.  Unfortunately, we don't have the index into the paragraph until
-            
-            return rtline.paragraph.getAbsoluteStart() + paraSelectionIdx;
+			//we again need to do some fixup here.  Unfortunately, we don't have the index into the paragraph until
+            return rtline.paragraph.getTextBlockAbsoluteStart(textLine.textBlock) + paraSelectionIdx;
         }
         
         static private function checkForDisplayed(container:DisplayObject):Boolean
@@ -1976,9 +1989,9 @@ package flashx.textLayout.edit
 						if(
 							!CellCoordinates.areEqual(coords, superManager.activeCellPosition)
 						){
-							superManager.selectCellRange(superManager.anchorCellPosition, coords);
 							superManager.subManager = null;
 							allowOperationMerge = false;
+							superManager.selectCellRange(superManager.anchorCellPosition, coords);
 							event.stopPropagation();
 							return;
 						}

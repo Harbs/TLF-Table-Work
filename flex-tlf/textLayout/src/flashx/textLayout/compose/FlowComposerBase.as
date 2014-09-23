@@ -462,6 +462,9 @@ package flashx.textLayout.compose
 				if(workLine != newLine)
 				{
 					_lines.splice(workIndex,0,newLine);
+					// set the next line absolute start to be rational for the next line...
+					if(workLine.absoluteStart == newLine.absoluteStart)
+						workLine.setAbsoluteStart(workLine.absoluteStart+1);
 				}
 			}
 								

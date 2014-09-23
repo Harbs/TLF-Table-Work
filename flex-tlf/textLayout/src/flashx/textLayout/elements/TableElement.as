@@ -23,13 +23,13 @@ package flashx.textLayout.elements
 	import flash.text.engine.GraphicElement;
 	import flash.utils.Dictionary;
 	
-	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.compose.TextFlowTableBlock;
 	import flashx.textLayout.edit.SelectionFormat;
 	import flashx.textLayout.events.ModelChange;
 	import flashx.textLayout.formats.FormatValue;
 	import flashx.textLayout.formats.ITextLayoutFormat;
 	import flashx.textLayout.formats.TextLayoutFormat;
+	import flashx.textLayout.tlf_internal;
 	
 	use namespace tlf_internal;
 	
@@ -379,29 +379,20 @@ package flashx.textLayout.elements
 		}
 		
 		/**
-		 * Returns an array of the cells for the column specified. 
+		 * Returns a Vector of the TableCellElements for the column specified. 
 		 **/
-		public function getCellsForColumn(column:TableColElement):Array {
-			var cells:Array = [];
+		public function getCellsForColumn(column:TableColElement):Vector.<TableCellElement> {
+			if(columns.indexOf(column) < 0)
+				return null;
 			
-			if (column.colIndex < 0) {
-				return cells;
-			}
-			
-			for each(var cell:TableCellElement in mxmlChildren){
-				if (cell.colIndex == column.colIndex) {
-					cells.push(cell);
-				}
-			}
-			
-			return cells;
+			return getCellsForColumnAt(column.colIndex);
 		}
 		
 		/**
-		 * Returns an array of the cells for the column at the specified index. 
+		 * Returns a Vector of the TableCellElements for the column at the specified index. 
 		 **/
-		public function getCellsForColumnAt(index:int):Array {
-			var cells:Array = [];
+		public function getCellsForColumnAt(index:int):Vector.<TableCellElement> {
+			var cells:Vector.<TableCellElement> = new Vector.<TableCellElement>();
 			
 			if (index < 0) {
 				return cells;
@@ -683,7 +674,7 @@ package flashx.textLayout.elements
 		override tlf_internal function removed():void
 		{
 			hasCellDamage = true;
-			removeAllRowsWithContent();
+			//removeAllRowsWithContent();
 		}
 		
 		/**

@@ -1,7 +1,12 @@
 package flashx.textLayout.elements
 {
+	import flash.text.engine.ElementFormat;
+	import flash.text.engine.TextElement;
 	import flash.text.engine.TextLine;
 	
+	import flashx.textLayout.compose.BaseCompose;
+	import flashx.textLayout.compose.IFlowComposer;
+	import flashx.textLayout.compose.ISWFContext;
 	import flashx.textLayout.formats.ITextLayoutFormat;
 	import flashx.textLayout.tlf_internal;
 	
@@ -20,6 +25,19 @@ package flashx.textLayout.elements
 		override tlf_internal function createContentElement():void
 		{
 			// not sure if this makes sense...
+			if (_blockElement)
+				return;
+			
+			computedFormat;	// BEFORE creating the element
+			var flowComposer:IFlowComposer = getTextFlow().flowComposer;
+			var swfContext:ISWFContext = flowComposer && flowComposer.swfContext ? flowComposer.swfContext : BaseCompose.globalSWFContext;
+
+			var format:ElementFormat = FlowLeafElement.computeElementFormatHelper (_table.computedFormat, _table.getParagraph(), swfContext) 
+			_blockElement = new TextElement(_text,format);
+			CONFIG::debug { Debugging.traceFTECall(_blockElement,null,"new TextElement()"); }
+			CONFIG::debug { Debugging.traceFTEAssign(_blockElement, "text", _text); }
+			super.createContentElement();
+
 		}
 
 		/** @private */
@@ -83,6 +101,20 @@ package flashx.textLayout.elements
 			return 0;
 		}
 
+		override public function get parent():FlowGroupElement
+		{ 
+			return _table; 
+		}
+
+		override public function getTextFlow():TextFlow
+		{
+			return _table.getTextFlow();
+		}
+		
+		override public function getParagraph():ParagraphElement
+		{
+			return _table.getParagraph();
+		}
 
 	}
 }

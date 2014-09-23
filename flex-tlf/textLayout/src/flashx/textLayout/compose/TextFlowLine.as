@@ -52,6 +52,8 @@ package flashx.textLayout.compose
 	import flashx.textLayout.elements.SpanElement;
 	import flashx.textLayout.elements.SubParagraphGroupElementBase;
 	import flashx.textLayout.elements.TCYElement;
+	import flashx.textLayout.elements.TableElement;
+	import flashx.textLayout.elements.TableLeafElement;
 	import flashx.textLayout.elements.TextFlow;
 	import flashx.textLayout.factory.StringTextLineFactory;
 	import flashx.textLayout.formats.BackgroundColor;
@@ -356,8 +358,14 @@ package flashx.textLayout.compose
 		{
 			if (_para)
 			{
-				var lineStart:int = _absoluteStart - _para.getAbsoluteStart();
+				var lineStart:int;
 				
+				// Harbs 8-31-14 added handling of multiple textBlocks might need more work to handle end?
+				var textLine:TextLine = peekTextLine();
+				if(textLine)
+					lineStart = _absoluteStart - _para.getTextBlockAbsoluteStart(textLine.textBlock);
+				else
+					lineStart = _absoluteStart - _para.getAbsoluteStart();
 				// Initialize settings for location
 				if (lineStart == 0)		// we're at the start of the paragraph
 					return _textLength == _para.textLength ? TextFlowLineLocation.ONLY : TextFlowLineLocation.FIRST;
@@ -851,7 +859,8 @@ package flashx.textLayout.compose
 		}
 
 		private function getTextLineInternal():TextLine
-		{			
+		{		
+			// 8-31-14 Do we need to change this to handle multiple textBlocks?
 			// Look it up in the textBlock
 			var paraAbsStart:int = paragraph.getAbsoluteStart();
 			
@@ -1370,6 +1379,7 @@ package flashx.textLayout.compose
 			if (isDamaged())
 				return null;
 			
+			// 8-31-14 Do we need to adjust this for paras with multiple textBlocks? 
 			//get the absolute start of the paragraph.  Calculation is expensive, so just do this once.
 			var paraAbsStart:int = _para.getAbsoluteStart();
 			
@@ -1433,7 +1443,8 @@ package flashx.textLayout.compose
 			//the direction of the text
 			var direction:String = _para.computedFormat.direction;
 			//get the absolute start of the paragraph.  Calculation is expensive, so just do this once.
-			var paraAbsStart:int = _para.getAbsoluteStart();
+			//var paraAbsStart:int = _para.getAbsoluteStart();
+			var paraAbsStart:int = _para.getTextBlockAbsoluteStart(textLine.textBlock);
 			//the current index.  used to iterate to the next element
 			var curIdx:int = begIdx;
 			//the current FlowLeafElement as determined by curIdx
@@ -1476,6 +1487,18 @@ package flashx.textLayout.compose
 				}
 				//the number of potential glyphs to hilite.  Could larger than needs be if we are only selecting part of it.
 				var numCharsSelecting:int = curElem.textLength + curElem.getElementRelativeStart(_para) - curIdx;
+				// special handling for TableLeafElements (do nothing)
+				if(curElem is TableLeafElement)
+				{
+					//if(floatRectArray == null)
+					//	floatRectArray = new Array();
+
+					//var block:TextFlowTableBlock = TableElement(TableLeafElement(curElem).parent).getFirstBlock();
+					//var blockRect:Rectangle = new Rectangle(floatInfo.x - textLine.x, floatInfo.y - textLine.y, ilg.elementWidth, ilg.elementHeight);
+					//floatRectArray.push(new Rectangle(0,0,block.width,block.height));
+					++curIdx;
+					continue;
+				}
 				//the index of the last glyph to hilite.  If a partial selection, use endIdx
 				var endPos:int = (numCharsSelecting + curIdx) > endIdx ? endIdx : (numCharsSelecting + curIdx);
 				
@@ -2161,7 +2184,7 @@ package flashx.textLayout.compose
 			if (!textLine || !textLine.parent)
 				return;
 			
-			var paraStart:int = _para.getAbsoluteStart();
+			var paraStart:int = _para.getTextBlockAbsoluteStart(textLine.textBlock);
 			begIdx -= paraStart;
 			endIdx -= paraStart;
 			
@@ -2202,7 +2225,9 @@ package flashx.textLayout.compose
 			if (!textLine || !textLine.parent)
 				return null;			
 			// adjust to this paragraph's TextBlock
-			idx -= _para.getAbsoluteStart();
+			// I'm assuming this needs to be relative to the TextBlock and not the paragraph -- Harbs
+				idx -= _para.getTextBlockAbsoluteStart(textLine.textBlock);
+			//idx -= _para.getAbsoluteStart();
 			
 			textLine = getTextLine(true);
 			
@@ -2251,7 +2276,7 @@ package flashx.textLayout.compose
 			}
 			
 			var heightAndAdj:Array = getRomanSelectionHeightAndVerticalAdjustment(prevLine, nextLine);
-			var blockRectArray:Array = makeSelectionBlocks(textLine, idx, endIdx, _para.getAbsoluteStart(), blockProgression, direction, heightAndAdj);
+			var blockRectArray:Array = makeSelectionBlocks(textLine, idx, endIdx, _para.getTextBlockAbsoluteStart(textLine.textBlock), blockProgression, direction, heightAndAdj);
 			CONFIG::debug{ assert(blockRectArray.length == 1, "A point selection should return a single selection rectangle!"); }
 			var rect:Rectangle = blockRectArray[0];
 			
@@ -2324,7 +2349,12 @@ package flashx.textLayout.compose
 			}
 			else
 			{
-				var paraStart:int = _para.getAbsoluteStart();
+				var paraStart:int;
+				//8-31-14 Assuming this should be from the textBlock. Keeping getAbsoluteStart() in case there's no textLine -- not sure if that's needed
+				if(textLine)
+					paraStart = _para.getTextBlockAbsoluteStart(textLine.textBlock);
+				else
+					paraStart = _para.getAbsoluteStart();
 				var selCache:SelectionCache = this.getSelectionShapesCacheEntry(begIdx-paraStart,endIdx-paraStart,prevLine,nextLine,blockProgression);
 				if (selCache)
 				{
