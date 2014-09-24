@@ -91,7 +91,8 @@
 					cell.borderBottomWidth = 1;
 					cell.borderRightColor = "#FF00FF";
 					cell.borderRightWidth = 1;
-					cell.paddingBottom = 3;
+					cell.paddingBottom = 7;
+					cell.paddingTop = 7;
 					cell.colIndex = i;
 					cell.rowIndex = rowIdx;
 					var para:ParagraphElement = new ParagraphElement();

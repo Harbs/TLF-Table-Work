@@ -563,7 +563,7 @@
 					
 					if (selectionManager) {
 						selectionManager.currentTable = table;
-						selectionManager.selectCells(selectedCells);
+						//selectionManager.selectCells(selectedCells);
 					}
 				}
 				

@@ -1111,12 +1111,27 @@ package flashx.textLayout.elements
 				w = 600;
 			if(w > 20000)
 				w = 600;
-			for each(var col:TableColElement in columns){
-				// simply stomp on the settings. (need to finesse this...)
-				col.columnWidth = w / numColumns;
-			}
 			
 			_computedWidth = w;
+
+			var numNonsetColumns:int = numColumns;
+			var col:TableColElement;
+			for each(col in columns){
+				// simply stomp on the settings. (need to finesse this...)
+				if(typeof(col.columnWidth) == "number")
+				{
+					w-= col.columnWidth;
+					numNonsetColumns--;
+				}
+			}
+
+			for each(col in columns)
+			{
+				// simply stomp on the settings. (need to finesse this...)
+				if(typeof(col.columnWidth) == "number")
+					continue;
+				col.columnWidth = w / numNonsetColumns;
+			}
 		}
 		
 		/**

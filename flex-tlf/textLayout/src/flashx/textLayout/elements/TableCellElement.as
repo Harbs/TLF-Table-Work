@@ -27,7 +27,7 @@ package flashx.textLayout.elements
 	import flash.utils.getDefinitionByName;
 	import flash.utils.getQualifiedClassName;
 	
-	import flashx.textLayout.tlf_internal;
+	import flashx.textLayout.compose.TextFlowLine;
 	import flashx.textLayout.container.ContainerController;
 	import flashx.textLayout.edit.EditManager;
 	import flashx.textLayout.edit.IEditManager;
@@ -36,6 +36,7 @@ package flashx.textLayout.elements
 	import flashx.textLayout.events.ModelChange;
 	import flashx.textLayout.formats.BlockProgression;
 	import flashx.textLayout.formats.Float;
+	import flashx.textLayout.tlf_internal;
 	import flashx.undo.UndoManager;
 	
 	use namespace tlf_internal;
@@ -66,6 +67,7 @@ package flashx.textLayout.elements
 		private var _columnSpan:uint = 1;
 		private var _rowIndex:int = -1;
 		private var _colIndex:int = -1;
+		private var _includeDescentInCellBounds:Boolean;
 		
 		public function TableCellElement()
 		{
@@ -93,16 +95,20 @@ package flashx.textLayout.elements
 		
 		public function compose():Boolean {
 			var table:TableElement = getTable();
-			
-			if (table && table.getColumnAt(colIndex)) {
-				width = table.getColumnAt(colIndex).columnWidth;
+			width = 0;
+			for(var i:int=0;i<columnSpan;i++)
+			{
+				if (table && table.getColumnAt(colIndex+i)) {
+					width += table.getColumnAt(colIndex+i).columnWidth;
+				}
+				
 			}
 			
 			_damaged = false;
-			//_textFlow.paddingTop = getEffectivePaddingTop();
-			//_textFlow.paddingBottom = getEffectivePaddingBottom();
-			//_textFlow.paddingLeft = getEffectivePaddingLeft();
-			//_textFlow.paddingRight = getEffectivePaddingRight();
+			_controller.paddingTop = getEffectivePaddingTop();
+			_controller.paddingBottom = getEffectivePaddingBottom();
+			_controller.paddingLeft = getEffectivePaddingLeft();
+			_controller.paddingRight = getEffectivePaddingRight();
 			
 			if (_textFlow && _textFlow.flowComposer) {
 				return _textFlow.flowComposer.compose();
@@ -262,7 +268,17 @@ package flashx.textLayout.elements
 		
 		public function getComposedHeight():Number
 		{
-			return _controller.getContentBounds().height;
+			var descent:Number = 0;
+			if(!includeDescentInCellBounds)
+			{
+				if(_textFlow.flowComposer && _textFlow.flowComposer.numLines)
+				{
+					var lastLine:TextFlowLine = _textFlow.flowComposer.getLineAt(_textFlow.flowComposer.numLines-1);
+					if(lastLine)
+						descent = lastLine.descent;
+				}
+			}
+			return (_controller.getContentBounds().height - descent);
 		}
 		
 		public function getRowHeight():Number
@@ -402,6 +418,17 @@ package flashx.textLayout.elements
 			
 			return paddingAmount;
 		}
+
+		public function get includeDescentInCellBounds():Boolean
+		{
+			return _includeDescentInCellBounds;
+		}
+
+		public function set includeDescentInCellBounds(value:Boolean):void
+		{
+			_includeDescentInCellBounds = value;
+		}
+
 		
 	}
 }

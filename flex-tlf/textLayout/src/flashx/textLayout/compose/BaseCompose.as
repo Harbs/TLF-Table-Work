@@ -563,7 +563,8 @@ package flashx.textLayout.compose
 				//_parcelList.addTotalDepth(tableElement.getEffectiveMarginBottom());
 				
 				while(
-					!(_parcelList.currentParcel.fitsInHeight(_parcelList.totalDepth, minRowHeight + footerHeight))
+					false
+					//!(_parcelList.currentParcel.fitsInHeight(_parcelList.totalDepth, minRowHeight + footerHeight))
 				){
 					//TODO: add in footer rows...
 					
@@ -579,7 +580,10 @@ package flashx.textLayout.compose
 //					BackgroundManager.collectTableBlock(_textFlow,curTableBlock, _parcelList.currentParcel.controller);
 					blockToAdd = false;
 					
-					_parcelList.next();
+					if(!_parcelList.next())
+					{ // current parcel not valid
+						break;
+					}
 					_parcelList.getLineSlug(_lineSlug, 0, 1, _textIndent, _curParaFormat.direction == Direction.LTR);
 					curTableBlock = tableElement.getNextBlock();
 					blockToAdd = true;
@@ -592,6 +596,7 @@ package flashx.textLayout.compose
 					
 					//TODO: add in header rows. Collect them on the next iteration if no real rows fit.
 					
+					// not needed?
 					if(_parcelList.currentParcel == null){
 						blockToAdd = false;
 						break;
