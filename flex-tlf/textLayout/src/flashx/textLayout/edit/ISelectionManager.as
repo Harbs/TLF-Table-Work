@@ -150,7 +150,16 @@ package flashx.textLayout.edit
  		 * @langversion 3.0
 		 */
 		function selectFirstPosition() : void
-		
+
+		/**
+		 * Removes any selection from the text flow
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 */
+		function deselect() : void
+
 		/** 
 		 * The anchor point of the selection. 
 		 * 

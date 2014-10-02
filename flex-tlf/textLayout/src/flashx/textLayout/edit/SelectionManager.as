@@ -135,7 +135,7 @@ package flashx.textLayout.edit
      */
     public class SelectionManager implements ISelectionManager
     {
-		
+		static tlf_internal var useTableSelectionCursors:Boolean = false;
 		/**
 		 * Cursor for selection of table
 		 **/
@@ -417,6 +417,11 @@ package flashx.textLayout.edit
 					block.controller.clearSelectionShapes();
 					block.controller.addCellSelectionShapes(currentCellSelectionFormat.rangeColor, block, anchorCoords, activeCoords);
 				}
+				if(subManager)
+				{
+					subManager.selectRange(-1,-1);
+					subManager = null;
+				}
 			}
 			else
 			{
@@ -434,7 +439,8 @@ package flashx.textLayout.edit
 		}
 		public function setCellRange(range:CellRange):void
 		{
-			_cellRange = range;
+			selectCellRange(range.anchorCoordinates,range.activeCoordinates);
+			//_cellRange = range;
 			// do something about actually drawing the selection.
 		}
         
@@ -526,6 +532,9 @@ package flashx.textLayout.edit
          */
         public function getSelectionState():SelectionState
         {
+			if(subManager)
+				return subManager.getSelectionState();
+			
             return new SelectionState(_textFlow, anchorMark.position, activeMark.position, pointFormat, _cellRange);
         }
                 
@@ -630,6 +639,7 @@ package flashx.textLayout.edit
                 
                 clear();
 				clearCellSelections();
+				_cellRange = null;
                 
                 // If we switch into read-only mode, make sure the cursor isn't showing a text selection IBeam
                 if (!value) // see Watson 2637162
@@ -1048,6 +1058,9 @@ package flashx.textLayout.edit
         public function selectRange(anchorPosition:int, activePosition:int) : void
         {
             flushPendingOperations();
+			
+			if(subManager)
+				subManager.selectRange(-1,-1);
             
             // anchor and active can be in any order
             // TODO: range check and clamp anchor,active
@@ -1055,11 +1068,12 @@ package flashx.textLayout.edit
             {   
                 clearSelectionShapes();
 				clearCellSelections();
+				_cellRange = null;
                     
                 internalSetSelection(_textFlow, anchorPosition, activePosition, _pointFormat);
                 
                 // selection changed
-                selectionChanged(true,false);
+                selectionChanged();
                 
                 allowOperationMerge = false;
             }
@@ -1092,7 +1106,28 @@ package flashx.textLayout.edit
 		{
 			selectRange(int.MAX_VALUE, int.MAX_VALUE);
 		}
-        
+
+		/** 
+		 * @copy ISelectionManager#deselect
+		 * 
+		 * @playerversion Flash 10
+		 * @playerversion AIR 1.5
+		 * @langversion 3.0
+		 * 
+		 * @see flashx.textLayout.compose.IFlowComposer
+		 */
+		public function deselect():void
+		{
+			if (hasAnySelection())
+			{
+				clearSelectionShapes();
+				clearCellSelections();
+				addSelectionShapes();
+			}
+			selectRange(-1,-1);
+			_cellRange = null;
+		}
+
         private function internalSetSelection(root:TextFlow,anchorPosition:int,activePosition:int,format:ITextLayoutFormat = null) : void
         {
             _textFlow = root;
@@ -1103,6 +1138,8 @@ package flashx.textLayout.edit
                 anchorPosition = -1;
                 activePosition = -1;
             }
+			else if(subManager)
+				subManager = null;
             
             var lastSelectablePos:int = (_textFlow.textLength > 0) ? _textFlow.textLength - 1 : 0;
             
@@ -1160,7 +1197,7 @@ package flashx.textLayout.edit
 			if(block)
 				block.controller.clearSelectionShapes();
 			
-			_cellRange = null;
+			//_cellRange = null;
 		}
         private function addSelectionShapes():void
         {
@@ -1208,6 +1245,7 @@ package flashx.textLayout.edit
 			if (hasAnySelection())
 			{
 				clearSelectionShapes();
+				clearCellSelections();
 				addSelectionShapes();
 			}
 		}
@@ -1224,6 +1262,7 @@ package flashx.textLayout.edit
 			if (hasAnySelection())
 			{
 				clearSelectionShapes();
+				clearCellSelections();
 			}
 		}
         
@@ -1943,8 +1982,8 @@ package flashx.textLayout.edit
 					return;
 				}
 				superManager.currentTable = cell.getTable();
-				superManager.selectRange(-1,-1);
-				superManager.setSelectionState(new SelectionState(superManager.textFlow,-1,-1) );
+				superManager.deselect();
+				//superManager.setSelectionState(new SelectionState(superManager.textFlow,-1,-1) );
 				superManager.anchorCellPosition.column = cell.colIndex;
 				superManager.anchorCellPosition.row = cell.rowIndex;
 				superManager.subManager = this;
@@ -1989,7 +2028,6 @@ package flashx.textLayout.edit
 						if(
 							!CellCoordinates.areEqual(coords, superManager.activeCellPosition)
 						){
-							superManager.subManager = null;
 							allowOperationMerge = false;
 							superManager.selectCellRange(superManager.anchorCellPosition, coords);
 							event.stopPropagation();
@@ -1999,6 +2037,8 @@ package flashx.textLayout.edit
 						
 					}while(0);
 				}
+				if(superManager && superManager.getCellRange())
+					return;
 				
 				handleMouseEventForSelection(event, true, _textFlow.parentElement != null);
 
@@ -2145,23 +2185,32 @@ package flashx.textLayout.edit
 						var cellContainerPoint:Point = cellContainer.localToGlobal(new Point);
 						point = globalPoint.subtract(cellContainerPoint);
 					}
-					
-					// set cursor for row, table or column
-					if (cell.colIndex==0 && point.x<leftEdge && point.y>topEdge) {
-						event.stopPropagation();
-						event.stopImmediatePropagation();
-						setMouseCursor(SelectTableRow);
-					}
-					else if (cell.rowIndex==0 && cell.colIndex==0 &&
-							point.x<leftEdge && point.y<topEdge) {
-						event.stopPropagation();
-						event.stopImmediatePropagation();
-						setMouseCursor(SelectTable);
-					}
-					else if (cell.rowIndex==0 && point.x>leftEdge && point.y<topEdge) {
-						event.stopPropagation();
-						event.stopImmediatePropagation();
-						setMouseCursor(SelectTableColumn);
+					if(useTableSelectionCursors)
+					{
+						// set cursor for row, table or column
+						if (cell.colIndex==0 && point.x<leftEdge && point.y>topEdge)
+						{
+							event.stopPropagation();
+							event.stopImmediatePropagation();
+							setMouseCursor(SelectTableRow);
+						}
+						else if (cell.rowIndex==0 && cell.colIndex==0 &&
+							point.x<leftEdge && point.y<topEdge)
+						{
+							event.stopPropagation();
+							event.stopImmediatePropagation();
+							setMouseCursor(SelectTable);
+						}
+						else if (cell.rowIndex==0 && point.x>leftEdge && point.y<topEdge)
+						{
+							event.stopPropagation();
+							event.stopImmediatePropagation();
+							setMouseCursor(SelectTableColumn);
+						}
+						else {
+							setMouseCursor(MouseCursor.IBEAM);
+						}
+						
 					}
 					else {
 						setMouseCursor(MouseCursor.IBEAM);

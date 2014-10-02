@@ -991,6 +991,7 @@ package flashx.textLayout.elements
 				parent.replaceChildren(myidx+1,myidx+1,newSibling);
 			}
 
+			newSibling.normalizeRange(0,newSibling.textLength);
 			return newSibling;
 		}
 

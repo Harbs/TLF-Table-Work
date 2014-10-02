@@ -567,7 +567,7 @@ package flashx.textLayout.elements
 							if(rest.length == 0) // delete of terminator was already done.
 								break;
 						}
-						if(endChildIndex >= termIdx)
+						if(endChildIndex >= termIdx && beginChildIndex != endChildIndex)
 							endChildIndex--;
 					}
 				}
@@ -626,6 +626,20 @@ package flashx.textLayout.elements
 					var s:SpanElement = new SpanElement();
 					super.replaceChildren(numChildren,numChildren,s);
 					s.format = newLastLeaf ? newLastLeaf.format : _terminatorSpan.format;
+					s.addParaTerminator();
+					this._terminatorSpan = s;
+				}
+			}
+			//merge terminator span to previous if possible
+			if(_terminatorSpan.textLength == 1)
+			{
+				var prev:FlowLeafElement = _terminatorSpan.getPreviousLeaf(this);
+				if(prev && prev is SpanElement)
+				{
+					_terminatorSpan.removeParaTerminator();
+					termIdx = getChildIndex(_terminatorSpan);
+					super.replaceChildren(termIdx, termIdx+1);
+					s = prev as SpanElement;
 					s.addParaTerminator();
 					this._terminatorSpan = s;
 				}

@@ -440,6 +440,8 @@ package flashx.textLayout.elements
 			
 			var blockedCoords:Vector.<CellCoords> = getBlockedCoords(-1,idx);
 			var cellIdx:int = getCellIndex(0,idx);
+			if(cellIdx < 0)
+				cellIdx = numChildren;
 			var rowIdx:int = 0;
 			
 			if (cells==null) cells = []; 
@@ -454,6 +456,9 @@ package flashx.textLayout.elements
 					blockedCoords.shift();
 				}
 				cellIdx = getCellIndex(rowIdx,idx);
+				if(cellIdx < 0)
+					cellIdx = numChildren;
+				
 				if(rowIdx < numRows){
 					addChildAt(cellIdx,cell);
 				}
@@ -491,6 +496,9 @@ package flashx.textLayout.elements
 
 			var blockedCoords:Vector.<CellCoords> = getBlockedCoords(idx);
 			var cellIdx:int = getCellIndex(idx,0);
+			if(cellIdx < 0)
+				cellIdx = numChildren;
+
 			var colIdx:int = 0;
 			
 			if (cells==null) cells = [];
@@ -506,8 +514,7 @@ package flashx.textLayout.elements
 					blockedCoords.shift();
 				}
 				if(colIdx < numColumns){
-					addChildAt(cellIdx,cell);
-					cellIdx++;
+					addChildAt(cellIdx++,cell);
 				}
 			}
 			return true;
