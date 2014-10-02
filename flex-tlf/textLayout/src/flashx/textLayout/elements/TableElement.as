@@ -933,7 +933,7 @@ package flashx.textLayout.elements
 							throw new Error("Two cells cannot have the same coordinates");
 						}
 						
-						rowVec[cell.colIndex] = cell;
+						rowVec.push(cell);
 					}
 				}
 				
