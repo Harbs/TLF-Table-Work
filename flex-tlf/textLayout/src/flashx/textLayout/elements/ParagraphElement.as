@@ -137,7 +137,10 @@ package flashx.textLayout.elements
 				child.createContentElement();
 			}
 			tbs.length = tableCount + 1;
-			updateTextBlock();
+			var tb:TextBlock;
+			for each(tb in tbs){
+				updateTextBlock(tb);
+			}
 		}
 		private function updateTextBlockDict():void
 		{
@@ -273,7 +276,11 @@ package flashx.textLayout.elements
 					return tb;
 				curPos += tb.content.rawText.length;
 				if(curPos + posShift > pos)
+				{
+					if(getTextBlockStart(tb) > pos)
+						return null;
 					return tb;
+				}
 			}
 			return null;
 		}
@@ -297,7 +304,7 @@ package flashx.textLayout.elements
 			{
 				for each(var table:TableElement in tables)
 				{
-					if(table.getElementRelativeStart(this) < curPos)
+					if(table.getElementRelativeStart(this) <= curPos)
 					{
 						curPos++;
 						tables.splice(tables.indexOf(table),1);
@@ -778,39 +785,47 @@ package flashx.textLayout.elements
 		 
 		public function findPreviousAtomBoundary(relativePosition:int):int
 		{
+			var tb:TextBlock = getTextBlockAtPosition(relativePosition);
+			var tbStart:int = getTextBlockStart(tb);
+			var textBlockPos:int = relativePosition - tbStart;
 			if (ContainerController.tlf_internal::usesDiscretionaryHyphens)
 			{
-				var textBlock:TextBlock = getTextBlock();
-				var tl:TextLine = textBlock.getTextLineAtCharIndex(relativePosition);
-				var currentAtomIndex:int = tl.getAtomIndexAtCharIndex(relativePosition);
+				var tl:TextLine = tb.getTextLineAtCharIndex(textBlockPos);
+				var currentAtomIndex:int = tl.getAtomIndexAtCharIndex(textBlockPos);
                 //trace("relpos", relativePosition, "atomIndex", currentAtomIndex);
                 var isRTL:Boolean = tl.getAtomBidiLevel(currentAtomIndex) == 1;
                 if (isRTL)
                 {
-                   var foo:int = getTextBlock().findPreviousAtomBoundary(relativePosition);
+                   var foo:int = tb.findPreviousAtomBoundary(textBlockPos);
                    if (currentAtomIndex == 0)
                    {
                        // when cursor is left of all characters (end of line)
                        // atomIndex is 0, so compensate
                        if (tl.atomCount > 0)
                        {
-                           while (--relativePosition)
+                           while (--textBlockPos)
                            {
-                               if (tl.getAtomIndexAtCharIndex(relativePosition) != currentAtomIndex)
+							   --relativePosition;
+                               if (tl.getAtomIndexAtCharIndex(textBlockPos) != currentAtomIndex)
                                    break;
                            }
                        }
                    }
                    else
                    {
-                       while (--relativePosition)
+                       while (--textBlockPos)
                        {
-                           if (tl.getAtomIndexAtCharIndex(relativePosition) != currentAtomIndex)
+						   --relativePosition;
+                           if (tl.getAtomIndexAtCharIndex(textBlockPos) != currentAtomIndex)
                                break;
                        }
                    }
                    if (CharacterUtil.isLowSurrogate(getText(relativePosition, relativePosition + 1).charCodeAt(0)))
-                       relativePosition--;
+				   {
+					   relativePosition--;
+					   textBlockPos--;
+				   }
+				   
                    //trace("previous", relativePosition, foo);
                 }
                 else
@@ -821,21 +836,27 @@ package flashx.textLayout.elements
     					if (!tl)
     						return -1;
     					// need this when 0x2028 line separator in use
-    					if (tl.textBlockBeginIndex + tl.rawTextLength == relativePosition)
-    						return tl.textBlockBeginIndex + tl.rawTextLength - 1;
-    					return tl.textBlockBeginIndex + tl.rawTextLength;
+    					if (tl.textBlockBeginIndex + tl.rawTextLength == textBlockPos)
+    						return tl.textBlockBeginIndex + tl.rawTextLength - 1 + tbStart;
+    					return tl.textBlockBeginIndex + tl.rawTextLength + tbStart;
     				}
-    				while (--relativePosition)
+    				while (--textBlockPos)
     				{
-    					if (tl.getAtomIndexAtCharIndex(relativePosition) < currentAtomIndex)
+						relativePosition--;
+    					if (tl.getAtomIndexAtCharIndex(textBlockPos) < currentAtomIndex)
     						break;
     				}
                     if (CharacterUtil.isLowSurrogate(getText(relativePosition, relativePosition + 1).charCodeAt(0)))
-                        relativePosition--;
+					{
+						relativePosition--;
+						textBlockPos--;
+					}
                 }
 				return relativePosition;
 			}
-            var pos:int = getTextBlock().findPreviousAtomBoundary(relativePosition);
+            var pos:int = tb.findPreviousAtomBoundary(textBlockPos);
+			if(pos >= 0)
+				pos += tbStart;
             //trace("previous", relativePosition, pos);
 			return pos;
 		}
@@ -860,34 +881,41 @@ package flashx.textLayout.elements
 		 
 		public function findNextAtomBoundary(relativePosition:int):int
 		{
+			var tb:TextBlock = getTextBlockAtPosition(relativePosition);
+			var tbStart:int = getTextBlockStart(tb);
+			var textBlockPos:int = relativePosition - tbStart;
 			if (ContainerController.tlf_internal::usesDiscretionaryHyphens)
 			{
-				var textBlock:TextBlock = getTextBlock();
-				var tl:TextLine = textBlock.getTextLineAtCharIndex(relativePosition);
-				var currentAtomIndex:int = tl.getAtomIndexAtCharIndex(relativePosition);
+				var tl:TextLine = tb.getTextLineAtCharIndex(textBlockPos);
+				var currentAtomIndex:int = tl.getAtomIndexAtCharIndex(textBlockPos);
                 //trace("relpos", relativePosition, "atomIndex", currentAtomIndex);
                 var isRTL:Boolean = tl.getAtomBidiLevel(currentAtomIndex) == 1;
                 if (isRTL)
                 {
-                    var foo:int = getTextBlock().findNextAtomBoundary(relativePosition);
+                    var foo:int = tb.findNextAtomBoundary(textBlockPos);
                     if (currentAtomIndex == 0)
                     {
-                        while (++relativePosition)
+                        while (++textBlockPos)
                         {
-                            if (tl.getAtomIndexAtCharIndex(relativePosition) != currentAtomIndex)
+							++relativePosition;
+                            if (tl.getAtomIndexAtCharIndex(textBlockPos) != currentAtomIndex)
                                 break;
                         }
                     }
                     else
                     {
-                        while (++relativePosition)
+                        while (++textBlockPos)
                         {
-                            if (tl.getAtomIndexAtCharIndex(relativePosition) != currentAtomIndex)
+							++relativePosition;
+                            if (tl.getAtomIndexAtCharIndex(textBlockPos) != currentAtomIndex)
                                 break;
                         }
                     }
                     if (CharacterUtil.isHighSurrogate(getText(relativePosition, relativePosition + 1).charCodeAt(0)))
-                        relativePosition++;
+					{
+						relativePosition++;
+						textBlockPos++;
+					}
                     //trace("next", relativePosition, foo);
                 }
                 else
@@ -897,19 +925,25 @@ package flashx.textLayout.elements
     					tl = tl.nextLine;
     					if (!tl)
     						return -1;
-    					return tl.textBlockBeginIndex;
+    					return tl.textBlockBeginIndex + tbStart;
     				}
-    				while (++relativePosition)
+    				while (++textBlockPos)
     				{
-    					if (tl.getAtomIndexAtCharIndex(relativePosition) > currentAtomIndex)
+						++relativePosition;
+    					if (tl.getAtomIndexAtCharIndex(textBlockPos) > currentAtomIndex)
     						break;
     				}
                     if (CharacterUtil.isHighSurrogate(getText(relativePosition, relativePosition + 1).charCodeAt(0)))
-                        relativePosition++;
+					{
+						relativePosition++;
+						textBlockPos++;
+					}
                 }
 				return relativePosition;
 			}
-			var pos:int = getTextBlock().findNextAtomBoundary(relativePosition);
+			var pos:int = tb.findNextAtomBoundary(textBlockPos);
+			if(pos >= 0)
+				pos += tbStart;
             //trace("next", relativePosition, pos);
             return pos;
 		}
@@ -972,11 +1006,11 @@ package flashx.textLayout.elements
 			}
 			var block:TextBlock = getTextBlockAtPosition(relativePosition);
 			if(block == null)
-				return getTextBlock().findPreviousWordBoundary(relativePosition);
+				block = getTextBlockAtPosition(--relativePosition);
 			var pos:int = getTextBlockStart(block);
 			if(pos < 0)
 				pos = 0;
-			return block.findPreviousWordBoundary(relativePosition - pos);
+			return relativePosition == pos ? pos : pos + block.findPreviousWordBoundary(relativePosition - pos);
 		}
 
 		/** 
@@ -1011,11 +1045,11 @@ package flashx.textLayout.elements
 			}
 			var block:TextBlock = getTextBlockAtPosition(relativePosition);
 			if(block == null)
-				return getTextBlock().findNextWordBoundary(relativePosition);
+				block = getTextBlockAtPosition(--relativePosition);
 			var pos:int = getTextBlockStart(block);
 			if(pos < 0)
 				pos = 0;
-			return block.findNextWordBoundary(relativePosition - pos);
+			return pos + block.findNextWordBoundary(relativePosition - pos);
 		}
 		
 		static private var _defaultTabStops:Vector.<TabStop>;
