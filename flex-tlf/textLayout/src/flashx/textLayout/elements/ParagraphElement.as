@@ -813,9 +813,8 @@ package flashx.textLayout.elements
                    }
                    else
                    {
-                       while (--textBlockPos)
+                       while (--relativePosition && --textBlockPos)
                        {
-						   --relativePosition;
                            if (tl.getAtomIndexAtCharIndex(textBlockPos) != currentAtomIndex)
                                break;
                        }
@@ -840,9 +839,8 @@ package flashx.textLayout.elements
     						return tl.textBlockBeginIndex + tl.rawTextLength - 1 + tbStart;
     					return tl.textBlockBeginIndex + tl.rawTextLength + tbStart;
     				}
-    				while (--textBlockPos)
+    				while (--relativePosition && --textBlockPos)
     				{
-						relativePosition--;
     					if (tl.getAtomIndexAtCharIndex(textBlockPos) < currentAtomIndex)
     						break;
     				}

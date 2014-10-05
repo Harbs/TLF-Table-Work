@@ -1041,7 +1041,13 @@ package flashx.textLayout.edit
          */
         public function selectAll() : void
         {
-            selectRange(0, int.MAX_VALUE);
+			if(subManager)
+				subManager.selectAll();
+			else
+			{
+				var lastSelectablePos:int = (_textFlow.textLength > 0) ? _textFlow.textLength - 1 : 0;
+				selectRange(0, lastSelectablePos);
+			}
         }
         
         /** 

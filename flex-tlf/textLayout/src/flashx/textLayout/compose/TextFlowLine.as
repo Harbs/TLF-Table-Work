@@ -866,7 +866,7 @@ package flashx.textLayout.compose
 			
 			// If we haven't found it yet, we need to regenerate it.
 			// Regenerate the whole paragraph at once, up to the current position. 
-			var textBlock:TextBlock = paragraph.getTextBlock();
+			var textBlock:TextBlock = paragraph.getTextBlockAtPosition(absoluteStart - paraAbsStart);
 			var currentLine:TextLine = textBlock.firstLine;
 			var flowComposer:IFlowComposer = paragraph.getTextFlow().flowComposer;
 			var lineIndex:int = flowComposer.findLineIndexAtPosition(paraAbsStart);
@@ -880,6 +880,11 @@ package flashx.textLayout.compose
 				{
 					textLine = currentLine;
 					currentLine = currentLine.nextLine;
+				}
+				else if(line is TextFlowTableBlock)
+				{
+					textLine = null;
+					currentLine = null;
 				}
 				else
 				{
