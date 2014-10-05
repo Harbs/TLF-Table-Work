@@ -548,6 +548,15 @@ package flashx.textLayout.elements
 		tlf_internal override function get defaultTypeName():String
 		{ return "p"; }
 
+		tlf_internal function removeEmptyTerminator():void
+		{
+			if(numChildren == 1 && _terminatorSpan && _terminatorSpan.textLength == 1)
+			{
+				_terminatorSpan.removeParaTerminator();
+				super.replaceChildren(0, 1);
+				this._terminatorSpan = null;
+			}
+		}
 		/** @private */
 		public override function replaceChildren(beginChildIndex:int,endChildIndex:int,...rest):void
 		{
@@ -586,11 +595,9 @@ package flashx.textLayout.elements
 				
 			}while(false);
 			
-			
+			ensureTerminatorAfterReplace();
 			// ensure correct text blocks
 			createTextBlock();
-			
-			ensureTerminatorAfterReplace();
 		}
 		
 		public override function splitAtPosition(relativePosition:int):FlowElement
